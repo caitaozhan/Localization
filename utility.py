@@ -69,7 +69,8 @@ def db_2_amplitude(db):
     try:
         val[val <= 0.0001] = 0
     except:
-        pass
+        if val <= 0.0001:  # noise floor
+            val = 0
     return val
 
 

@@ -1,5 +1,3 @@
 {
-    "grid_length":"50",
-    "sensor_number":"300",
-    "discretized_x_file":"discretized_x_100"
+    "grid_length":"50"
 }

@@ -114,6 +114,27 @@ def visualize_cluster(grid_len, intruders, sensor_to_cluster, labels):
     plt.show()
 
 
+def visualize_localization(grid_len, true_locations, pred_locations):
+    '''Visualize the localization
+    Args:
+        true_locations (list): each element is a coordinate (x, y)
+        pred_locations (list): each element is a coordinate (x, y)
+    '''
+    grid = np.zeros((grid_len, grid_len))
+    for true in true_locations:
+        grid[true[0]][true[1]] = -1       # miss
+    for pred in pred_locations:
+        if grid[pred[0]][pred[1]] == -1:
+            grid[pred[0]][pred[1]] = 0.3  # accurate prediction
+        else:
+            grid[pred[0]][pred[1]] = 1    # false alarm
+    sns.set(style="white")
+    f, ax = plt.subplots(figsize=(8, 8))
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.show()
+
+
 def save_data_AGA(plot_data, file_path):
     '''Save the plot_data to file_path for offline greedy
         plot_data's element: [length of subset, ot approx, ot real]
