@@ -1566,13 +1566,13 @@ class SelectSensor:
             else:
                 #trans.set_mean_vec_sub(subset_sensors)
                 #new_cov = self.covariance[np.ix_(subset_sensors, subset_sensors)]
-                array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs_copy) * 2  # times 2 is for 800 sensors, but for 100 sensors ?
+                array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs_copy)  # times 2 is for 800 sensors, but for 100 sensors ?
                 likelihood = np.prod(array_of_pdfs)
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
         
         # Also check the probability of no transmitter to avoid false alarms
         mean_vec = np.full(len(sensor_outputs), -80)
-        array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs) * 2
+        array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs)
         likelihood = np.prod(array_of_pdfs)
         self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
 
@@ -1757,7 +1757,7 @@ class SelectSensor:
     def get_posterior_localization(self, intruders, sensor_outputs):
         '''Our hypothesis-based localization algorithm
         '''
-        init_size_2R = 10  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
+        init_size_2R = 20  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                            # {25} for 160 x 160 grid, transmitter range = 0.7 Km
         visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -75)
         identified = []
@@ -1772,12 +1772,20 @@ class SelectSensor:
             print('size_2R', size_2R)
             detected = False
             posterior = self.get_posterior_new(size_2R, sensor_outputs)
-            if posterior[-1] == 1.0:
+
+            indices = peak_local_max(posterior, 2, threshold_abs=0.9, exclude_border = False)
+            
+            H_0 = False
+            for index in indices:
+                if index[0] == len(self.transmitters):  # One of the peaks could be H_0
+                    H_0 = True
+            if H_0:
                 size_2R /= 2
                 continue
-            indices = peak_local_max(posterior, 2, threshold_abs=0.9, exclude_border = False)
+
             sensor_subset = range(len(self.sensors))
             for index in indices:
+                print('peak = ', posterior[index])
                 self.delete_transmitter(index, sensor_subset, sensor_outputs)
                 identified.append((index[0]//self.grid_len, index[0]%self.grid_len))
                 detected = True
@@ -2264,44 +2272,9 @@ def main5():
     '''main 5: localization IPSN
         Clustering and Ours
     '''
-    #selectsensor = SelectSensor('config/splat_config_40.json')
     selectsensor = SelectSensor('config/ipsn_config.json')
     selectsensor.init_data('data50/homogeneous/cov', 'data50/homogeneous/sensors', 'data50/homogeneous/hypothesis')
-    repeat = 30
 
-    error_sum = 0
-    miss_sum = 0
-    false_alarms_sum = 0
-
-    for _ in range(0, repeat):
-        num_intruders = random.randint(5, 8)
-        true_indices = random.sample(range(selectsensor.grid_len * selectsensor.grid_len), num_intruders)
-
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
-
-        pred_location = selectsensor.get_posterior_localization(intruders, sensor_outputs)
-        #pred_location = selectsensor.get_cluster_localization(intruders, sensor_outputs)
-
-        true_positions = selectsensor.convert_to_pos(true_indices)
-        print(true_positions)
-        print(pred_location)
-        # if len(pred_location) > 0:
-        try:
-            error, misses, false_alarms = selectsensor.compute_error(true_positions, pred_location)
-            error_sum += error
-            miss_sum += misses
-            false_alarms_sum += false_alarms
-            print(error, misses, false_alarms, '\n')
-        except:
-            print('except')
-    print('error = {}, miss = {}, false_alarm = {}'.format(error_sum/repeat, miss_sum/repeat, false_alarms_sum/repeat))
-
-
-def main6():
-    '''main 6: using the SPLAT
-    '''
-    selectsensor = SelectSensor('config/splat_config_40.json')
-    selectsensor.init_data('dataSplat/1600-800/cov', 'dataSplat/1600-800/sensors', 'dataSplat/1600-800/hypothesis')
     repeat = 1
     errors = []
     misses = []
@@ -2315,6 +2288,52 @@ def main6():
         #true_indices = [(7, 5), (22, 12), (16, 28), (37, 9)]
         #true_indices = [(25, 37), (9, 22), (29, 2), (8, 22)]
         true_indices = [(31, 30), (4, 12)]
+        #true_indices = [(4, 12)]
+        true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
+
+        pred_locations = selectsensor.get_posterior_localization(intruders, sensor_outputs)
+        #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
+
+        true_positions = selectsensor.convert_to_pos(true_indices)
+        print(true_positions)
+        print(pred_locations)
+        try:
+            error, miss, false_alarm = selectsensor.compute_error(true_positions, pred_locations)
+            errors.append(error)
+            misses.append(miss)
+            false_alarms.append(false_alarm)
+            print(error, miss, false_alarm, '\n')
+            visualize_localization(selectsensor.grid_len, true_positions, pred_locations)
+        except:
+            print('except')
+
+    try:
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(sum(errors)/repeat, max(errors), min(errors), \
+              sum(misses)/repeat, max(misses), min(misses), sum(false_alarms)/repeat, max(false_alarms), min(false_alarms)))
+        print('Ours! time = ', time.time()-start)
+    except:
+        print('Empty list!')
+
+
+def main6():
+    '''main 6: using the SPLAT
+    '''
+    selectsensor = SelectSensor('config/splat_config_40.json')
+    selectsensor.init_data('dataSplat/1600-200/cov', 'dataSplat/1600-200/sensors', 'dataSplat/1600-200/hypothesis')
+    repeat = 1
+    errors = []
+    misses = []
+    false_alarms = []
+    start = time.time()
+
+    for _ in range(0, repeat):
+        #num_intruders = random.randint(10, 20)
+        num_intruders = 4
+        true_indices = random.sample(range(selectsensor.grid_len * selectsensor.grid_len), num_intruders)
+        #true_indices = [(7, 5), (22, 12), (16, 28), (37, 9)]
+        #true_indices = [(25, 37), (9, 22), (29, 2), (8, 22)]
+        true_indices = [(38, 2), (2, 38)]
         #true_indices = [(4, 12)]
         true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
