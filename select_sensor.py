@@ -1634,6 +1634,8 @@ class SelectSensor:
             tran_y = trans.y
             #print('tran', tran_x, tran_y)
             for sen_index in range(len(self.sensors)):
+                #amplitude_db = np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index],
+                #                             self.stds[tran_x * self.grid_len + tran_y, sen_index])
                 amplitude = db_2_amplitude(self.means[tran_x * self.grid_len + tran_y, sen_index])
                 sensor_outputs[sen_index] += amplitude
                 #print(self.means[tran_x * self.grid_len + tran_y, sen_index],
@@ -2281,7 +2283,7 @@ def main5():
     selectsensor = SelectSensor('config/ipsn_50.json')
     selectsensor.init_data('data50/homogeneous-300/cov', 'data50/homogeneous-300/sensors', 'data50/homogeneous-300/hypothesis')
 
-    repeat = 2
+    repeat = 5
     errors = []
     misses = []
     false_alarms = []
