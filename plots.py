@@ -125,7 +125,7 @@ def visualize_localization(grid_len, true_locations, pred_locations):
         grid[true[0]][true[1]] = -1       # miss
     for pred in pred_locations:
         if grid[pred[0]][pred[1]] == -1:
-            grid[pred[0]][pred[1]] = 0.3  # accurate prediction
+            grid[pred[0]][pred[1]] = 0.4  # accurate prediction
         else:
             grid[pred[0]][pred[1]] = 1    # false alarm
     sns.set(style="white")

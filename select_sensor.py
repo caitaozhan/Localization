@@ -27,7 +27,7 @@ import line_profiler
 from sklearn.cluster import KMeans
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization
-from utility import random_intruder
+from utility import generate_intruders
 from skimage.feature import peak_local_max
 import itertools
 
@@ -1543,13 +1543,14 @@ class SelectSensor:
             subset_index (list):
             true_transmitter (Transmitter):
         '''
-
+        # position_to_check = [(40, 4), (37, 47), (1, 48), (40, 34), (15, 48), (39, 34), (14, 48), (40, 35), (16, 48), (15, 47), (1, 47), (41, 48), (14, 16), (11, 35), (3, 24)]
+        position_to_check = [(40, 34), (15, 48), (14, 16)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
 
         for trans in self.transmitters: #For each location, first collect sensors in vicinity
             sensor_outputs_copy = np.copy(sensor_outputs)
-            if (trans.x == 22 and trans.y == 11) or (trans.x == 31 and trans.y == 30):
-                pass #print('hello')
+            if (trans.x, trans.y) in position_to_check:
+                pass#print((trans.x, trans.y), end=' ')
             my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
             subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
             subset_sensors = np.array(subset_sensors)
@@ -1606,8 +1607,9 @@ class SelectSensor:
         return subset_sensors
 
 
-    def delete_transmitter(self, trans_index, sensor_subset, sensor_outputs):
+    def delete_transmitter(self, trans_pos, sensor_subset, sensor_outputs):
         '''Remove a transmitter and change sensor outputs accordingly'''
+        trans_index = trans_pos[0] * self.grid_len + trans_pos[1]
         for sen_index in sensor_subset:
             sensor_output = db_2_amplitude(sensor_outputs[sen_index])
             sensor_output_from_transmitter = db_2_amplitude(self.means[trans_index, sen_index])
@@ -1753,44 +1755,49 @@ class SelectSensor:
             return 0, 0, 0
 
 
+    def ignore_boarders(self, edge):
+        '''
+        Args:
+            edge (int): this amount of edge is ignored at the boarders
+        '''
+        self.grid_priori[0:self.grid_len*edge] = self.grid_priori[-self.grid_len*edge:0] = 0
+        for i in range(edge):
+            self.grid_priori[np.ix_(range(i, self.grid_len * self.grid_len, self.grid_len))] = 0
+            self.grid_priori[np.ix_(range(self.grid_len - 1 - i, self.grid_len * self.grid_len, self.grid_len))] = 0
+
+
     #@profile
     def get_posterior_localization(self, intruders, sensor_outputs):
         '''Our hypothesis-based localization algorithm
         '''
         init_size_2R = 20  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                            # {25} for 160 x 160 grid, transmitter range = 0.7 Km
-        visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -75)
+        visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80)
         identified = []
         num_cells = self.grid_len * self.grid_len + 1
         self.grid_priori = np.full(num_cells, 1.0 / num_cells)
-        self.grid_priori[0:self.grid_len] = self.grid_priori[-self.grid_len:0] = 0
-        self.grid_priori[np.ix_(range(0, self.grid_len * self.grid_len, self.grid_len))] = 0
-        self.grid_priori[np.ix_(range(self.grid_len - 1, self.grid_len * self.grid_len, self.grid_len))] = 0
+        self.ignore_boarders(edge=2)
 
         size_2R = init_size_2R
-        while size_2R >= 3:
-            print('size_2R', size_2R)
+        while size_2R >= 6:
+            print('\nsize_2R', size_2R)
             detected = False
             posterior = self.get_posterior_new(size_2R, sensor_outputs)
-
-            indices = peak_local_max(posterior, 2, threshold_abs=0.9, exclude_border = False)
-            
-            H_0 = False
-            for index in indices:
-                if index[0] == len(self.transmitters):  # One of the peaks could be H_0
-                    H_0 = True
-            if H_0:
+            H_0 = posterior[-1]
+            if H_0 > 0.9:     # if H_O is a peak
                 size_2R /= 2
                 continue
+            posterior = np.reshape(posterior[:-1], (self.grid_len, self.grid_len))
+
+            indices = peak_local_max(posterior, 2, threshold_abs=0.9, exclude_border = False)
 
             sensor_subset = range(len(self.sensors))
-            for index in indices:
-                print('peak = ', posterior[index])
+            for index in indices:  # 2D index
+                print('detected peak = ', index, posterior[index[0]][index[1]])
                 self.delete_transmitter(index, sensor_subset, sensor_outputs)
-                identified.append((index[0]//self.grid_len, index[0]%self.grid_len))
+                identified.append(index)
                 detected = True
-                self.grid_priori[index] = 0
-                print('detected = ', (index[0]//self.grid_len, index[0]%self.grid_len))
+                self.grid_priori[index[0]*self.grid_len + index[1]] = 0
             if detected is False:
                 size_2R /= 2
             #print(indices)
@@ -2269,27 +2276,25 @@ def main4():
 
 
 def main5():
-    '''main 5: localization IPSN
-        Clustering and Ours
+    '''main 5: IPSN synthetic data
     '''
-    selectsensor = SelectSensor('config/ipsn_config.json')
-    selectsensor.init_data('data50/homogeneous/cov', 'data50/homogeneous/sensors', 'data50/homogeneous/hypothesis')
+    selectsensor = SelectSensor('config/ipsn_50.json')
+    selectsensor.init_data('data50/homogeneous-300/cov', 'data50/homogeneous-300/sensors', 'data50/homogeneous-300/hypothesis')
 
-    repeat = 1
+    repeat = 2
     errors = []
     misses = []
     false_alarms = []
     start = time.time()
 
     for _ in range(0, repeat):
-        #num_intruders = random.randint(10, 20)
-        num_intruders = 4
-        true_indices = random.sample(range(selectsensor.grid_len * selectsensor.grid_len), num_intruders)
-        #true_indices = [(7, 5), (22, 12), (16, 28), (37, 9)]
-        #true_indices = [(25, 37), (9, 22), (29, 2), (8, 22)]
-        true_indices = [(31, 30), (4, 12)]
-        #true_indices = [(4, 12)]
-        true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=10)
+
+        #true_indices = [(31, 35), (8, 28), (31, 4), (13, 3)]
+        #true_indices = [(3, 24), (40, 4), (14, 16), (37, 47)]
+        #true_indices = [(14, 16)]
+        #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+        
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
 
         pred_locations = selectsensor.get_posterior_localization(intruders, sensor_outputs)
@@ -2317,7 +2322,7 @@ def main5():
 
 
 def main6():
-    '''main 6: using the SPLAT
+    '''main 6: using SPLAT data
     '''
     selectsensor = SelectSensor('config/splat_config_40.json')
     selectsensor.init_data('dataSplat/1600-200/cov', 'dataSplat/1600-200/sensors', 'dataSplat/1600-200/hypothesis')
@@ -2367,6 +2372,6 @@ if __name__ == '__main__':
     #main2()
     #main3()
     #main4()
-    #main5()
-    main6()
+    main5()
+    #main6()
 

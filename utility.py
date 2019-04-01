@@ -132,6 +132,46 @@ def random_intruder(grid_len):
     return intruder
 
 
+def get_distance(grid_len, index1, index2):
+    '''
+    '''
+    x1, y1 = index1//grid_len, index1%grid_len
+    x2, y2 = index2//grid_len, index2%grid_len
+    return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+
+def generate_intruders(grid_len, edge, num, min_dist):
+    '''
+    Args:
+        grid_len (int):
+        edge (int): intruders cannot be at the edge
+        num (int): number of intruders
+    Return:
+        (list): a list of 1D index
+    '''
+    intruders = []
+    counter = 0
+    while counter < num:
+        tmp = random.sample(range(grid_len * grid_len), 1)
+        tmp = tmp[0]
+        x = tmp//grid_len
+        y = tmp%grid_len
+        if x < edge or x >= grid_len-edge:
+            continue
+        if y < edge or y >= grid_len-edge:
+            continue
+        flag = True
+        for intruder in intruders:
+            dist = get_distance(grid_len, intruder, tmp)
+            if dist < min_dist:
+                flag = False
+                break
+        if flag:
+            intruders.append(tmp)
+            counter += 1
+    return intruders
+
+
 if __name__ == '__main__':
     dic = read_config('config.json')
     print(dic)
