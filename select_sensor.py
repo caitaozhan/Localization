@@ -1627,7 +1627,7 @@ class SelectSensor:
         sensor_outputs[np.isnan(sensor_outputs)] = -80
 
 
-    def set_intruders(self, true_indices):
+    def set_intruders(self, true_indices, randomness = False):
         '''Create intruders and return sensor outputs accordingly
         Args:
             true_indices (list): a list of integers (transmitter index)
@@ -1641,20 +1641,13 @@ class SelectSensor:
         for trans in true_transmitters:
             tran_x = trans.x
             tran_y = trans.y
-            #print('tran', tran_x, tran_y)
             for sen_index in range(len(self.sensors)):
-                amplitude = db_2_amplitude(self.means[tran_x * self.grid_len + tran_y, sen_index])
+                if randomness:
+                    amplitude = db_2_amplitude(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index], self.stds[tran_x * self.grid_len + tran_y, sen_index]))
+                else:
+                    amplitude = db_2_amplitude(self.means[tran_x * self.grid_len + tran_y, sen_index])
                 sensor_outputs[sen_index] += amplitude
-                #print(self.means[tran_x * self.grid_len + tran_y, sen_index],
-                #      db_2_amplitude(self.means[tran_x * self.grid_len + tran_y, sen_index]),
-                #      sensor_outputs[sen_index])
-        #print(sensor_outputs)
         sensor_outputs = amplitude_2_db(sensor_outputs)
-
-        # for i in self.sensors:
-        #     print('set_intruders_output', i.x, i.y, i.index, sensor_outputs[i.index])
-        # #print('sensors = ', self.sensors, 'sensor_outputs = ', sensor_outputs)
-
         return (true_transmitters, sensor_outputs)
 
 
@@ -2294,7 +2287,7 @@ def main5():
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=True)
         visualize_sensor_output(selectsensor.grid_len, intruders, sensor_outputs, selectsensor.sensors, -80, i)
 
         pred_locations = selectsensor.get_posterior_localization(intruders, sensor_outputs)
