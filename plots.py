@@ -75,18 +75,44 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         if sensor_outputs[index] > threshold:
             color = (sensor_outputs[index] - minimum) / (maximum - minimum) + 0.2
         else:
-            color = -0.4
+            color = -0.2
         grid[sensor.x][sensor.y] = color
         #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
     for intr in intruders:
-        grid[intr.x][intr.y] = -1
+        grid[intr.x][intr.y] = -1.2
 
     sns.set(style="white")
     f, ax = plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
     #plt.show()
     plt.savefig('visualize/localization/{}-sensor-output'.format(fig))
+
+
+def visualize_q(grid_len, posterior, fig):
+    '''Args: grid_len (int) posterior (np.array), 1D array
+    '''
+    grid = np.zeros((grid_len, grid_len))
+    for x in range(grid_len):
+        for y in range(grid_len):
+            grid[x][y] = np.log10(posterior[x*grid_len +y])
+    grid[grid == -np.inf] = -330
+    plt.subplots(figsize=(8, 8))
+    sns.heatmap(grid, vmin=np.min(grid), vmax=np.max(grid), square=True, linewidth=0.5)
+    plt.title('Q: ploting the exponent of Q, \n min exponent = -infinity (modify to -330 for plotting), max = {}'.format(round(np.max(grid), 3)))
+    plt.savefig('visualize/localization/{}-q'.format(fig))
+
+
+def visualize_q_prime(posterior, fig):
+    '''
+    '''
+    plt.subplots(figsize=(8, 8))
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    sns.heatmap(posterior, vmin=0, vmax=1, cmap=cmap, center=0, square=True, linewidth=0.5)
+    plt.title('Q prime')
+    plt.savefig('visualize/localization/{}-q-prime'.format(fig))
+
 
 
 def visualize_cluster(grid_len, intruders, sensor_to_cluster, labels):
@@ -133,6 +159,7 @@ def visualize_localization(grid_len, true_locations, pred_locations, fig):
     f, ax = plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.xlabel('1 = false alarm; 0.4 = accurate prediction; -1 = miss')
     #plt.show()
     plt.savefig('visualize/localization/{}-localization'.format(fig))
 
