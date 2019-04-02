@@ -1769,7 +1769,7 @@ class SelectSensor:
 
 
     #@profile
-    def get_posterior_localization(self, intruders, sensor_outputs):
+    def get_posterior_localization(self, sensor_outputs):
         '''Our hypothesis-based localization algorithm
         '''
         init_size_2R = 9  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
@@ -2272,9 +2272,9 @@ def main5():
     '''main 5: IPSN synthetic data
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
-    selectsensor.init_data('data50/homogeneous-75/cov', 'data50/homogeneous-75/sensors', 'data50/homogeneous-75/hypothesis')
+    selectsensor.init_data('data50/homogeneous-300/cov', 'data50/homogeneous-300/sensors', 'data50/homogeneous-300/hypothesis')
 
-    repeat = 10
+    repeat = 20
     errors = []
     misses = []
     false_alarms = []
@@ -2287,10 +2287,10 @@ def main5():
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=True)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
         visualize_sensor_output(selectsensor.grid_len, intruders, sensor_outputs, selectsensor.sensors, -80, i)
 
-        pred_locations = selectsensor.get_posterior_localization(intruders, sensor_outputs)
+        pred_locations = selectsensor.get_posterior_localization(sensor_outputs)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
 
         true_positions = selectsensor.convert_to_pos(true_indices)
@@ -2336,7 +2336,7 @@ def main6():
         true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
 
-        pred_locations = selectsensor.get_posterior_localization(intruders, sensor_outputs)
+        pred_locations = selectsensor.get_posterior_localization(sensor_outputs)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
 
         true_positions = selectsensor.convert_to_pos(true_indices)
