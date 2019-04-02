@@ -60,7 +60,7 @@ def visualize_selection(counter, grid_len, primary, secondary, results, sensors)
     plt.savefig('visualize/{}'.format(counter))
 
 
-def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, threshold):
+def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, threshold, fig):
     '''Visualize the intruders and sensor_output to have a better sense on deciding the threshold
     Args:
         grid_len (int):       length of grid
@@ -73,7 +73,7 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     minimum = np.min(sensor_outputs)
     for index, sensor in enumerate(sensors):
         if sensor_outputs[index] > threshold:
-            color = (sensor_outputs[index] - minimum) / (maximum - minimum)
+            color = (sensor_outputs[index] - minimum) / (maximum - minimum) + 0.2
         else:
             color = 0
         grid[sensor.x][sensor.y] = color
@@ -85,7 +85,8 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     f, ax = plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
-    plt.show()
+    #plt.show()
+    plt.savefig('visualize/localization/{}-sensor-output'.format(fig))
 
 
 def visualize_cluster(grid_len, intruders, sensor_to_cluster, labels):
@@ -114,7 +115,7 @@ def visualize_cluster(grid_len, intruders, sensor_to_cluster, labels):
     plt.show()
 
 
-def visualize_localization(grid_len, true_locations, pred_locations):
+def visualize_localization(grid_len, true_locations, pred_locations, fig):
     '''Visualize the localization
     Args:
         true_locations (list): each element is a coordinate (x, y)
@@ -132,7 +133,8 @@ def visualize_localization(grid_len, true_locations, pred_locations):
     f, ax = plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
-    plt.show()
+    #plt.show()
+    plt.savefig('visualize/localization/{}-localization'.format(fig))
 
 
 def save_data_AGA(plot_data, file_path):

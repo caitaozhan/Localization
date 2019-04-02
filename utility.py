@@ -151,32 +151,35 @@ def generate_intruders(grid_len, edge, num, min_dist):
     '''
     intruders = []
     counter = 0
+    trials = 0
     while counter < num:
-        tmp = random.sample(range(grid_len * grid_len), 1)
-        tmp = tmp[0]
-        x = tmp//grid_len
-        y = tmp%grid_len
-        if x < edge or x >= grid_len-edge:
-            continue
-        if y < edge or y >= grid_len-edge:
-            continue
-        flag = True
-        for intruder in intruders:
-            dist = get_distance(grid_len, intruder, tmp)
-            if dist < min_dist:
-                flag = False
-                break
-        if flag:
-            intruders.append(tmp)
-            counter += 1
+        trials += 1
+        if trials < 1000:           # could get stuck ... when everywhere is covered according to the min_dist constraint
+            tmp = random.sample(range(grid_len * grid_len), 1)
+            tmp = tmp[0]
+            x = tmp//grid_len
+            y = tmp%grid_len
+            if x < edge or x >= grid_len-edge:
+                continue
+            if y < edge or y >= grid_len-edge:
+                continue
+            flag = True
+            for intruder in intruders:
+                dist = get_distance(grid_len, intruder, tmp)
+                if dist < min_dist:  # new location violates the min distance constraint
+                    flag = False
+                    break
+            if flag:
+                intruders.append(tmp)
+                counter += 1
+        else:
+            #print('Oops!')
+            intruders = generate_intruders(grid_len, edge, num, min_dist) # when stuck, just restart again
+            break
     return intruders
 
 
 if __name__ == '__main__':
-    dic = read_config('config.json')
-    print(dic)
-    sensor_list = [2, 4, 6, 8]
-    ordered_insert(sensor_list, 11)
-    print(sensor_list)
-    sensor_list.remove(11)
-    print(sensor_list)
+    for _ in range(20):
+        print('intruders = ', generate_intruders(grid_len=50, edge=2, num=6, min_dist=20))
+
