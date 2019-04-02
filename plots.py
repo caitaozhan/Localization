@@ -74,13 +74,13 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     for index, sensor in enumerate(sensors):
         if sensor_outputs[index] > threshold:
             color = (sensor_outputs[index] - minimum) / (maximum - minimum) + 0.2
-        #else:
-        #    color = 0
+        else:
+            color = -0.4
         grid[sensor.x][sensor.y] = color
         #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
-    #for intr in [intruders]:
-    #    grid[intr.x][intr.y] = -1
-    grid[12][13] = -1
+    for intr in intruders:
+        grid[intr.x][intr.y] = -1
+
     sns.set(style="white")
     f, ax = plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
@@ -137,6 +137,43 @@ def visualize_localization(grid_len, true_locations, pred_locations, fig):
     plt.savefig('visualize/localization/{}-localization'.format(fig))
 
 
+
+def visualize_gupta(grid_len, true_locations, pred_locations, sensors, sensor_outputs, threshold, fig):
+    '''Visualize the localization
+    Args:
+        true_locations (list): each element is a coordinate (x, y)
+        pred_locations (list): each element is a coordinate (x, y)
+    '''
+    grid = np.zeros((grid_len, grid_len))
+
+    maximum = np.max(sensor_outputs)
+    minimum = np.min(sensor_outputs)
+    for index, sensor in enumerate(sensors):
+        if sensor_outputs[index] > threshold:
+            color = (sensor_outputs[index] - minimum) / (maximum - minimum)
+            color += 0.2
+        else:
+            color = -0.15                    # noise
+        grid[sensor.x][sensor.y] = color
+
+    for true in true_locations:
+        grid[true[0]][true[1]] = -0.4       # miss
+    for pred in pred_locations:
+        if grid[pred[0]][pred[1]] == -0.4:
+            grid[pred[0]][pred[1]] = -0.7  # accurate prediction
+        else:
+            grid[pred[0]][pred[1]] = -1    # false alarm
+    sns.set(style="white")
+    f, ax = plt.subplots(figsize=(8, 8))
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.title('Now I only know how to use heatmap with two colors...')
+    plt.xlabel('Red(>0): sensor outputs not noise; -0.15 = noise \n -0.4 = miss; -0.7 = accurate prediction; -1 = false alarm')
+    #plt.show()
+    plt.savefig('visualize/localization/{}-all'.format(fig))
+
+
+
 def save_data_AGA(plot_data, file_path):
     '''Save the plot_data to file_path for offline greedy
         plot_data's element: [length of subset, ot approx, ot real]
@@ -164,4 +201,3 @@ def figure_localization_error():
 
 if __name__ == '__main__':
     figure_localization_error()
-    pass

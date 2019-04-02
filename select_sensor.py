@@ -26,7 +26,7 @@ from itertools import combinations
 import line_profiler
 from sklearn.cluster import KMeans
 from scipy.optimize import nnls
-from plots import visualize_sensor_output, visualize_cluster, visualize_localization
+from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_gupta
 from utility import generate_intruders
 from skimage.feature import peak_local_max
 import itertools
@@ -2272,7 +2272,7 @@ def main5():
     '''main 5: IPSN synthetic data
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
-    selectsensor.init_data('data50/homogeneous-300/cov', 'data50/homogeneous-300/sensors', 'data50/homogeneous-300/hypothesis')
+    selectsensor.init_data('data50/homogeneous-150/cov', 'data50/homogeneous-150/sensors', 'data50/homogeneous-150/hypothesis')
 
     repeat = 1
     errors = []
@@ -2281,15 +2281,17 @@ def main5():
     start = time.time()
 
     for i in range(0, repeat):
-        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=30, min_dist=5)
+        #true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=30, min_dist=5)
+        true_indices = [(20, 2), (36, 14), (23, 30), (44, 40), (5, 47)]
         #true_indices = [(35, 12), (27, 36), (47, 36), (5, 46), (14, 14)]
         #true_indices = [(6, 12), (46, 29), (40, 4), (26, 26), (12, 46)]
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
-        #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+        true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
+        sensor_outputs_copy = copy.copy(sensor_outputs)
         visualize_sensor_output(selectsensor.grid_len, intruders, sensor_outputs, selectsensor.sensors, -80, i)
-        return
+
         pred_locations = selectsensor.get_posterior_localization(sensor_outputs)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
 
@@ -2303,8 +2305,9 @@ def main5():
             false_alarms.append(false_alarm)
             print(error, miss, false_alarm, '\n')
             visualize_localization(selectsensor.grid_len, true_positions, pred_locations, i)
-        except:
-            print('except')
+            visualize_gupta(selectsensor.grid_len, true_positions, pred_locations, selectsensor.sensors, sensor_outputs_copy, -80, i)
+        except Exception as e:
+            print(e)
 
     try:
         print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(sum(errors)/repeat, max(errors), min(errors), \
