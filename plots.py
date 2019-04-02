@@ -74,13 +74,13 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     for index, sensor in enumerate(sensors):
         if sensor_outputs[index] > threshold:
             color = (sensor_outputs[index] - minimum) / (maximum - minimum) + 0.2
-        else:
-            color = 0
+        #else:
+        #    color = 0
         grid[sensor.x][sensor.y] = color
         #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
-    for intr in intruders:
-        grid[intr.x][intr.y] = -1
-
+    #for intr in [intruders]:
+    #    grid[intr.x][intr.y] = -1
+    grid[12][13] = -1
     sns.set(style="white")
     f, ax = plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)

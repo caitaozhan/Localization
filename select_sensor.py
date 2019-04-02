@@ -2274,14 +2274,14 @@ def main5():
     selectsensor = SelectSensor('config/ipsn_50.json')
     selectsensor.init_data('data50/homogeneous-300/cov', 'data50/homogeneous-300/sensors', 'data50/homogeneous-300/hypothesis')
 
-    repeat = 20
+    repeat = 1
     errors = []
     misses = []
     false_alarms = []
     start = time.time()
 
     for i in range(0, repeat):
-        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
+        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=30, min_dist=5)
         #true_indices = [(35, 12), (27, 36), (47, 36), (5, 46), (14, 14)]
         #true_indices = [(6, 12), (46, 29), (40, 4), (26, 26), (12, 46)]
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
@@ -2289,7 +2289,7 @@ def main5():
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
         visualize_sensor_output(selectsensor.grid_len, intruders, sensor_outputs, selectsensor.sensors, -80, i)
-
+        return
         pred_locations = selectsensor.get_posterior_localization(sensor_outputs)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
 
