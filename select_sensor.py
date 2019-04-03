@@ -9,7 +9,7 @@ import time
 import os
 import numpy as np
 import pandas as pd
-from numba import cuda
+#from numba import cuda
 from scipy.spatial import distance
 from scipy.stats import multivariate_normal, norm
 from joblib import Parallel, delayed, dump, load
@@ -1567,13 +1567,13 @@ class SelectSensor:
             stds = np.sqrt(np.diagonal(self.covariance))
             array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)  # times 2 is for 800 sensors, but for 100 sensors ?
             likelihood = np.prod(array_of_pdfs)
-            if (trans.x, trans.y) in position_to_check:
-                filename = 'visualize/localization/array-of-pdfs-{}-{}'
-                myfile = open(filename.format(trans.x, trans.y), 'w')
-                print('likelihood = ', likelihood, file=myfile)
-                for i in range(len(mean_vec)):
-                    print('sensor = {}, mean = {}, std = {}, data = {}, prob = {}'.format((self.sensors[i].x, self.sensors[i].y), mean_vec[i], stds[i], sensor_outputs_copy[i], array_of_pdfs[i]), file=myfile)
-                myfile.close()
+            # if (trans.x, trans.y) in position_to_check:
+            #     filename = 'visualize/localization/array-of-pdfs-{}-{}'
+            #     myfile = open(filename.format(trans.x, trans.y), 'w')
+            #     print('likelihood = ', likelihood, file=myfile)
+            #     for i in range(len(mean_vec)):
+            #         print('sensor = {}, mean = {}, std = {}, data = {}, prob = {}'.format((self.sensors[i].x, self.sensors[i].y), mean_vec[i], stds[i], sensor_outputs_copy[i], array_of_pdfs[i]), file=myfile)
+            #     myfile.close()
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
         
         # Also check the probability of no transmitter to avoid false alarms
@@ -1587,17 +1587,20 @@ class SelectSensor:
         else:
             H_0 = False
 
-        visualize_q(self.grid_len, self.grid_posterior, fig)
+        #visualize_q(self.grid_len, self.grid_posterior, fig)
 
         grid_posterior_copy = np.copy(self.grid_posterior)
         for trans in self.transmitters:
-            if (trans.x, trans.y) in [(11, 35), (11, 36), (12, 34), (12, 35), (12, 36), (13, 35), (13, 36), (11, 37)]:
-                print(self.grid_posterior[trans.x * self.grid_len + trans.y])
+            #if (trans.x, trans.y) in [(11, 35), (11, 36), (12, 34), (12, 35), (12, 36), (13, 35), (13, 36), (11, 37)]:
+            #    print(self.grid_posterior[trans.x * self.grid_len + trans.y])
             min_x = int(max(0, trans.x - radius))
             max_x = int(min(trans.x + radius, self.grid_len - 1))
             min_y = int(max(0, trans.y - radius))
             max_y = int(min(trans.y + radius, self.grid_len - 1))
-            den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)]))
+            den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
+                                    if distance.euclidean([x, y], [trans.x, trans.y]) <= radius]))
+            #den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in
+            #                       range(min_y, max_y + 1)]))
             grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
 
         den = np.sum(self.grid_posterior)   # for H_0, den is the sum of all, not within a raduis of R of somewhere, right?
@@ -1613,10 +1616,11 @@ class SelectSensor:
         if given_sensors is None:
             given_sensors = self.sensors
         subset_sensors = []
-        distance = []
         for cur_sensor in given_sensors:
             if (cur_sensor.x > sensor.x - size_R) and (cur_sensor.x < sensor.x + size_R) and (cur_sensor.y > sensor.y - size_R) and (cur_sensor.y < sensor.y + size_R):
-                subset_sensors.append(cur_sensor.index)
+                distance_euc = distance.euclidean([cur_sensor.x, cur_sensor.y], [sensor.x, sensor.y])
+                if (distance_euc < size_R):
+                    subset_sensors.append(cur_sensor.index)
         return subset_sensors
 
 
@@ -1776,7 +1780,7 @@ class SelectSensor:
     def get_posterior_localization(self, sensor_outputs, fig):
         '''Our hypothesis-based localization algorithm
         '''
-        init_size_2R = 9  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
+        init_size_2R = 12  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                           # {25} for 160 x 160 grid, transmitter range = 0.7 Km
         identified = []
         num_cells = self.grid_len * self.grid_len + 1
@@ -2279,20 +2283,20 @@ def main5():
     selectsensor = SelectSensor('config/ipsn_50.json')
     selectsensor.init_data('data50/homogeneous-150/cov', 'data50/homogeneous-150/sensors', 'data50/homogeneous-150/hypothesis')
 
-    repeat = 1
+    repeat = 5
     errors = []
     misses = []
     false_alarms = []
     start = time.time()
 
     for i in range(0, repeat):
-        #true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
+        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
         #true_indices = [(2, 26), (17, 9), (46, 4), (35, 31), (13, 43)]
-        true_indices = [(2, 9), (21, 43), (23, 16), (43, 12), (45, 45)]
+        #true_indices = [(2, 9), (21, 43), (23, 16), (43, 12), (45, 45)]
         #true_indices = [(35, 12), (27, 36), (47, 36), (5, 46), (14, 14)]
         #true_indices = [(6, 12), (46, 29), (40, 4), (26, 26), (12, 46)]
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
-        true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+        #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
         sensor_outputs_copy = copy.copy(sensor_outputs)
