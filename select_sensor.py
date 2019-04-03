@@ -2275,7 +2275,7 @@ def main5():
     '''main 5: IPSN synthetic data
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
-    selectsensor.init_data('data50/homogeneous-150/cov', 'data50/homogeneous-150/sensors', 'data50/homogeneous-150/hypothesis')
+    selectsensor.init_data('data50/homogeneous-300/cov', 'data50/homogeneous-300/sensors', 'data50/homogeneous-300/hypothesis')
 
     repeat = 10
     errors = []
@@ -2308,7 +2308,6 @@ def main5():
             false_alarms.append(false_alarm)
             print(error, miss, false_alarm, '\n')
             visualize_localization(selectsensor.grid_len, true_positions, pred_locations, i)
-            visualize_gupta(selectsensor.grid_len, true_positions, pred_locations, selectsensor.sensors, sensor_outputs_copy, -80, i)
         except Exception as e:
             print(e)
 
