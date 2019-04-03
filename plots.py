@@ -2,7 +2,6 @@
 Plots
 '''
 
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -82,7 +81,7 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         grid[intr.x][intr.y] = -1.2
 
     sns.set(style="white")
-    f, ax = plt.subplots(figsize=(8, 8))
+    plt.subplots(figsize=(8, 8))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
@@ -96,7 +95,7 @@ def visualize_q(grid_len, posterior, fig):
     grid = np.zeros((grid_len, grid_len))
     for x in range(grid_len):
         for y in range(grid_len):
-            grid[x][y] = np.log10(posterior[x*grid_len +y])
+            grid[x][y] = np.log10(posterior[x*grid_len + y])
     grid[grid == -np.inf] = -330
     plt.subplots(figsize=(8, 8))
     sns.heatmap(grid, vmin=np.min(grid), vmax=np.max(grid), square=True, linewidth=0.5)
