@@ -9,7 +9,6 @@ import time
 import os
 import numpy as np
 import pandas as pd
-#from numba import cuda
 from scipy.spatial import distance
 from scipy.stats import multivariate_normal, norm
 from joblib import Parallel, delayed, dump, load
@@ -17,9 +16,9 @@ from sensor import Sensor
 from transmitter import Transmitter
 from utility import read_config, ordered_insert, amplitude_2_db, db_2_amplitude, find_elbow#, print_results
 try:
+    from numba import cuda
     from cuda_kernals import o_t_approx_kernal, o_t_kernal, o_t_approx_dist_kernal, \
-                         o_t_approx_kernal2, o_t_approx_dist_kernal2, update_dot_of_selected_kernal, \
-                         sum_reduce
+                         o_t_approx_kernal2, o_t_approx_dist_kernal2, update_dot_of_selected_kernal, sum_reduce
 except:
     pass
 from itertools import combinations
@@ -1587,7 +1586,8 @@ class SelectSensor:
         else:
             H_0 = False
 
-        #visualize_q(self.grid_len, self.grid_posterior, fig)
+        q = copy.copy(self.grid_posterior)
+        visualize_q(self.grid_len, q, fig)
 
         grid_posterior_copy = np.copy(self.grid_posterior)
         for trans in self.transmitters:
@@ -1598,7 +1598,7 @@ class SelectSensor:
             min_y = int(max(0, trans.y - radius))
             max_y = int(min(trans.y + radius, self.grid_len - 1))
             den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
-                                    if distance.euclidean([x, y], [trans.x, trans.y]) <= radius]))
+                                    if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) <= radius]))
             #den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in
             #                       range(min_y, max_y + 1)]))
             grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
@@ -1608,7 +1608,7 @@ class SelectSensor:
 
         grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
         self.grid_posterior = grid_posterior_copy
-        return self.grid_posterior, H_0
+        return self.grid_posterior, H_0, q
 
 
     def collect_sensors_in_radius(self, size_R, sensor, given_sensors = None, num_sensors = None):
@@ -1618,7 +1618,7 @@ class SelectSensor:
         subset_sensors = []
         for cur_sensor in given_sensors:
             if (cur_sensor.x > sensor.x - size_R) and (cur_sensor.x < sensor.x + size_R) and (cur_sensor.y > sensor.y - size_R) and (cur_sensor.y < sensor.y + size_R):
-                distance_euc = distance.euclidean([cur_sensor.x, cur_sensor.y], [sensor.x, sensor.y])
+                distance_euc = math.sqrt((cur_sensor.x - sensor.x)**2 + (cur_sensor.y - sensor.y)**2)
                 if (distance_euc < size_R):
                     subset_sensors.append(cur_sensor.index)
         return subset_sensors
@@ -1776,11 +1776,25 @@ class SelectSensor:
             self.grid_priori[np.ix_(range(self.grid_len - 1 - i, self.grid_len * self.grid_len, self.grid_len))] = 0
 
 
+    def get_q_threshold(self):
+        '''Different number of sensors get a different thershold
+        '''
+        if len(self.sensors) == 150:
+            return 1e-50
+        elif len(self.sensors) == 75:
+            return 0.25
+        elif len(self.sensors) == 300:
+            return 1e-100
+        else:
+            print('default threshold')
+            return 1e-50
+
+
     #@profile
     def get_posterior_localization(self, sensor_outputs, fig):
         '''Our hypothesis-based localization algorithm
         '''
-        init_size_2R = 12  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
+        init_size_2R = 9  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                           # {25} for 160 x 160 grid, transmitter range = 0.7 Km
         identified = []
         num_cells = self.grid_len * self.grid_len + 1
@@ -1790,7 +1804,7 @@ class SelectSensor:
         size_2R = init_size_2R
         while size_2R >= 6:
             print('\nsize_2R', size_2R)
-            posterior, H_0 = self.get_posterior_new(size_2R, sensor_outputs, fig)
+            posterior, H_0, Q = self.get_posterior_new(size_2R, sensor_outputs, fig)
             if H_0:
                 size_2R /= 2
                 continue
@@ -1798,11 +1812,19 @@ class SelectSensor:
             visualize_q_prime(posterior, fig)
             indices = peak_local_max(posterior, 2, threshold_abs=0.9, exclude_border = False)  # change 2?
             sensor_subset = range(len(self.sensors))
+            max_q = np.max(Q)
+            q_threshold = self.get_q_threshold()
             for index in indices:  # 2D index
-                print('detected peak = ', index, posterior[index[0]][index[1]])
-                self.delete_transmitter(index, sensor_subset, sensor_outputs)
-                identified.append(tuple(index))
-                self.grid_priori[index[0]*self.grid_len + index[1]] = 0
+                print('detected peak = ', index, "; Q' = ", posterior[index[0]][index[1]], end='; ')
+                q = Q[index[0]*self.grid_len + index[1]]
+                print('Q = ', q, end='; ')
+                if q > q_threshold*max_q:
+                    print('Intruder!')
+                    self.delete_transmitter(index, sensor_subset, sensor_outputs)
+                    identified.append(tuple(index))
+                    self.grid_priori[index[0]*self.grid_len + index[1]] = 0
+                else:
+                    print('Not intruder...')
             size_2R /= 2
 
         return identified
@@ -2283,7 +2305,7 @@ def main5():
     selectsensor = SelectSensor('config/ipsn_50.json')
     selectsensor.init_data('data50/homogeneous-150/cov', 'data50/homogeneous-150/sensors', 'data50/homogeneous-150/hypothesis')
 
-    repeat = 5
+    repeat = 10
     errors = []
     misses = []
     false_alarms = []
