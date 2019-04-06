@@ -14,13 +14,13 @@ from scipy.stats import multivariate_normal, norm
 from joblib import Parallel, delayed, dump, load
 from sensor import Sensor
 from transmitter import Transmitter
-from utility import read_config, ordered_insert, amplitude_2_db, db_2_amplitude, find_elbow#, print_results
+from utility import read_config, ordered_insert, amplitude_2_db, amplitude_2_db_, db_2_amplitude, db_2_amplitude_, find_elbow#, print_results
 try:
     from numba import cuda
     from cuda_kernals import o_t_approx_kernal, o_t_kernal, o_t_approx_dist_kernal, \
                          o_t_approx_kernal2, o_t_approx_dist_kernal2, update_dot_of_selected_kernal, sum_reduce
-except:
-    pass
+except Exception as e:
+    print(e)
 from itertools import combinations
 import line_profiler
 from sklearn.cluster import KMeans
@@ -87,7 +87,8 @@ class SelectSensor:
         '''
         cov = pd.read_csv(cov_file, header=None, delimiter=' ')
         del cov[len(cov)]
-        self.covariance = cov.values
+        self.covariance = np.zeros(cov.values.shape)
+        np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor
 
         self.sensors = []
         with open(sensor_file, 'r') as f:
@@ -97,7 +98,7 @@ class SelectSensor:
             for line in lines:
                 line = line.split(' ')
                 x, y, std, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
-                self.sensors.append(Sensor(x, y, std, cost, gain_up_bound=max_gain, index=index))
+                self.sensors.append(Sensor(x, y, 1, cost, gain_up_bound=max_gain, index=index))  # uniform sensors
                 index += 1
         self.sen_num = len(self.sensors)
 
@@ -1547,25 +1548,26 @@ class SelectSensor:
             H_0 (bool): whether H_0 is the largest likelihood or not
         '''
         #position_to_check = [(2, 26), (2, 25), (3, 26), (30, 2), (30, 3), (30, 4), (30, 5), (30, 6),(27, 18), (27, 19), (27, 20), (26, 18), (26, 19), (26, 20)]
-        position_to_check = [(30, 2), (30, 3), (30, 4), (30, 5), (11, 35), (11, 36), (12, 34), (12, 35), (12, 36), (13, 35), (13, 36), (11, 37)]
+        #position_to_check = [(30, 2), (30, 3), (30, 4), (30, 5), (11, 35), (11, 36), (12, 34), (12, 35), (12, 36), (13, 35), (13, 36), (11, 37)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
-
+        out_prob = norm(loc=0, scale=1).pdf(0)  # probability of sensor outside the radius
         for trans in self.transmitters: #For each location, first collect sensors in vicinity
-            sensor_outputs_copy = np.copy(sensor_outputs)
             my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
             subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
             subset_sensors = np.array(subset_sensors)
             all_sensors = np.arange(0, len(self.sensors), 1).astype(int)
             remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
-            sensor_outputs_copy[remaining_sensors] = -80
-            sensor_outputs_copy[sensor_outputs_copy < -80] = -80
+            sensor_outputs_copy = np.copy(sensor_outputs)
+            sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+            #sensor_outputs_copy[remaining_sensors] = -80
+            #sensor_outputs_copy[sensor_outputs_copy < -80] = -80
             mean_vec = np.copy(trans.mean_vec)
-            mean_vec[remaining_sensors] = -80
-            mean_vec[mean_vec < -80] = -80
+            mean_vec = mean_vec[subset_sensors]
+            #mean_vec[mean_vec < -80] = -80
 
-            stds = np.sqrt(np.diagonal(self.covariance))
+            stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
             array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)  # times 2 is for 800 sensors, but for 100 sensors ?
-            likelihood = np.prod(array_of_pdfs)
+            likelihood = np.prod(array_of_pdfs) * np.power(out_prob, len(remaining_sensors)) * np.power(2., self.sen_num)
             # if (trans.x, trans.y) in position_to_check:
             #     filename = 'visualize/localization/array-of-pdfs-{}-{}'
             #     myfile = open(filename.format(trans.x, trans.y), 'w')
@@ -1574,7 +1576,7 @@ class SelectSensor:
             #         print('sensor = {}, mean = {}, std = {}, data = {}, prob = {}'.format((self.sensors[i].x, self.sensors[i].y), mean_vec[i], stds[i], sensor_outputs_copy[i], array_of_pdfs[i]), file=myfile)
             #     myfile.close()
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
-        
+
         # Also check the probability of no transmitter to avoid false alarms
         mean_vec = np.full(len(sensor_outputs), -80)
         array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs)
@@ -1651,11 +1653,11 @@ class SelectSensor:
             tran_y = trans.y
             for sen_index in range(len(self.sensors)):
                 if randomness:
-                    amplitude = db_2_amplitude(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index], self.stds[tran_x * self.grid_len + tran_y, sen_index]))
+                    amplitude = db_2_amplitude_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index], self.stds[tran_x * self.grid_len + tran_y, sen_index]))
                 else:
-                    amplitude = db_2_amplitude(self.means[tran_x * self.grid_len + tran_y, sen_index])
+                    amplitude = db_2_amplitude_(self.means[tran_x * self.grid_len + tran_y, sen_index])
                 sensor_outputs[sen_index] += amplitude
-        sensor_outputs = amplitude_2_db(sensor_outputs)
+        sensor_outputs = amplitude_2_db_(sensor_outputs)
         return (true_transmitters, sensor_outputs)
 
 
@@ -1798,12 +1800,12 @@ class SelectSensor:
                           # {25} for 160 x 160 grid, transmitter range = 0.7 Km
         identified = []
         num_cells = self.grid_len * self.grid_len + 1
-        self.grid_priori = np.full(num_cells, 1.0 / num_cells)
-        self.ignore_boarders(edge=2)
 
         size_2R = init_size_2R
         while size_2R >= 6:
             print('\nsize_2R', size_2R)
+            self.grid_priori = np.full(num_cells, 1.0 / (3.14*size_2R**2))  # modify priori to whatever himanshu likes
+            self.ignore_boarders(edge=2)
             posterior, H_0, Q = self.get_posterior_new(size_2R, sensor_outputs, fig)
             if H_0:
                 size_2R /= 2
@@ -2303,14 +2305,14 @@ def main5():
     '''main 5: IPSN synthetic data
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
-    selectsensor.init_data('data50/homogeneous-150/cov', 'data50/homogeneous-150/sensors', 'data50/homogeneous-150/hypothesis')
+    selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
 
     repeat = 10
     errors = []
     misses = []
     false_alarms = []
     start = time.time()
-
+    random.seed(0)
     for i in range(0, repeat):
         true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
         #true_indices = [(2, 26), (17, 9), (46, 4), (35, 31), (13, 43)]
@@ -2320,7 +2322,7 @@ def main5():
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=True)
         sensor_outputs_copy = copy.copy(sensor_outputs)
         visualize_sensor_output(selectsensor.grid_len, intruders, sensor_outputs, selectsensor.sensors, -80, i)
 
