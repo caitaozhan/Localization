@@ -68,8 +68,8 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         sensors (lists):      list of Sensor objects
     '''
     grid = np.zeros((grid_len, grid_len))
-    maximum = np.max(sensor_outputs)
-    minimum = np.min(sensor_outputs)
+    maximum = np.max(sensor_outputs[sensor_outputs > threshold])
+    minimum = np.min(sensor_outputs[sensor_outputs > threshold])
     for index, sensor in enumerate(sensors):
         if sensor_outputs[index] > threshold:
             color = (sensor_outputs[index] - minimum) / (maximum - minimum) + 0.2

@@ -1497,113 +1497,6 @@ class SelectSensor:
             print('denominator', denominator)
 
 
-    #@profile
-    def get_posterior(self, subset_index, true_transmitter, radius):
-        '''Test the accuracy of a subset of sensors when detecting the (single) true transmitter
-        Args:
-            subset_index (list):
-            true_transmitter (Transmitter):
-        '''
-        self.set_priori()
-        self.subset_index = subset_index
-        self.update_transmitters()
-        true_x, true_y = true_transmitter.x, true_transmitter.y
-        seed = true_x * self.grid_len + true_y
-        np.random.seed(seed)
-        random.seed(seed)
-        test_num = 100  # test a thousand times
-        success = 0
-        i = 0
-        min_x = max(0, true_x - radius)
-        max_x = min(true_x + radius, self.grid_len - 1)
-        min_y = max(0, true_y - radius)
-        max_y = min(true_y + radius, self.grid_len - 1)
-        # post_file = open('posterior', 'w')
-        subset_index = np.array(subset_index)
-        data = np.random.normal(self.means[true_x * self.grid_len + true_y, subset_index],
-                                self.stds[true_x * self.grid_len + true_y, subset_index])
-        # std = self.stds[true_x * self.grid_len + true_y, subset_index]
-        # data =
-        self.grid_posterior = np.zeros((self.grid_len, self.grid_len))
-
-        while i < test_num:
-            i += 1
-            for trans in self.transmitters:
-                if (trans.x < min_x or trans.x > max_x or trans.y < min_y or trans.y > max_y):
-                    continue
-                likelihood = trans.multivariant_gaussian.pdf(data)
-                self.grid_posterior[trans.x][trans.y] = likelihood * self.grid_priori[trans.x][trans.y]  # don't care about
-            self.grid_posterior = self.grid_posterior / np.sum(self.grid_posterior)
-        return self.grid_posterior
-
-
-    def get_posterior_new(self, radius, sensor_outputs, fig, subset_index = None): #Fix bug on data
-        '''Test the accuracy of a subset of sensors when detecting the (single) true transmitter
-        Args:
-            radius (int): the transmission radius
-            sensor_outputs (list): a list of residual RSS of each sensor
-            subset_index (list): a list of sensor index
-        Return:
-            posterior (np.array): 1D array
-            H_0 (bool): whether H_0 is the largest likelihood or not
-        '''
-        position_to_check = [(33, 28), (33, 27)]
-        self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
-        out_prob = 0.2 #norm(loc=0, scale=1).pdf(0)  # probability of sensor outside the radius
-        for trans in self.transmitters: #For each location, first collect sensors in vicinity
-            my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
-            subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
-            subset_sensors = np.array(subset_sensors)
-            all_sensors = np.arange(0, len(self.sensors), 1).astype(int)
-            remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
-            if len(subset_sensors) == 0:
-                likelihood = 1
-            else:
-                sensor_outputs_copy = np.copy(sensor_outputs)
-                sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
-                mean_vec = np.copy(trans.mean_vec)
-                mean_vec = mean_vec[subset_sensors]
-                stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
-                array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)
-                likelihood = np.prod(array_of_pdfs)
-            likelihood *= np.power(out_prob, len(remaining_sensors)) * np.power(3., self.sen_num)
-            if (trans.x, trans.y) in position_to_check:
-                pass#print('caitao')
-            self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
-
-        # Also check the probability of no transmitter to avoid false alarms
-        mean_vec = np.full(len(sensor_outputs), -80)
-        sensor_outputs_copy = copy.copy(sensor_outputs)
-        sensor_outputs_copy[sensor_outputs_copy < -80] = -80
-        array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs_copy)
-        likelihood = np.prod(array_of_pdfs) * np.power(2., len(self.sensors))
-        self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
-        # check if H_0's likelihood*prior is one of the largest
-        if self.grid_posterior[len(self.transmitters)] == self.grid_posterior[np.argmax(self.grid_posterior)]:
-            H_0 = True
-        else:
-            H_0 = False
-
-        q = copy.copy(self.grid_posterior)
-        visualize_q(self.grid_len, q, fig)
-
-        grid_posterior_copy = np.copy(self.grid_posterior)
-        for trans in self.transmitters:
-            #if (trans.x, trans.y) in [(11, 35), (11, 36), (12, 34), (12, 35), (12, 36), (13, 35), (13, 36), (11, 37)]:
-            #    print(self.grid_posterior[trans.x * self.grid_len + trans.y])
-            min_x = int(max(0, trans.x - radius))
-            max_x = int(min(trans.x + radius, self.grid_len - 1))
-            min_y = int(max(0, trans.y - radius))
-            max_y = int(min(trans.y + radius, self.grid_len - 1))
-            den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
-                                    if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) < radius]))
-            grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
-
-        grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
-        self.grid_posterior = grid_posterior_copy
-        return self.grid_posterior, H_0, q
-
-
     def collect_sensors_in_radius(self, size_R, sensor, given_sensors = None, num_sensors = None):
         '''Returns a subset of sensors that are within a radius of given sensor'''
         if given_sensors is None:
@@ -1777,28 +1670,104 @@ class SelectSensor:
     def get_q_threshold(self, radius):
         '''Different number of sensors get a different thershold
         '''
-        expected_sensor_num = self.sen_num * 3.14159 * radius**2 / len(self.transmitters)
-        q = np.power(norm(0, 1).pdf(3), expected_sensor_num) * np.power(0.2, self.sen_num - expected_sensor_num)
-        q *= np.power(3., self.sen_num)  # constant
+        inside = self.sen_num * 3.14159 * radius**2 / len(self.transmitters)
+        outside = self.sen_num - inside
+        #q = np.power(norm(0, 1).pdf(3), inside) * np.power(0.2, outside) * np.power(3., self.sen_num)
+        q = np.power(norm(0, 1).pdf(3), inside)
+        q *= np.power(0.6, outside)  # 0.6 = 0.2 x 3
+        q *= np.power(3, inside)
         return q
 
 
+    def posterior_iteration(self, radius, sensor_outputs, fig, subset_index = None):
+        '''
+        Args:
+            radius (int): the transmission radius
+            sensor_outputs (list): a list of residual RSS of each sensor
+            subset_index (list): a list of sensor index
+        Return:
+            posterior (np.array): 1D array
+            H_0 (bool): whether H_0 is the largest likelihood or not
+        '''
+        position_to_check = [(25, 25)]
+        self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
+        out_prob = 0.2 # probability of sensor outside the radius
+        constant = 3
+        for trans in self.transmitters: #For each location, first collect sensors in vicinity
+            my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
+            subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
+            subset_sensors = np.array(subset_sensors)
+            all_sensors = np.arange(0, len(self.sensors), 1).astype(int)
+            remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
+            if len(subset_sensors) == 0:
+                likelihood = 1
+            else:
+                sensor_outputs_copy = np.copy(sensor_outputs)
+                sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+                mean_vec = np.copy(trans.mean_vec)
+                mean_vec = mean_vec[subset_sensors]
+                stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+                array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)
+                likelihood = np.prod(array_of_pdfs)
+            #likelihood *= np.power(out_prob, len(remaining_sensors)) * np.power(3., self.sen_num)
+            likelihood *= np.power(out_prob*constant, len(remaining_sensors)) * np.power(constant, len(subset_sensors))
+            if (trans.x, trans.y) in position_to_check:
+                pass#print(likelihood)
+            self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
+
+        # Also check the probability of no transmitter to avoid false alarms
+        mean_vec = np.full(len(sensor_outputs), -80)
+        sensor_outputs_copy = copy.copy(sensor_outputs)
+        sensor_outputs_copy[sensor_outputs_copy < -80] = -80
+        array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs_copy)
+        likelihood = np.prod(array_of_pdfs) * np.power(2., len(self.sensors))
+        self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
+        # check if H_0's likelihood*prior is one of the largest
+        if self.grid_posterior[len(self.transmitters)] == self.grid_posterior[np.argmax(self.grid_posterior)]:
+            H_0 = True
+        else:
+            H_0 = False
+
+        q = copy.copy(self.grid_posterior)
+        visualize_q(self.grid_len, q, fig)
+
+        grid_posterior_copy = np.copy(self.grid_posterior)
+        for trans in self.transmitters:
+            if (trans.x, trans.y) in position_to_check:
+                pass#print(self.grid_posterior[trans.x * self.grid_len + trans.y])
+            min_x = int(max(0, trans.x - radius))
+            max_x = int(min(trans.x + radius, self.grid_len - 1))
+            min_y = int(max(0, trans.y - radius))
+            max_y = int(min(trans.y + radius, self.grid_len - 1))
+            den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
+                                    if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) < radius]))
+            grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
+
+        grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
+        self.grid_posterior = grid_posterior_copy
+        return self.grid_posterior, H_0, q
+
+
     #@profile
-    def get_posterior_localization(self, sensor_outputs, fig):
+    def get_posterior_localization(self, sensor_outputs, intruders, fig):
         '''Our hypothesis-based localization algorithm
         '''
-        radius = 10  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
+        radius = 4  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                           # {25} for 160 x 160 grid, transmitter range = 0.7 Km
-        identified = []
         num_cells = self.grid_len * self.grid_len + 1
+        self.grid_priori = np.full(num_cells, 1.0 / (3.14*radius**2))  # modify priori to whatever himanshu likes
+        self.ignore_boarders(edge=2)           
+        identified = []
         detected = True
         q_threshold = self.get_q_threshold(radius)
         print('q-threshold =', q_threshold)
+        counter = 0
         while detected:
+            counter += 1
+            visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
             detected = False
-            self.grid_priori = np.full(num_cells, 1.0 / (3.14*radius**2))  # modify priori to whatever himanshu likes
-            self.ignore_boarders(edge=2)
-            posterior, H_0, Q = self.get_posterior_new(radius, sensor_outputs, fig)
+
+            posterior, H_0, Q = self.posterior_iteration(radius, sensor_outputs, fig)
 
             if H_0:
                 print('H_0 is most likely')
@@ -1826,7 +1795,7 @@ class SelectSensor:
                 else:
                     print('Not intruder...')
             print('---')
-        return identified
+        return identified, counter
 
 
     def compute_gradient(self, sensor_subset, sensor_outputs):
@@ -2223,7 +2192,7 @@ def main2():
     '''
     selectsensor = SelectSensor('config/splat_config_40.json')
     selectsensor.init_data('dataSplat/1600/cov', 'dataSplat/1600/sensors', 'dataSplat/1600/hypothesis')
-    repeat = 20
+    repeat = 10
     error_sum = 0
     miss_sum = 0
     false_alarm_sum = 0
@@ -2302,19 +2271,21 @@ def main5():
     '''main 5: IPSN synthetic data
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
-    #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
-    selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
+    #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
+    selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
+    #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 10
+    repeat = 20
     errors = []
     misses = []
     false_alarms = []
+    iterations = 0
     start = time.time()
     for i in range(0, repeat):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
+        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=16, num=5, min_dist=8)
         #true_indices = [(2, 26), (17, 9), (46, 4), (35, 31), (13, 43)]
         #true_indices = [(2, 9), (21, 43), (23, 16), (43, 12), (45, 45)]
         #true_indices = [(35, 12), (27, 36), (47, 36), (5, 46), (14, 14)]
@@ -2324,11 +2295,10 @@ def main5():
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=True)
         sensor_outputs_copy = copy.copy(sensor_outputs)
-        visualize_sensor_output(selectsensor.grid_len, intruders, sensor_outputs, selectsensor.sensors, -80, i)
 
-        pred_locations = selectsensor.get_posterior_localization(sensor_outputs, i)
+        pred_locations, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
-
+        iterations += iteration
         true_positions = selectsensor.convert_to_pos(true_indices)
         print('true =', true_positions)
         print('pred =', pred_locations)
@@ -2345,7 +2315,7 @@ def main5():
     try:
         print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(sum(errors)/repeat, max(errors), min(errors), \
               sum(misses)/repeat, max(misses), min(misses), sum(false_alarms)/repeat, max(false_alarms), min(false_alarms)))
-        print('Ours! time = ', time.time()-start)
+        print('Ours! time = ', time.time()-start, '; iterations =', iterations/repeat)
     except:
         print('Empty list!')
 
