@@ -1752,7 +1752,7 @@ class SelectSensor:
     def get_posterior_localization(self, sensor_outputs, intruders, fig):
         '''Our hypothesis-based localization algorithm
         '''
-        radius = 4  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
+        radius = 10  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                           # {25} for 160 x 160 grid, transmitter range = 0.7 Km
         num_cells = self.grid_len * self.grid_len + 1
         self.grid_priori = np.full(num_cells, 1.0 / (3.14*radius**2))  # modify priori to whatever himanshu likes
@@ -2271,21 +2271,21 @@ def main5():
     '''main 5: IPSN synthetic data
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
-    #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
-    selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
+    selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
+    #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 20
+    repeat = 10
     errors = []
     misses = []
     false_alarms = []
     iterations = 0
     start = time.time()
-    for i in range(0, repeat):
+    for i in range(3, repeat):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=16, num=5, min_dist=8)
+        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
         #true_indices = [(2, 26), (17, 9), (46, 4), (35, 31), (13, 43)]
         #true_indices = [(2, 9), (21, 43), (23, 16), (43, 12), (45, 45)]
         #true_indices = [(35, 12), (27, 36), (47, 36), (5, 46), (14, 14)]
@@ -2293,7 +2293,7 @@ def main5():
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=True)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
         sensor_outputs_copy = copy.copy(sensor_outputs)
 
         pred_locations, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i)
