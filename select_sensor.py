@@ -126,6 +126,15 @@ class SelectSensor:
             transmitter.mean_vec = np.array(mean_vec)
 
 
+    def vary_power(self, powers):
+        '''Varing power
+        Args:
+            powers (list): an element is a number that denote the difference from the default power read from the hypothesis file
+        '''
+        for tran in self.transmitters:
+            tran.powers = powers
+
+
     def interpolate_gradient(self, x, y):
         '''The gradient for location (x, y) in the origin grid, for each sensor
         Args:
@@ -1510,7 +1519,7 @@ class SelectSensor:
         return subset_sensors
 
 
-    def delete_transmitter(self, trans_pos, sensor_subset, sensor_outputs):
+    def delete_transmitter(self, trans_pos, power, sensor_subset, sensor_outputs):
         '''Remove a transmitter and change sensor outputs accordingly'''
         trans_index = trans_pos[0] * self.grid_len + trans_pos[1]
         for sen_index in sensor_subset:
@@ -1520,13 +1529,13 @@ class SelectSensor:
             #sensor_outputs[sen_index] = amplitude_2_db(sensor_output)
 
             sensor_output = db_2_amplitude_(sensor_outputs[sen_index])
-            sensor_output_from_transmitter = db_2_amplitude_(self.means[trans_index, sen_index])
+            sensor_output_from_transmitter = db_2_amplitude_(self.means[trans_index, sen_index] + power)
             sensor_output -= sensor_output_from_transmitter
             sensor_outputs[sen_index] = amplitude_2_db_(sensor_output)
         sensor_outputs[np.isnan(sensor_outputs)] = -120
 
 
-    def set_intruders(self, true_indices, randomness = False):
+    def set_intruders(self, true_indices, powers, randomness = False):
         '''Create intruders and return sensor outputs accordingly
         Args:
             true_indices (list): a list of integers (transmitter index)
@@ -1535,16 +1544,16 @@ class SelectSensor:
         for i in true_indices:
             true_transmitters.append(self.transmitters[i])
 
-        self.means_all = np.zeros((len(self.transmitters), len(self.sensors)))
         sensor_outputs = np.zeros(len(self.sensors))
-        for trans in true_transmitters:
-            tran_x = trans.x
-            tran_y = trans.y
+        for i in range(len(true_transmitters)):
+            tran_x = true_transmitters[i].x
+            tran_y = true_transmitters[i].y
+            power = powers[i]
             for sen_index in range(len(self.sensors)):
                 if randomness:
-                    amplitude = db_2_amplitude_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index], self.stds[tran_x * self.grid_len + tran_y, sen_index]))
+                    amplitude = db_2_amplitude_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, self.stds[tran_x * self.grid_len + tran_y, sen_index]))
                 else:
-                    amplitude = db_2_amplitude_(self.means[tran_x * self.grid_len + tran_y, sen_index])
+                    amplitude = db_2_amplitude_(self.means[tran_x * self.grid_len + tran_y, sen_index] + power)
                 sensor_outputs[sen_index] += amplitude
         sensor_outputs = amplitude_2_db_(sensor_outputs)
         return (true_transmitters, sensor_outputs)
@@ -1623,7 +1632,7 @@ class SelectSensor:
             (float): error
         '''
         if len(localization) == 0:
-            return None
+            return -1, 1, 0
         distance = np.zeros((len(true_positions), len(localization)))
         for i in range(len(true_positions)):
             for j in range(len(localization)):
@@ -1689,11 +1698,14 @@ class SelectSensor:
             posterior (np.array): 1D array
             H_0 (bool): whether H_0 is the largest likelihood or not
         '''
-        position_to_check = [(25, 25)]
+        position_to_check = [(31, 27), (3, 15), (39, 2), (47, 39), (17, 44)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
+        power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
         constant = 3
         for trans in self.transmitters: #For each location, first collect sensors in vicinity
+            if (trans.x, trans.y) in position_to_check:
+                pass#print(trans.x, trans.y)
             my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
             subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
             subset_sensors = np.array(subset_sensors)
@@ -1702,18 +1714,25 @@ class SelectSensor:
             if len(subset_sensors) == 0:
                 likelihood = 1
             else:
-                sensor_outputs_copy = np.copy(sensor_outputs)
-                sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
-                mean_vec = np.copy(trans.mean_vec)
-                mean_vec = mean_vec[subset_sensors]
-                stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
-                array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)
-                likelihood = np.prod(array_of_pdfs)
+                likelihood_max = 0
+                power_max = 0
+                for power in trans.powers:                       # varies power
+                    sensor_outputs_copy = np.copy(sensor_outputs)
+                    sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+                    mean_vec = np.copy(trans.mean_vec)
+                    mean_vec = mean_vec[subset_sensors] + power  # add the delta of power
+                    stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+                    array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)
+                    likelihood = np.prod(array_of_pdfs)
+                    if likelihood > likelihood_max:
+                        likelihood_max = likelihood
+                        power_max = power
+                likelihood = likelihood_max
             #likelihood *= np.power(out_prob, len(remaining_sensors)) * np.power(3., self.sen_num)
             likelihood *= np.power(out_prob*constant, len(remaining_sensors)) * np.power(constant, len(subset_sensors))
-            if (trans.x, trans.y) in position_to_check:
-                pass#print(likelihood)
+
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
+            power_grid[trans.x][trans.y] = power_max
 
         # Also check the probability of no transmitter to avoid false alarms
         mean_vec = np.full(len(sensor_outputs), -80)
@@ -1745,7 +1764,7 @@ class SelectSensor:
 
         grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
         self.grid_posterior = grid_posterior_copy
-        return self.grid_posterior, H_0, q
+        return self.grid_posterior, H_0, q, power_grid
 
 
     #@profile
@@ -1758,6 +1777,7 @@ class SelectSensor:
         self.grid_priori = np.full(num_cells, 1.0 / (3.14*radius**2))  # modify priori to whatever himanshu likes
         self.ignore_boarders(edge=2)           
         identified = []
+        pred_power = []
         detected = True
         q_threshold = self.get_q_threshold(radius)
         print('q-threshold =', q_threshold)
@@ -1767,7 +1787,7 @@ class SelectSensor:
             visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
             detected = False
 
-            posterior, H_0, Q = self.posterior_iteration(radius, sensor_outputs, fig)
+            posterior, H_0, Q, power = self.posterior_iteration(radius, sensor_outputs, fig)
 
             if H_0:
                 print('H_0 is most likely')
@@ -1789,13 +1809,15 @@ class SelectSensor:
                 if q > q_threshold:
                     print('Intruder!')
                     detected = True
-                    self.delete_transmitter(index, sensor_subset, sensor_outputs)
+                    p = power[index[0]][index[1]]
+                    self.delete_transmitter(index, p, sensor_subset, sensor_outputs)
                     identified.append(tuple(index))
+                    pred_power.append(p)
                     self.grid_priori[index[0]*self.grid_len + index[1]] = 0
                 else:
                     print('Not intruder...')
             print('---')
-        return identified, counter
+        return identified, pred_power, counter
 
 
     def compute_gradient(self, sensor_subset, sensor_outputs):
@@ -2272,6 +2294,10 @@ def main5():
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
     selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
+    #powers = [-8, -4, 0, 4, 8]
+    powers = [-4, -2, 0, 2, 4]
+    #powers = [0, 0, 0, 0, 0]   # no varing power
+    selectsensor.vary_power(powers)
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
@@ -2281,11 +2307,11 @@ def main5():
     false_alarms = []
     iterations = 0
     start = time.time()
-    for i in range(3, repeat):
+    for i in range(0, repeat):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20)
+        true_indices, powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20, powers=powers)
         #true_indices = [(2, 26), (17, 9), (46, 4), (35, 31), (13, 43)]
         #true_indices = [(2, 9), (21, 43), (23, 16), (43, 12), (45, 45)]
         #true_indices = [(35, 12), (27, 36), (47, 36), (5, 46), (14, 14)]
@@ -2293,18 +2319,19 @@ def main5():
         #true_indices = [[29, 28], [33, 29], [31, 28], [31, 27], [30, 28], [30, 27], [32, 28]]
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, randomness=False)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=powers, randomness=True)
         sensor_outputs_copy = copy.copy(sensor_outputs)
 
-        pred_locations, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i)
+        pred_locations, pred_power, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
         iterations += iteration
         true_positions = selectsensor.convert_to_pos(true_indices)
-        print('true =', true_positions)
-        print('pred =', pred_locations)
+        print('true =', true_positions, powers)
+        print('pred =', pred_locations, pred_power)
         try:
             error, miss, false_alarm = selectsensor.compute_error(true_positions, pred_locations)
-            errors.append(error)
+            if error >= 0:
+                errors.append(error)
             misses.append(miss)
             false_alarms.append(false_alarm)
             print('error/miss/false=', error, miss, false_alarm, '\n')
@@ -2313,7 +2340,7 @@ def main5():
             print(e)
 
     try:
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(sum(errors)/repeat, max(errors), min(errors), \
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(sum(errors)/len(errors), max(errors), min(errors), \
               sum(misses)/repeat, max(misses), min(misses), sum(false_alarms)/repeat, max(false_alarms), min(false_alarms)))
         print('Ours! time = ', time.time()-start, '; iterations =', iterations/repeat)
     except:

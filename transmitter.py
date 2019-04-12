@@ -11,8 +11,8 @@ class Transmitter:
         y (int): location -  second dimension
         mean_vec (np.ndarray):     mean vector, length is the number of sensors
         mean_vec_sub (np.ndarray): mean vector for subset of sensors
-        multivariant_gaussian(scipy.stats.multivariate_normal):
-                              each hypothesis corresponds to a multivariant guassian distribution
+        multivariant_gaussian(scipy.stats.multivariate_normal): each hypothesis corresponds to a multivariant guassian distribution
+        powers (list): a list of powers, contains a 0 in the center: the power read from the hypothesis file
     '''
     def __init__(self, x, y):
         self.x = x
@@ -21,6 +21,7 @@ class Transmitter:
         self.mean_vec = np.zeros(0)
         self.mean_vec_sub = np.zeros(0)
         self.multivariant_gaussian = None
+        self.powers = [0]
 
 
     def set_mean_vec_sub(self, subset_index):

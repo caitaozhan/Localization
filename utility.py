@@ -156,7 +156,7 @@ def get_distance(grid_len, index1, index2):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 
-def generate_intruders(grid_len, edge, num, min_dist):
+def generate_intruders(grid_len, edge, num, min_dist, powers):
     '''
     Args:
         grid_len (int):
@@ -165,6 +165,9 @@ def generate_intruders(grid_len, edge, num, min_dist):
     Return:
         (list): a list of 1D index
     '''
+    np.random.shuffle(powers)
+    #powers = [np.random.choice(powers) for _ in range(num)]
+
     intruders = []
     counter = 0
     trials = 0
@@ -190,12 +193,12 @@ def generate_intruders(grid_len, edge, num, min_dist):
                 counter += 1
         else:
             #print('Oops!')
-            intruders = generate_intruders(grid_len, edge, num, min_dist) # when stuck, just restart again
+            intruders, powers = generate_intruders(grid_len, edge, num, min_dist, powers) # when stuck, just restart again
             break
-    return intruders
+    return intruders, powers
 
 
 if __name__ == '__main__':
     for _ in range(20):
-        print('intruders = ', generate_intruders(grid_len=50, edge=2, num=6, min_dist=20))
+        print('intruders = ', generate_intruders(grid_len=50, edge=2, num=6, min_dist=20, powers=[-4, -2, 0, 2, 4]))
 
