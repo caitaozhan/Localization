@@ -165,7 +165,7 @@ def generate_intruders(grid_len, edge, num, min_dist, powers):
     Return:
         (list): a list of 1D index
     '''
-    np.random.shuffle(powers)
+    #random.shuffle(powers)
     #powers = [np.random.choice(powers) for _ in range(num)]
 
     intruders = []
