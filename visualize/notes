@@ -1,0 +1,23 @@
+Settings: 50 x 50 grid, 150 sensors, 5 intrudrs 2R apart, power=[-4, -2, 0, 2, 4]
+
+R=6
+(mean/max/min) error=(0.549/2.02/0.0), miss=(0.16/0.6/0.0), false_alarm=(0.24/0.6/0.0), power=(0.19/1.2/-1.2)
+Ours! time =  434.05666303634644 ; iterations = 2.4
+
+
+R=8
+(mean/max/min) error=(0.068/0.282/0.0), miss=(0.0/0.0/0.0), false_alarm=(0.12/0.2/0.0), power=(0.92/1.2/0.4)
+Ours! time =  421.96457147598267 ; iterations = 2.3
+
+
+R=10
+error/miss/false/power = 0.2/0.0/0.0/1.2
+(mean/max/min) error=(0.06/0.2/0.0), miss=(0.0/0.0/0.0), false_alarm=(0.0/0.0/0.0), power=(0.92/1.2/0.0)
+
+---------------
+
+Settings: 50 x 50 grid, 156 sensors, 5 intrudrs 2R apart, power=[-4, -2, 0, 2, 4]
+
+R=8
+(mean/max/min) error=(0.048/0.482/0.0), miss=(0.0/0.0/0.0), false_alarm=(0.0/0.0/0.0), power=(0.76/2.0/0.0)
+Ours! time =  402.76631712913513 ; iterations = 2.2

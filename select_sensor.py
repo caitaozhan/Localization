@@ -1643,29 +1643,18 @@ class SelectSensor:
 
         k = 0
         matches = []
+        misses = list(range(len(true_locations)))
         falses = list(range(len(pred_locations)))
         while k < min(len(true_locations), len(pred_locations)):
             min_error = np.min(distances)
             min_error_index = np.argmin(distances)
             i = min_error_index // len(pred_locations)
             j = min_error_index %  len(pred_locations)
-            falses.remove(j)
             power_error = pred_powers[j] - true_powers[i]
             matches.append((i, j, min_error, power_error))
             distances[i, :] = np.inf
             distances[:, j] = np.inf
             k += 1
-
-        print('True:', end=' ')
-        for match in matches:
-            print(str(true_locations[match[0]]).ljust(9) + str(true_powers[match[0]]).ljust(4), end='; ')
-        print('\nPred:', end=' ')
-        for match in matches:
-            print(str(pred_locations[match[1]]).ljust(9) + str(pred_powers[match[1]]).ljust(4), end='; ')
-        print('\nFalse Alarm:', end=' ')
-        for false in falses:
-            print(pred_locations[false], end=' ')
-        print()
 
         tot_error = 0              # distance error
         tot_power_error = 0        # power error
@@ -1677,6 +1666,22 @@ class SelectSensor:
                 tot_error += error
                 tot_power_error += match[3]
                 detected += 1
+                misses.remove(match[0])
+                falses.remove(match[1])
+        
+        print('Pred:', end=' ')
+        for match in matches:
+            print(str(pred_locations[match[1]]).ljust(9) + str(pred_powers[match[1]]).ljust(4), end='; ')
+        print('\nTrue:', end=' ')
+        for match in matches:
+            print(str(true_locations[match[0]]).ljust(9) + str(true_powers[match[0]]).ljust(4), end='; ')
+        print('\nMiss:', end=' ')
+        for miss in misses:
+            print(true_locations[miss], end=' ')
+        print('\nFalse Alarm:', end=' ')
+        for false in falses:
+            print(pred_locations[false], end=' ')
+        print()
         try:
             return tot_error / detected, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations), tot_power_error / detected
         except:
@@ -1790,11 +1795,33 @@ class SelectSensor:
         return self.grid_posterior, H_0, q, power_grid
 
 
-    #@profile
-    def get_posterior_localization(self, sensor_outputs, intruders, fig):
-        '''Our hypothesis-based localization algorithm
+    def our_localization(self, sensor_outputs, intruders, fig):
+        '''Our localization, reduce R
         '''
-        radius = 10  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
+        R_list = [10, 8, 6]
+        identified = []
+        pred_power = []
+        counter    = 0
+        for R in R_list:
+            identified_R, pred_power_R, counter_R = self.get_posterior_localization(sensor_outputs, intruders, fig, R)
+            identified.extend(identified_R)
+            pred_power.extend(pred_power_R)
+            counter += counter_R
+        return identified, pred_power, counter
+
+
+    #@profile
+    def get_posterior_localization(self, sensor_outputs, intruders, fig, radius):
+        '''Our hypothesis-based localization algorithm
+        Args:
+            sensor_outputs (np.array)
+            intruders (list)
+            fig (int)
+            radius (int) 
+        Return:
+            (list, list, int)
+        '''
+        #radius = 10  # {10} for 40 x 40 grid,   transmitter range = 1.2 Km
                           # {25} for 160 x 160 grid, transmitter range = 0.7 Km
         num_cells = self.grid_len * self.grid_len + 1
         self.grid_priori = np.full(num_cells, 1.0 / (3.14*radius**2))  # modify priori to whatever himanshu likes
@@ -1838,7 +1865,7 @@ class SelectSensor:
                     pred_power.append(p)
                     self.grid_priori[index[0]*self.grid_len + index[1]] = 0
                 else:
-                    print('Not intruder...')
+                    print()
             print('---')
         return identified, pred_power, counter
 
@@ -2205,67 +2232,6 @@ class SelectSensor:
         selectsensor.scalability_sensor('CPU', [50, 100])#, 200, 300, 400, 500, 600, 700, 800, 900, 1000])
 
 
-def main():
-    '''main
-    '''
-    selectsensor = SelectSensor('config/splat_config_40-100.json')
-    #selectsensor.init_from_real_data('data64/heterogeneous/cov', 'data64/heterogeneous/sensors', 'data64/heterogeneous/hypothesis')
-    #selectsensor.init_data('data16/homogeneous/cov', 'data16/homogeneous/sensors', 'data16/homogeneous/hypothesis')
-    #plots.figure_1a(selectsensor, None)
-    selectsensor.init_data('dataSplat/1600/cov', 'dataSplat/1600/sensors', 'dataSplat/1600/hypothesis')
-    #selectsensor.interpolate()
-    #selectsensor.init_data_from_model(10) #works as expected
-    #selectsensor.set_intruders() #works as expected
-    selectsensor.set_priori()
-    for i in range(0, 10):
-        #num_intruders = random.randint(1, 11)
-        true_indices = random.sample(range(selectsensor.grid_len * selectsensor.grid_len), 10)
-        #print(indices)
-        #true_indices = [9, 99, 51]
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
-        our_indices = selectsensor.get_posterior_localization(intruders, sensor_outputs)
-
-        true_positions = selectsensor.convert_to_pos(true_indices)
-        error, misses = selectsensor.compute_error(true_positions, our_indices)
-        print(error, misses)
-
-        #cluster_locations = selectsensor.get_cluster_localization(true_indices = [9, 99, 50, 51])
-
-
-def main2():
-    '''main 2: localization
-    '''
-    selectsensor = SelectSensor('config/splat_config_40.json')
-    selectsensor.init_data('dataSplat/1600/cov', 'dataSplat/1600/sensors', 'dataSplat/1600/hypothesis')
-    repeat = 10
-    error_sum = 0
-    miss_sum = 0
-    false_alarm_sum = 0
-    for _ in range(0, repeat):
-        num_intruders = random.randint(10, 20)
-        true_indices = random.sample(range(selectsensor.grid_len * selectsensor.grid_len), num_intruders)
-        #selectsensor.interpolate_loc(scale=4)
-
-        #true_indices = [45] # (4, 5)
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
-
-        pred_location = selectsensor.get_splot_localization2(intruders, sensor_outputs, size_R1=8, size_R2=9, threshold=-75)
-        #pred_location = selectsensor.get_cluster_localization_loc(intruders, sensor_outputs)
-
-        true_positions = selectsensor.convert_to_pos(true_indices)
-        print(true_positions)
-        print(pred_location)
-        try:
-            error, misses, false_alarms = selectsensor.compute_error(true_positions, pred_location)
-            error_sum += error
-            miss_sum += misses
-            false_alarm_sum += false_alarms
-            print(error, misses, false_alarms, '\n')
-        except:
-            print('intruders', true_indices, true_positions)
-    print(error_sum / repeat, miss_sum / repeat, false_alarm_sum / repeat)
-
-
 def main3():
     '''main 3: interpolation
     '''
@@ -2317,7 +2283,8 @@ def main5():
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
-    selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
+    #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
+    selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
     #true_powers = [-8, -4, 0, 4, 8]
     true_powers = [-4, -2, 0, 2, 4]
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
@@ -2325,7 +2292,7 @@ def main5():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 15
+    repeat = 1
     errors = []
     misses = []
     false_alarms = []
@@ -2336,13 +2303,15 @@ def main5():
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20, powers=true_powers)
+        R = 8
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=2*R, powers=true_powers)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
         sensor_outputs_copy = copy.copy(sensor_outputs)
 
-        pred_locations, pred_power, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i)
+        pred_locations, pred_power, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i, radius=R)
+        #pred_locations, pred_power, iteration = selectsensor.our_localization(sensor_outputs, intruders, i, radius=R)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
         iterations += iteration
         true_locations = selectsensor.convert_to_pos(true_indices)
