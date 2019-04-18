@@ -20,7 +20,7 @@ try:
     from cuda_kernals import o_t_approx_kernal, o_t_kernal, o_t_approx_dist_kernal, \
                          o_t_approx_kernal2, o_t_approx_dist_kernal2, update_dot_of_selected_kernal, sum_reduce
 except Exception as e:
-    print(e)
+    pass
 from itertools import combinations
 import line_profiler
 from sklearn.cluster import KMeans
@@ -1705,7 +1705,7 @@ class SelectSensor:
         inside = self.sen_num * 3.14159 * radius**2 / len(self.transmitters)
         outside = self.sen_num - inside
         #q = np.power(norm(0, 1).pdf(3), inside) * np.power(0.2, outside) * np.power(3., self.sen_num)
-        q = np.power(norm(0, 1).pdf(2.70), inside)
+        q = np.power(norm(0, 1).pdf(2.7), inside)
         q *= np.power(0.6, outside)  # 0.6 = 0.2 x 3
         q *= np.power(3, inside)
         return q
@@ -1748,7 +1748,7 @@ class SelectSensor:
             posterior (np.array): 1D array
             H_0 (bool): whether H_0 is the largest likelihood or not
         '''
-        position_to_check = [(6, 47), (13, 42)]
+        position_to_check = [(21, 10), (21, 8)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
         power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
@@ -1827,7 +1827,7 @@ class SelectSensor:
         '''Our localization, reduce R
         '''
         hypotheses = list(range(len(self.transmitters)))
-        R_list = [8, 6, 4]
+        R_list = [8, 6, 4, 5]
         identified = []
         pred_power = []
         counter    = 0
@@ -1860,6 +1860,7 @@ class SelectSensor:
         pred_power = []
         detected = True
         q_threshold = self.get_q_threshold(radius)
+        offset = 0.74
         print('R= {}, q-threshold ={}'.format(radius, q_threshold))
         counter = 0
         while detected:
@@ -1883,18 +1884,19 @@ class SelectSensor:
                 continue
 
             for index in indices:  # 2D index
-                print('detected peak =', index, "; Q' =", posterior[index[0]][index[1]], end='; ')
+                print('detected peak =', index, "; Q' =", round(posterior[index[0]][index[1]], 3), end='; ')
                 q = Q[index[0]*self.grid_len + index[1]]
                 print('Q =', q, end='; ')
                 if q > q_threshold:
-                    print('Intruder!')
+                    print(' **Intruder!**')
                     detected = True
-                    p = power[index[0]][index[1]]
+                    p = power[index[0]][index[1]] - offset  # deduct a power offset, 0.74 value is from 100 exeriments
                     self.delete_transmitter(index, p, sensor_subset, sensor_outputs)
                     identified.append(tuple(index))
                     pred_power.append(p)
                     self.grid_priori[index[0]*self.grid_len + index[1]] = 0
                 else:
+                    #pass
                     print()
             print('---')
         return identified, pred_power, counter
@@ -2322,7 +2324,7 @@ def main5():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 5
+    repeat = 100
     errors = []
     misses = []
     false_alarms = []
@@ -2336,7 +2338,7 @@ def main5():
         true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=6, powers=true_powers)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
         sensor_outputs_copy = copy.copy(sensor_outputs)
 
         #pred_locations, pred_power, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i, radius=R)
