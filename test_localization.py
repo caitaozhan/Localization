@@ -114,7 +114,7 @@ def splat_ours(sensor_num=None, num_intruders=None):
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
 
-        pred_location = selectsensor.get_posterior_localization(intruders, sensor_outputs)
+        pred_location = selectsensor.procedure1(intruders, sensor_outputs)
         print('time = ', time.time()-start)
 
         true_positions = selectsensor.convert_to_pos(true_indices)

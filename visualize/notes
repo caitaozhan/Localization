@@ -21,3 +21,21 @@ Settings: 50 x 50 grid, 156 sensors, 5 intrudrs 2R apart, power=[-4, -2, 0, 2, 4
 R=8
 (mean/max/min) error=(0.048/0.482/0.0), miss=(0.0/0.0/0.0), false_alarm=(0.0/0.0/0.0), power=(0.76/2.0/0.0)
 Ours! time =  402.76631712913513 ; iterations = 2.2
+
+
+----------------
+
+Settings: 50 x 50 grid, 156 sensors, 5 intrudrs 6 apart, offset=0.74, power=[-2, -1, 0, 1, 2], std=1
+
+intruder no randomness
+(mean/max/min) error=(0.24/1.84/0.0), miss=(0.022/0.4/0.0), false_alarm=(0.018/0.2/0.0), power=(0.11/1.01/-0.74)
+
+intruder has randomness
+(mean/max/min) error=(0.26/2.23/0.0), miss=(0.046/0.6/0.0), false_alarm=(0.032/0.4/0.0), power=(0.038/1.06/-0.94)
+
+
+----------------
+
+Settings: 50 x 50 grid, 200 sensors, 10 intrudrs, offset=0.74, power=[-2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 1.5, 2], std=1, intruder no randomness
+
+(mean/max/min) error=(0.98/3.37/0.0), miss=(0.125/0.5/0.0), false_alarm=(0.092/0.3/0.0), power=(0.073/0.98/-0.96)

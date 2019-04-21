@@ -87,9 +87,9 @@ class SelectSensor:
         '''
         cov = pd.read_csv(cov_file, header=None, delimiter=' ')
         del cov[len(cov)]
-        self.covariance = cov.values
-        #self.covariance = np.zeros(cov.values.shape)
-        #np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor
+        #self.covariance = cov.values
+        self.covariance = np.zeros(cov.values.shape)
+        np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor
 
         self.sensors = []
         with open(sensor_file, 'r') as f:
@@ -1671,10 +1671,10 @@ class SelectSensor:
         
         print('Pred:', end=' ')
         for match in matches:
-            print(str(pred_locations[match[1]]).ljust(9) + str(pred_powers[match[1]]).ljust(4), end='; ')
+            print(str(pred_locations[match[1]]).ljust(9) + str(pred_powers[match[1]]).ljust(5), end='; ')
         print('\nTrue:', end=' ')
         for match in matches:
-            print(str(true_locations[match[0]]).ljust(9) + str(true_powers[match[0]]).ljust(4), end='; ')
+            print(str(true_locations[match[0]]).ljust(9) + str(true_powers[match[0]]).ljust(5), end='; ')
         print('\nMiss:', end=' ')
         for miss in misses:
             print(true_locations[miss], end=' ')
@@ -1705,7 +1705,7 @@ class SelectSensor:
         inside = self.sen_num * 3.14159 * radius**2 / len(self.transmitters)
         outside = self.sen_num - inside
         #q = np.power(norm(0, 1).pdf(3), inside) * np.power(0.2, outside) * np.power(3., self.sen_num)
-        q = np.power(norm(0, 1).pdf(2.7), inside)
+        q = np.power(norm(0, 1).pdf(2.77), inside)
         q *= np.power(0.6, outside)  # 0.6 = 0.2 x 3
         q *= np.power(3, inside)
         return q
@@ -1745,10 +1745,12 @@ class SelectSensor:
             sensor_outputs (list): a list of residual RSS of each sensor
             subset_index (list): a list of sensor index
         Return:
-            posterior (np.array): 1D array
+            posterior (np.array): 1D array of posterior
             H_0 (bool): whether H_0 is the largest likelihood or not
+            q (np.array): 2D array of Q
+            power_grid (np.array): 2D array of power
         '''
-        position_to_check = [(21, 10), (21, 8)]
+        position_to_check = [(10, 30)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
         power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
@@ -1824,29 +1826,130 @@ class SelectSensor:
 
 
     def our_localization(self, sensor_outputs, intruders, fig):
-        '''Our localization, reduce R
+        '''Our localization, reduce R procedure 1 + procedure 2
         '''
         hypotheses = list(range(len(self.transmitters)))
-        R_list = [8, 6, 4, 5]
+        R_list = [8, 6, 4]
         identified = []
         pred_power = []
         counter    = 0
         for R in R_list:
-            identified_R, pred_power_R, counter_R = self.get_posterior_localization(hypotheses, sensor_outputs, intruders, fig, R)
+            identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
             identified.extend(identified_R)
             pred_power.extend(pred_power_R)
             counter += counter_R
+
+        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
+        identified.extend(identified2)
+        pred_power.extend(pred_power2)
+
         return identified, pred_power, counter
 
 
+    def procedure2(self, sensor_outputs, intruders, fig, R):
+        '''Our hypothesis-based localization algorithm's procedure 2
+        Args:
+            sensor_outputs (np.array)
+            intruders (list): for plotting
+            fig (int)       : for plotting
+            R (int)
+        Return:
+            (list, list)
+        '''
+        detected, power = [], []
+        center = self.get_center_sensor(sensor_outputs, R)
+        sensor_subset = self.collect_sensors_in_radius(2*R, self.sensors[center])  # sensor in 2R, hypothesis in R
+        hypotheses = [h for h in range(len(self.transmitters)) \
+                      if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
+        q_threshold = np.power(norm(0, 1).pdf(2.77), len(sensor_subset))
+        print('q threshold =', q_threshold)
+        while center != -1:
+            for t in range(2, 3):
+                hypotheses_combination = list(combinations(hypotheses, t))
+                #posterior, H_0, Q, power = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
+                posterior, Q = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
+                if np.max(Q) > q_threshold and np.max(posterior) > 0.5:
+                    hypo_comb = hypotheses_combination[np.argmax(Q)]
+                    for hypo in hypo_comb:
+                        x = hypo//self.grid_len
+                        y = hypo%self.grid_len
+                        print((x, y), end=' ')
+                        detected.append((x, y))
+                        power.append(0)
+                        self.delete_transmitter((x, y), 2, sensor_subset, sensor_outputs)
+                    print(np.max(Q))
+                    visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+                    break
+            center = self.get_center_sensor(sensor_outputs, R)
+        return detected, power
+
+
+    def procedure2_iteration(self, hypotheses_combination, sensor_outputs, sensor_subset):
+        '''MAP over combinaton of hypotheses
+        Args:
+            hypotheses_combination (list): an element is a tuple of transmitter index, i.e. (t1, t2)
+            sensor_outputs (np.array)
+        Return:
+            posterior (np.array): 1D array of posterior
+            H_0 (bool): whether H_0 is the largest likelihood or not
+            q (np.array): 2D array of Q
+            power_grid (np.array): 2D array of power
+        '''
+        # Note try single power first
+        posterior = np.zeros(len(hypotheses_combination))
+        prior = 1./len(hypotheses_combination)
+        for i in range(len(hypotheses_combination)):
+            combination = hypotheses_combination[i]
+            mean_vec = np.zeros(len(sensor_subset))
+            for hypo in combination:
+                mean_vec += db_2_amplitude_(self.means[hypo][sensor_subset])
+            mean_vec = amplitude_2_db_(mean_vec)
+            stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
+            array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs[sensor_subset])
+            likelihood = np.prod(array_of_pdfs)
+            posterior[i] = likelihood * prior
+        return posterior/np.sum(posterior), posterior  # question: is the denometer the summation of everything?
+
+
+    def get_center_sensor(self, sensor_outputs, R):
+        '''Check a center for procedure 2, if no centers, return -1
+           Return the index of sensor with highest residual received power
+        Args:
+            sensor_outputs (np.array)
+            R (int)
+        Return:
+            (int)
+        '''
+        flag = True
+        while flag:
+            center = np.argmax(sensor_outputs)
+            if sensor_outputs[center] < -70:
+                center = -1
+                flag = False
+                break
+            center_sensor = self.sensors[center]
+            counter = 0
+            for sen_index in range(len(self.sensors)):
+                if sensor_outputs[sen_index] > -70:  # inaccurate residual power during deleting intruders
+                    dist = math.sqrt((self.sensors[sen_index].x - center_sensor.x)**2 + (self.sensors[sen_index].y - center_sensor.y)**2)
+                    if dist >=1 and dist < R:
+                        counter += 1
+                    if counter == 3:                 # need three "strong" sensor
+                        flag = False
+                        break
+            else:
+                sensor_outputs[center] = -80
+        return center
+
+
     #@profile
-    def get_posterior_localization(self, hypotheses, sensor_outputs, intruders, fig, radius):
-        '''Our hypothesis-based localization algorithm
+    def procedure1(self, hypotheses, sensor_outputs, intruders, fig, radius):
+        '''Our hypothesis-based localization algorithm's procedure 1
         Args:
             hypotheses (list): transmitters (1D index) that has 2 or more sensors in radius with RSS > -80 
             sensor_outputs (np.array)
-            intruders (list)
-            fig (int)
+            intruders (list): for plotting
+            fig (int):        for plotting
             radius (int) 
         Return:
             (list, list, int)
@@ -2255,15 +2358,6 @@ class SelectSensor:
         return list
 
 
-    def scalability_test(self):
-        '''scalability test
-        '''
-        selectsensor = SelectSensor('config.json')
-        selectsensor.scalability_budget('CPU', [1, 5])#, 10, 20, 30, 40, 50, 60, 70, 80])
-        selectsensor.scalability_hypothesis('CPU', [16, 24])#, 32, 40, 48, 56, 64, 72, 80])
-        selectsensor.scalability_sensor('CPU', [50, 100])#, 200, 300, 400, 500, 600, 700, 800, 900, 1000])
-
-
 def main3():
     '''main 3: interpolation
     '''
@@ -2318,6 +2412,7 @@ def main5():
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
     #true_powers = [-8, -4, 0, 4, 8]
+    #true_powers = [-2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 1.5, 2]
     true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
@@ -2331,7 +2426,7 @@ def main5():
     power_errors = []
     iterations = 0
     start = time.time()
-    for i in range(0, repeat):
+    for i in range(44, 45):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
@@ -2389,7 +2484,7 @@ def main6():
         true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
 
-        pred_locations = selectsensor.get_posterior_localization(sensor_outputs)
+        pred_locations = selectsensor.procedure1(sensor_outputs)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
 
         true_positions = selectsensor.convert_to_pos(true_indices)
