@@ -26,7 +26,7 @@ import line_profiler
 from sklearn.cluster import KMeans
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_gupta, visualize_q_prime, visualize_q
-from utility import generate_intruders
+from utility import generate_intruders, generate_intruders_2
 from skimage.feature import peak_local_max
 import itertools
 
@@ -1532,8 +1532,8 @@ class SelectSensor:
             sensor_output_from_transmitter = db_2_amplitude_(self.means[trans_index, sen_index] + power)
             sensor_output -= sensor_output_from_transmitter
             sensor_outputs[sen_index] = amplitude_2_db_(sensor_output)
-            #if self.sensors[sen_index].x == 23 and self.sensors[sen_index].y == 40:
-                #print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
+            #if sen_index == 46:
+            #    print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
         sensor_outputs[np.isnan(sensor_outputs)] = -120
 
 
@@ -1557,7 +1557,7 @@ class SelectSensor:
                 else:
                     amplitude = db_2_amplitude_(self.means[tran_x * self.grid_len + tran_y, sen_index] + power)
                 sensor_outputs[sen_index] += amplitude
-                #if self.sensors[sen_index].x == 23 and self.sensors[sen_index].y == 40:
+                #if sen_index == 46:
                 #    print('+', (tran_x, tran_y), power, amplitude, sensor_outputs[sen_index])
         sensor_outputs = amplitude_2_db_(sensor_outputs)
         return (true_transmitters, sensor_outputs)
@@ -1716,7 +1716,7 @@ class SelectSensor:
         for prune in prunes:
             hypotheses.remove(prune)
 
-
+    #@profile
     def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, subset_index = None):
         '''
         Args:
@@ -1807,16 +1807,16 @@ class SelectSensor:
     def our_localization(self, sensor_outputs, intruders, fig):
         '''Our localization, reduce R procedure 1 + procedure 2
         '''
-        hypotheses = list(range(len(self.transmitters)))
-        R_list = [8, 6, 4]
         identified = []
         pred_power = []
         counter    = 0
-        for R in R_list:
-            identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
-            identified.extend(identified_R)
-            pred_power.extend(pred_power_R)
-            counter += counter_R
+        #hypotheses = list(range(len(self.transmitters)))
+        #R_list = [8, 6, 4]
+        #for R in R_list:
+        #    identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
+        #    identified.extend(identified_R)
+        #    pred_power.extend(pred_power_R)
+        #    counter += counter_R
 
         identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
         identified.extend(identified2)
@@ -1838,13 +1838,13 @@ class SelectSensor:
         detected, power = [], []
         center_list = []
         center = self.get_center_sensor(sensor_outputs, R, center_list)
-        center_list.append(center)
-        sensor_subset = self.collect_sensors_in_radius(R, self.sensors[center])  # sensor in 2R, hypothesis in R
-        hypotheses = [h for h in range(len(self.transmitters)) \
-                      if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
-        q_threshold = np.power(norm(0, 1).pdf(2.77), len(sensor_subset))
-        print('q threshold =', q_threshold)
         while center != -1:
+            center_list.append(center)
+            sensor_subset = self.collect_sensors_in_radius(R, self.sensors[center])  # sensor in R, hypothesis in R
+            hypotheses = [h for h in range(len(self.transmitters)) \
+                          if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
+            q_threshold = np.power(norm(0, 1).pdf(2.77), len(sensor_subset))
+            print('q threshold =', q_threshold)
             for t in range(2, 3):
                 hypotheses_combination = list(combinations(hypotheses, t))
                 #posterior, H_0, Q, power = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
@@ -1857,7 +1857,7 @@ class SelectSensor:
                         print((x, y), end=' ')
                         detected.append((x, y))
                         power.append(0)
-                        self.delete_transmitter((x, y), 2, sensor_subset, sensor_outputs)
+                        self.delete_transmitter((x, y), 0, range(len(self.sensors)), sensor_outputs)
                     print(np.max(Q))
                     visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
                     break
@@ -1865,7 +1865,7 @@ class SelectSensor:
             center_list.append(center)
         return detected, power
 
-
+    #@profile
     def procedure2_iteration(self, hypotheses_combination, sensor_outputs, sensor_subset):
         '''MAP over combinaton of hypotheses
         Args:
@@ -1923,7 +1923,7 @@ class SelectSensor:
                         counter += 1
                     if counter == 3:                 # need three "strong" sensor
                         flag = False
-                        print('center =', (self.sensors[center].x, self.sensors[center].y), 'RSS =', sensor_outputs[center])
+                        print('\n* center =', (self.sensors[center].x, self.sensors[center].y), 'RSS =', sensor_outputs[center])
                         break
             else:
                 sensor_outputs[center] = -80
@@ -2398,27 +2398,29 @@ def main5():
     selectsensor = SelectSensor('config/ipsn_50.json')
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
-    selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
+    selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
+    #selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
     #true_powers = [-8, -4, 0, 4, 8]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 1.5, 2]
-    true_powers = [-2, -1, 0, 1, 2]
+    true_powers = [-2, 1, 0, 0, 1, 2]
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 50
+    repeat = 40
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
     iterations = 0
     start = time.time()
-    for i in range(0, repeat):
+    for i in range(16, 17):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=3, min_dist=20, powers=true_powers)
+        true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=6, intruders=true_indices, powers=true_powers)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)

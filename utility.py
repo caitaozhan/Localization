@@ -149,7 +149,7 @@ def random_intruder(grid_len):
 
 
 def get_distance(grid_len, index1, index2):
-    '''
+    '''Convert 1D index to 2D index, then return distance of the 2D index
     '''
     x1, y1 = index1//grid_len, index1%grid_len
     x2, y2 = index2//grid_len, index2%grid_len
@@ -162,6 +162,8 @@ def generate_intruders(grid_len, edge, num, min_dist, powers):
         grid_len (int):
         edge (int): intruders cannot be at the edge
         num (int): number of intruders
+        min_dist (int): minimum distance between intruders
+        powers (list): an element is float, denoting power
     Return:
         (list): a list of 1D index
     '''
@@ -195,6 +197,52 @@ def generate_intruders(grid_len, edge, num, min_dist, powers):
             #print('Oops!')
             intruders, powers = generate_intruders(grid_len, edge, num, min_dist, powers) # when stuck, just restart again
             break
+    return intruders, powers
+
+
+def generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers):
+    '''generate intruders for testing procedure 2
+    Args:
+        grid_len (int):
+        edge (int): intruders cannot be at the edge
+        min_dist (int): minimum distance between intruders in different cluster
+        max_dist (int): maximum distance between intruders in the same cluster
+        powers (list): an element is float, denoting power
+    Return:
+        (list): a list of 1D index
+    '''
+    counter = 0
+    num = len(intruders)
+    new_intruders = []
+    while counter < num:
+        c_intruder = intruders[counter]   # a cluster center
+        c_x = c_intruder//grid_len
+        c_y = c_intruder%grid_len
+        trial = 0
+        if trial < 100:
+            trial += 1
+            rand = np.random.randint(low=-max_dist, high=max_dist+1, size=2)
+            x = c_x + rand[0]
+            y = c_y + rand[1]
+            if x < edge or x >= grid_len-edge:
+                continue
+            if y < edge or y >= grid_len-edge:
+                continue
+            tmp = x*grid_len + y
+            if get_distance(grid_len, c_intruder, tmp) >= max_dist:
+                continue
+            for intruder in intruders:
+                if intruder != c_intruder and get_distance(grid_len, intruder, tmp) < min_dist:
+                    break
+            else:
+                new_intruders.append(tmp)
+                counter += 1
+                continue
+        else:
+            print('Oooops!')
+            new_intruders, powers = generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers)
+            break
+    intruders.extend(new_intruders)
     return intruders, powers
 
 
