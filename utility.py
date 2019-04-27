@@ -200,7 +200,7 @@ def generate_intruders(grid_len, edge, num, min_dist, powers):
     return intruders, powers
 
 
-def generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers):
+def generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers, cluster_size):
     '''generate intruders for testing procedure 2
     Args:
         grid_len (int):
@@ -214,6 +214,7 @@ def generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers):
     counter = 0
     num = len(intruders)
     new_intruders = []
+    size = 1                              # size of a cluster of intruders
     while counter < num:
         c_intruder = intruders[counter]   # a cluster center
         c_x = c_intruder//grid_len
@@ -235,12 +236,15 @@ def generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers):
                 if intruder != c_intruder and get_distance(grid_len, intruder, tmp) < min_dist:
                     break
             else:
+                size += 1
                 new_intruders.append(tmp)
-                counter += 1
-                continue
+                if size == cluster_size:
+                    counter += 1
+                    size = 1
+                    continue
         else:
             print('Oooops!')
-            new_intruders, powers = generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers)
+            new_intruders, powers = generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers, cluster_size)
             break
     intruders.extend(new_intruders)
     return intruders, powers

@@ -39,3 +39,7 @@ intruder has randomness
 Settings: 50 x 50 grid, 200 sensors, 10 intrudrs, offset=0.74, power=[-2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 1.5, 2], std=1, intruder no randomness
 
 (mean/max/min) error=(0.98/3.37/0.0), miss=(0.125/0.5/0.0), false_alarm=(0.092/0.3/0.0), power=(0.073/0.98/-0.96)
+
+----------------
+
+Settings: 50 x 50 grid; 200 sensors; 2 intruders in a cluster, there are 3 clusters and they are far apart. Intruders are varies power {-2, -1, 0, 0, 1, 2}
