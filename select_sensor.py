@@ -1681,13 +1681,28 @@ class SelectSensor:
 
 
     def get_q_threshold(self, radius):
-        '''Different number of sensors get a different thershold
+        '''Different number of sensors (expected) get a different thershold
         '''
         inside = self.sen_num * 3.14159 * radius**2 / len(self.transmitters)
         outside = self.sen_num - inside
         #q = np.power(norm(0, 1).pdf(3), inside) * np.power(0.2, outside) * np.power(3., self.sen_num)
         q = np.power(norm(0, 1).pdf(2.77), inside)
         q *= np.power(0.6, outside)  # 0.6 = 0.2 x 3
+        q *= np.power(3, inside)
+        return q
+ 
+ 
+    def get_q_threshold_custom(self, inside, radius):
+        '''Different number of sensors (real) get a different thershold
+        Args:
+            inside (int): real number of sensors inside radius R
+        Return:
+            (float): the customized q threshold
+        '''
+        prior = 1./(3.14 * radius**2)
+        outside = self.sen_num - inside
+        q = np.power(norm(0, 1).pdf(2.77), inside) * prior
+        q *= np.power(0.6, outside)
         q *= np.power(3, inside)
         return q
 
@@ -1812,17 +1827,17 @@ class SelectSensor:
         identified = []
         pred_power = []
         counter    = 0
-        #hypotheses = list(range(len(self.transmitters)))
-        #R_list = [8, 6, 4]
-        #for R in R_list:
-        #    identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
-        #    identified.extend(identified_R)
-        #    pred_power.extend(pred_power_R)
-        #    counter += counter_R
+        hypotheses = list(range(len(self.transmitters)))
+        R_list = [8, 6, 4]
+        for R in R_list:
+            identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
+            identified.extend(identified_R)
+            pred_power.extend(pred_power_R)
+            counter += counter_R
 
-        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
-        identified.extend(identified2)
-        pred_power.extend(pred_power2)
+        #identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
+        #identified.extend(identified2)
+        #pred_power.extend(pred_power2)
 
         return identified, pred_power, counter
 
@@ -1961,9 +1976,10 @@ class SelectSensor:
         identified = []
         pred_power = []
         detected = True
-        q_threshold = self.get_q_threshold(radius)
+        #q_threshold = self.get_q_threshold(radius)
+        #print('R= {}, q-threshold ={}'.format(radius, q_threshold))
+        print('R = {}'.format(radius))
         offset = 0.74
-        print('R= {}, q-threshold ={}'.format(radius, q_threshold))
         counter = 0
         while detected:
             counter += 1
@@ -1988,7 +2004,10 @@ class SelectSensor:
             for index in indices:  # 2D index
                 print('detected peak =', index, "; Q' =", round(posterior[index[0]][index[1]], 3), end='; ')
                 q = Q[index[0]*self.grid_len + index[1]]
+                sen_inside = len(self.collect_sensors_in_radius(radius, Sensor(index[0], index[1], 1)))
+                q_threshold = self.get_q_threshold_custom(sen_inside, radius)
                 print('Q =', q, end='; ')
+                print('q-threshold = {}, inside = {}'.format(q_threshold, sen_inside), end=' ')
                 if q > q_threshold:
                     print(' **Intruder!**')
                     detected = True
@@ -2419,19 +2438,19 @@ def main5():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 30
+    repeat = 50
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
     iterations = 0
     start = time.time()
-    for i in range(0, 1):
+    for i in range(0, repeat):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=2, min_dist=20, powers=true_powers)
-        true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
