@@ -1,0 +1,70 @@
+
+
+Test  0
+
+center = (37, 3) RSS = -31.6547928716329
+q-threshold = 1.5602655599571686e-14
+max Q = 5.397107179434755e-14; posterior = 0.999999444258756; intruders = [(37, 2), (39, 2)]
+** Intruder! **
+
+center = (6, 20) RSS = -40.75874929005061
+q-threshold = 2.8855984189636646e-26
+max Q = 1.752397022278236e-21; posterior = 0.9999999997628066; intruders = [(3, 15), (5, 19)]
+** Intruder! **
+
+center = (32, 26) RSS = -42.588323092704854
+q-threshold = 7.169010141464239e-14
+max Q = 1.2726351595099511e-09; posterior = 0.5858560938809398; intruders = [(27, 24), (31, 27)]
+** Intruder! **
+
+center = (38, 1) RSS = -53.720915485624026
+q-threshold = 2.9661186317392657e-13
+max Q = 0.0; posterior = nan; intruders = [(31, 0), (45, 0)]
+
+Pred: (31, 27) 0    ; (3, 15)  0    ; (39, 2)  0    ; (5, 19)  0    ; (37, 2)  0    ; (27, 24) 0    ; 
+True: (31, 27) -2   ; (3, 15)  -1   ; (39, 2)  0    ; (5, 19)  1    ; (37, 2)  2    ; (29, 25) 0    ; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.37267799624996495/0.0/0.0/0.0
+(mean/max/min) error=(0.37267799624996495/0.37267799624996495/0.37267799624996495), miss=(0.0/0.0/0.0), false_alarm=(0.0/0.0/0.0), power=(0.0/0.0/0.0)
+Ours! time =  60.370787143707275 ; iterations = 0.0
+Wrote profile results to select_sensor.py.lprof
+Timer unit: 1e-06 s
+
+Total time: 58.8269 s
+File: select_sensor.py
+Function: procedure2_iteration at line 1895
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+  1895                                               @profile
+  1896                                               def procedure2_iteration(self, hypotheses_combination, sensor_outputs, sensor_subset):
+  1897                                                   '''MAP over combinaton of hypotheses
+  1898                                                   Args:
+  1899                                                       hypotheses_combination (list): an element is a tuple of transmitter index, i.e. (t1, t2)
+  1900                                                       sensor_outputs (np.array)
+  1901                                                   Return:
+  1902                                                       posterior (np.array): 1D array of posterior
+  1903                                                       H_0 (bool): whether H_0 is the largest likelihood or not
+  1904                                                       q (np.array): 2D array of Q
+  1905                                                       power_grid (np.array): 2D array of power
+  1906                                                   '''
+  1907                                                   # Note try single power first
+  1908         4         51.0     12.8      0.0          posterior = np.zeros(len(hypotheses_combination))
+  1909         4          9.0      2.2      0.0          prior = 1./len(hypotheses_combination)
+  1910     47343      31285.0      0.7      0.1          for i in range(len(hypotheses_combination)):
+  1911     47339      36820.0      0.8      0.1              combination = hypotheses_combination[i]
+  1912     47339      45102.0      1.0      0.1              if combination == (37*50+2, 39*50+2) or combination == (3*50+15, 5*50+19) or combination == (27*50+24, 31*50+27):
+  1913                                                           pass#print(combination)
+  1914     47339     126293.0      2.7      0.2              mean_vec = np.zeros(len(sensor_subset))
+  1915    142017     110873.0      0.8      0.2              for hypo in combination:
+  1916     94678    1217445.0     12.9      2.1                  mean_vec += db_2_amplitude_(self.means[hypo][sensor_subset])
+  1917     47339     206351.0      4.4      0.4              mean_vec = amplitude_2_db_(mean_vec)
+  1918     47339     410960.0      8.7      0.7              stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
+  1919     47339   54321497.0   1147.5     92.3              array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs[sensor_subset])
+  1920     47339     549911.0     11.6      0.9              likelihood = np.prod(array_of_pdfs)
+  1921     47339    1290962.0     27.3      2.2              array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs[sensor_subset])
+  1922     47339     398171.0      8.4      0.7              likelihood = np.prod(array_of_pdfs)
+  1923     47339      80861.0      1.7      0.1              posterior[i] = likelihood * prior
+  1924         4        355.0     88.8      0.0          return posterior/np.sum(posterior), posterior  # question: is the denometer the summation of everything?
+

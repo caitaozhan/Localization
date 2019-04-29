@@ -75,7 +75,8 @@ class SelectSensor:
         self.TPB = 32
         self.primary_trans = []                # introduce the legal transmitters as secondary user in the Mobicom version
         self.secondary_trans = []              # they include primary and secondary
-        self.lookup_table = np.array([1. - 0.5*(1. + math.erf(i/1.4142135623730951)) for i in np.arange(0, 8.3, 0.0001)])
+        self.lookup_table_q = np.array([1. - 0.5*(1. + math.erf(i/1.4142135623730951)) for i in np.arange(0, 8.3, 0.0001)])
+        self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
 
 
     #@profile
@@ -826,7 +827,7 @@ class SelectSensor:
         d_covariance      = cuda.to_device(self.covariance)  # transfer only once
         d_meanvec         = cuda.to_device(self.meanvec_array)
         d_results         = cuda.device_array(n_h*n_h, np.float64)
-        d_lookup_table    = cuda.to_device(self.lookup_table)
+        d_lookup_table    = cuda.to_device(self.lookup_table_q)
 
         #logger = open('dataSplat/log', 'w')
         while cost < budget and complement_sensors:
@@ -1259,7 +1260,7 @@ class SelectSensor:
         d_covariance      = cuda.to_device(self.covariance)
         d_meanvec         = cuda.to_device(self.meanvec_array)
         d_results         = cuda.device_array(n_h*n_h, np.float64)
-        d_lookup_table    = cuda.to_device(self.lookup_table)
+        d_lookup_table    = cuda.to_device(self.lookup_table_q)
 
         while cost < budget and complement_sensors:
             sensor_delete = []                  # sensors that will lead to over budget
@@ -1774,7 +1775,7 @@ class SelectSensor:
                     mean_vec = np.copy(trans.mean_vec)
                     mean_vec = mean_vec[subset_sensors] + power  # add the delta of power
                     stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
-                    array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs_copy)
+                    array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
                     likelihood = np.prod(array_of_pdfs)
                     if likelihood > likelihood_max:
                         likelihood_max = likelihood
@@ -1792,7 +1793,7 @@ class SelectSensor:
         mean_vec = np.full(len(sensor_outputs), -80)
         sensor_outputs_copy = copy.copy(sensor_outputs)
         sensor_outputs_copy[sensor_outputs_copy < -80] = -80
-        array_of_pdfs = norm(mean_vec, np.sqrt(np.diagonal(self.covariance))).pdf(sensor_outputs_copy)
+        array_of_pdfs = self.get_pdfs(mean_vec, np.sqrt(np.diagonal(self.covariance)), sensor_outputs_copy)
         likelihood = np.prod(array_of_pdfs) * np.power(2., len(self.sensors))
         self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
         # check if H_0's likelihood*prior is one of the largest
@@ -1813,7 +1814,7 @@ class SelectSensor:
             min_y = int(max(0, trans.y - radius))
             max_y = int(min(trans.y + radius, self.grid_len - 1))
             den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
-                                    if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) < radius]))
+                                                                              if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) < radius]))
             grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
 
         grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
@@ -1827,17 +1828,18 @@ class SelectSensor:
         identified = []
         pred_power = []
         counter    = 0
-        hypotheses = list(range(len(self.transmitters)))
-        R_list = [8, 6, 4]
-        for R in R_list:
-            identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
-            identified.extend(identified_R)
-            pred_power.extend(pred_power_R)
-            counter += counter_R
 
-        #identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
-        #identified.extend(identified2)
-        #pred_power.extend(pred_power2)
+        #hypotheses = list(range(len(self.transmitters)))
+        #R_list = [8, 6, 4]
+        #for R in R_list:
+        #    identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
+        #    identified.extend(identified_R)
+        #    pred_power.extend(pred_power_R)
+        #    counter += counter_R
+
+        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
+        identified.extend(identified2)
+        pred_power.extend(pred_power2)
 
         return identified, pred_power, counter
 
@@ -1889,6 +1891,7 @@ class SelectSensor:
             center_list.append(center)
         return detected, power
 
+
     #@profile
     def procedure2_iteration(self, hypotheses_combination, sensor_outputs, sensor_subset):
         '''MAP over combinaton of hypotheses
@@ -1906,17 +1909,27 @@ class SelectSensor:
         prior = 1./len(hypotheses_combination)
         for i in range(len(hypotheses_combination)):
             combination = hypotheses_combination[i]
-            if combination == (37*50+2, 39*50+2) or combination == (3*50+15, 5*50+19) or combination == (27*50+24, 31*50+27):
-                pass#print(combination)
+            #if combination == (37*50+2, 39*50+2) or combination == (3*50+15, 5*50+19) or combination == (27*50+24, 31*50+27):
+            #    pass#print(combination)
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
                 mean_vec += db_2_amplitude_(self.means[hypo][sensor_subset])
             mean_vec = amplitude_2_db_(mean_vec)
             stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
-            array_of_pdfs = norm(mean_vec, stds).pdf(sensor_outputs[sensor_subset])
+            array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs[sensor_subset])
             likelihood = np.prod(array_of_pdfs)
             posterior[i] = likelihood * prior
         return posterior/np.sum(posterior), posterior  # question: is the denometer the summation of everything?
+
+
+    def get_pdfs(self, mean_vec, stds, sensor_outputs):
+        ''' Replace:
+            norm(mean_vec, stds).pdf(sensor_outputs[sensor_subset])
+            from 0.7 ms down to 0.013 ms
+        '''
+        sensor_outputs = np.abs((sensor_outputs - mean_vec) / stds)
+        index = [i if i<390000 else 389999 for i in np.array(sensor_outputs * 10000, np.int)]
+        return self.lookup_table_norm[index]
 
 
     def get_center_sensor(self, sensor_outputs, R, center_list):
@@ -2438,19 +2451,19 @@ def main5():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 50
+    repeat = 1
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
     iterations = 0
     start = time.time()
-    for i in range(0, repeat):
+    for i in range(1, 2):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
-        #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=2, min_dist=20, powers=true_powers)
+        true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
