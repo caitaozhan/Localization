@@ -43,3 +43,16 @@ Settings: 50 x 50 grid, 200 sensors, 10 intrudrs, offset=0.74, power=[-2, -1.5, 
 ----------------
 
 Settings: 50 x 50 grid; 200 sensors; 2 intruders in a cluster, there are 3 clusters and they are far apart. Intruders are varies power {-2, -1, 0, 0, 1, 2}
+
+
+----------------
+
+Settings: 50 x 50 grid; 200 sensors; 5 intruders, min_dist = 1. Intruders are varies power {-2, -1, 0, 1, 2}
+
+Procedure 1:
+(mean/max/min) error=(0.20/1.22/0.0), miss=(0.048/0.6/0.0), false_alarm=(0.0/0.0/0.0), power=(0.21099999999999988/1.0599999999999998/-1.1400000000000001)
+time =  328.40410709381104 / 50 = 6.5 (s)
+
+Procedure 1 + 2:
+(mean/max/min) error=(0.19/1.22/0.0), miss=(0.016/0.2/0.0), false_alarm=(0.0/0.0/0.0), power=(0.18/1.06/-1.14)
+time =  347.0773959159851 / 50 = 6.8 (s)

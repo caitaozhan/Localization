@@ -1734,12 +1734,37 @@ class SelectSensor:
         for prune in prunes:
             hypotheses.remove(prune)
 
+
+    def ignore_screwed_sensor(self, subset_sensors, previous_identified, min_dist):
+        '''When a sensor is close to a identified intruder, it is likely to get screwed due to deleting signals with a wrong power
+           Ignore the potential screwed sensor whose distance <= min_dist
+        Args:
+            subset_sensors (list)
+            previous_identified (list): an element is a 2D index of intuder
+            min_dist (int): threshold of being a likely screwed sensor
+        '''
+        screwed = []
+        for sen in subset_sensors:
+            sen_x = self.sensors[sen].x
+            sen_y = self.sensors[sen].y
+            for intru in previous_identified:
+                dist = math.sqrt((sen_x - intru[0])**2 + (sen_y - intru[1])**2)
+                if dist <= min_dist:
+                    screwed.append(sen)
+                    break
+        for screw in screwed:
+            subset_sensors.remove(screw)
+
+
     #@profile
-    def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, subset_index = None):
+    def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
         '''
         Args:
+            hypothesis (list): an element is potential hypothesis
             radius (int): the transmission radius
             sensor_outputs (list): a list of residual RSS of each sensor
+            fig (int): for plotting
+            previous_identified (list): an element is a 2D index, identified intruder in previous
             subset_index (list): a list of sensor index
         Return:
             posterior (np.array): 1D array of posterior
@@ -1747,7 +1772,7 @@ class SelectSensor:
             q (np.array): 2D array of Q
             power_grid (np.array): 2D array of power
         '''
-        position_to_check = [(39, 12)]
+        position_to_check = [(15, 44)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
         power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
@@ -1758,14 +1783,16 @@ class SelectSensor:
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
                 continue
             if (trans.x, trans.y) in position_to_check:
-                pass#print(trans.x, trans.y)
+                print(trans.x, trans.y)
             my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
             subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
+            self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
             subset_sensors = np.array(subset_sensors)
             all_sensors = np.arange(0, len(self.sensors), 1).astype(int)
             remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
-            if len(subset_sensors) == 0:
-                likelihood = 1
+            if len(subset_sensors) < 3:
+                likelihood = 0
+                power_max = 0
             else:
                 likelihood_max = 0
                 power_max = 0
@@ -1828,18 +1855,19 @@ class SelectSensor:
         identified = []
         pred_power = []
         counter    = 0
+        print('Procedure 1')
+        hypotheses = list(range(len(self.transmitters)))
+        R_list = [8, 6, 4]
+        for R in R_list:
+            identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
+            identified.extend(identified_R)
+            pred_power.extend(pred_power_R)
+            counter += counter_R
 
-        #hypotheses = list(range(len(self.transmitters)))
-        #R_list = [8, 6, 4]
-        #for R in R_list:
-        #    identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R)
-        #    identified.extend(identified_R)
-        #    pred_power.extend(pred_power_R)
-        #    counter += counter_R
-
-        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
-        identified.extend(identified2)
-        pred_power.extend(pred_power2)
+        #print('Procedure 2')
+        #identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
+        #identified.extend(identified2)
+        #pred_power.extend(pred_power2)
 
         return identified, pred_power, counter
 
@@ -1864,14 +1892,14 @@ class SelectSensor:
             sensor_subset = self.collect_sensors_in_radius(R, self.sensors[center])  # sensor in R, hypothesis in R
             hypotheses = [h for h in range(len(self.transmitters)) \
                           if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
-            for t in range(3, 4):
+            for t in range(2, 3):
                 hypotheses_combination = list(combinations(hypotheses, t))
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked]
                 if len(hypotheses_combination) == 0:
                     break
-                q_threshold = np.power(norm(0, 1).pdf(1.5), len(sensor_subset)) * (1./len(hypotheses_combination))
+                q_threshold = np.power(norm(0, 1).pdf(2.2), len(sensor_subset)) * (1./len(hypotheses_combination))
                 combination_checked = combination_checked.union(set(hypotheses_combination))
-                print('q-threshold =', q_threshold)
+                print('q-threshold = {}, inside = {}'.format(q_threshold, len(sensor_subset)))
                 #posterior, H_0, Q, power = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
                 posterior, Q = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
                 print('max Q = {}; posterior = {}; intruders = {}'.format(np.max(Q), np.max(posterior),\
@@ -1970,7 +1998,7 @@ class SelectSensor:
 
 
     #@profile
-    def procedure1(self, hypotheses, sensor_outputs, intruders, fig, radius):
+    def procedure1(self, hypotheses, sensor_outputs, intruders, fig, radius, previous_identified):
         '''Our hypothesis-based localization algorithm's procedure 1
         Args:
             hypotheses (list): transmitters (1D index) that has 2 or more sensors in radius with RSS > -80 
@@ -1978,6 +2006,7 @@ class SelectSensor:
             intruders (list): for plotting
             fig (int):        for plotting
             radius (int) 
+            previous_identified (list): an element is a 2D index, identified intruder in previous
         Return:
             (list, list, int)
         '''
@@ -1998,8 +2027,8 @@ class SelectSensor:
             counter += 1
             visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
             detected = False
-
-            posterior, H_0, Q, power = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig)
+            previous_identified = list(set(previous_identified).union(set(identified)))
+            posterior, H_0, Q, power = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig, previous_identified)
 
             if H_0:
                 print('H_0 is most likely')
@@ -2443,27 +2472,26 @@ def main5():
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
     selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
-    #true_powers = [-8, -4, 0, 4, 8]
+    true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 1.5, 2]
-    true_powers = [-2, -1, 0, 0, 1, 2]
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 1
+    repeat = 50
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
     iterations = 0
     start = time.time()
-    for i in range(1, 2):
+    for i in range(0, repeat):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=2, min_dist=20, powers=true_powers)
-        true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
