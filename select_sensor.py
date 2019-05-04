@@ -25,7 +25,7 @@ from itertools import combinations
 import line_profiler
 from sklearn.cluster import KMeans
 from scipy.optimize import nnls
-from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_gupta, visualize_q_prime, visualize_q
+from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot
 from utility import generate_intruders, generate_intruders_2
 from skimage.feature import peak_local_max
 import itertools
@@ -1606,6 +1606,67 @@ class SelectSensor:
         return localize
 
 
+    def compute_error2(self, true_locations, pred_locations):
+        '''Given the true location and localization location, computer the error
+           Comparing to compute_error, this one do not include error, used for SPLOT and clustering
+        Args:
+            true_locations (list): an element is a tuple (true transmitter 2D location)
+            pred_locations (list): an element is a tuple (predicted transmitter 2D location)
+        Return:
+            (tuple): (distance error, miss, false alarm)
+        '''
+        if len(pred_locations) == 0:
+            return -1, 1, 0
+        distances = np.zeros((len(true_locations), len(pred_locations)))
+        for i in range(len(true_locations)):
+            for j in range(len(pred_locations)):
+                distances[i, j] = np.sqrt((true_locations[i][0] - pred_locations[j][0]) ** 2 + (true_locations[i][1] - pred_locations[j][1]) ** 2)
+
+        k = 0
+        matches = []
+        misses = list(range(len(true_locations)))
+        falses = list(range(len(pred_locations)))
+        while k < min(len(true_locations), len(pred_locations)):
+            min_error = np.min(distances)
+            min_error_index = np.argmin(distances)
+            i = min_error_index // len(pred_locations)
+            j = min_error_index %  len(pred_locations)
+            matches.append((i, j, min_error))
+            distances[i, :] = np.inf
+            distances[:, j] = np.inf
+            k += 1
+
+        tot_error = 0              # distance error
+        detected = 0
+        threshold = self.grid_len / 5
+        for match in matches:
+            error = match[2]
+            if error <= threshold:
+                tot_error += error
+                detected += 1
+                misses.remove(match[0])
+                falses.remove(match[1])
+
+        print('\nPred:', end=' ')
+        for match in matches:
+            print(str(pred_locations[match[1]]).ljust(9), end='; ')
+        print('\nTrue:', end=' ')
+        for match in matches:
+            print(str(true_locations[match[0]]).ljust(9), end='; ')
+        print('\nMiss:', end=' ')
+        for miss in misses:
+            print(true_locations[miss], end=' ')
+        print('\nFalse Alarm:', end=' ')
+        for false in falses:
+            print(pred_locations[false], end=' ')
+        print()
+        try:
+            return tot_error / detected, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations)
+        except:
+            return 0, 0, 0
+
+        
+
     def compute_error(self, true_locations, true_powers, pred_locations, pred_powers):
         '''Given the true location and localization location, computer the error
         Args:
@@ -1691,8 +1752,8 @@ class SelectSensor:
         q *= np.power(0.6, outside)  # 0.6 = 0.2 x 3
         q *= np.power(3, inside)
         return q
- 
- 
+
+
     def get_q_threshold_custom(self, inside, radius):
         '''Different number of sensors (real) get a different thershold
         Args:
@@ -1783,7 +1844,7 @@ class SelectSensor:
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
                 continue
             if (trans.x, trans.y) in position_to_check:
-                print(trans.x, trans.y)
+                pass#print(trans.x, trans.y)
             my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
             subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
             self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
@@ -1864,10 +1925,10 @@ class SelectSensor:
             pred_power.extend(pred_power_R)
             counter += counter_R
 
-        #print('Procedure 2')
-        #identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
-        #identified.extend(identified2)
-        #pred_power.extend(pred_power2)
+        print('Procedure 2')
+        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
+        identified.extend(identified2)
+        pred_power.extend(pred_power2)
 
         return identified, pred_power, counter
 
@@ -1892,7 +1953,10 @@ class SelectSensor:
             sensor_subset = self.collect_sensors_in_radius(R, self.sensors[center])  # sensor in R, hypothesis in R
             hypotheses = [h for h in range(len(self.transmitters)) \
                           if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
-            for t in range(2, 3):
+            for t in range(2, 4):
+                print('t =', t)
+                if t == 3:
+                    pass
                 hypotheses_combination = list(combinations(hypotheses, t))
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked]
                 if len(hypotheses_combination) == 0:
@@ -1902,8 +1966,8 @@ class SelectSensor:
                 print('q-threshold = {}, inside = {}'.format(q_threshold, len(sensor_subset)))
                 #posterior, H_0, Q, power = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
                 posterior, Q = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
-                print('max Q = {}; posterior = {}; intruders = {}'.format(np.max(Q), np.max(posterior),\
-                      [(hypo//self.grid_len, hypo%self.grid_len) for hypo in hypotheses_combination[np.argmax(Q)]]))
+                print('combination = {}; max Q = {}; posterior = {}'.format([ (hypo//self.grid_len, hypo%self.grid_len) for hypo in \
+                       hypotheses_combination[np.argmax(Q)] ], np.max(Q), np.max(posterior)))
                 if np.max(Q) > q_threshold and np.max(posterior) > 0.3:
                     print('** Intruder! **')
                     hypo_comb = hypotheses_combination[np.argmax(Q)]
@@ -1984,7 +2048,7 @@ class SelectSensor:
             center_sensor = self.sensors[center]
             counter = 0
             for sen_index in range(len(self.sensors)):
-                if sensor_outputs[sen_index] > -80:  # inaccurate residual power during deleting intruders
+                if sensor_outputs[sen_index] > -75:  # inaccurate residual power during deleting intruders
                     dist = math.sqrt((self.sensors[sen_index].x - center_sensor.x)**2 + (self.sensors[sen_index].y - center_sensor.y)**2)
                     if dist >=1 and dist < R:
                         counter += 1
@@ -2021,7 +2085,7 @@ class SelectSensor:
         #q_threshold = self.get_q_threshold(radius)
         #print('R= {}, q-threshold ={}'.format(radius, q_threshold))
         print('R = {}'.format(radius))
-        offset = 0.74
+        offset = 0 #0.74
         counter = 0
         while detected:
             counter += 1
@@ -2065,29 +2129,6 @@ class SelectSensor:
         return identified, pred_power, counter
 
 
-    def compute_gradient(self, sensor_subset, sensor_outputs):
-        first_sensor = self.sensors[sensor_subset[0]]
-        first_x = first_sensor.x
-        first_y = first_sensor.y
-        first_power = db_2_amplitude(sensor_outputs[first_sensor.index])
-        distance_vector = np.zeros((len(sensor_subset) - 1))
-        power_gradient = np.zeros((len(sensor_subset) - 1))
-
-        i = 0
-        #print(first_power, sensor_outputs[first_sensor.index])
-        for sen_num in sensor_subset[1:]:
-            sensor = self.sensors[sen_num]
-            distance_vector[i] = math.sqrt((first_x - sensor.x) ** 2 + (first_y - sensor.y) ** 2)
-            power_gradient[i] = db_2_amplitude(sensor_outputs[sensor.index]) - first_power
-            i += 1
-        A = np.vstack([distance_vector, np.ones(len(power_gradient))]).T
-        W, n = nnls(A, power_gradient)[0]
-        if n < 0:
-            n = 0
-        #print(A, power_gradient, W, n)
-        return (W, n)
-
-
     def get_min_max(self, sensor_subset):
         min_x = self.grid_len
         min_y = self.grid_len
@@ -2106,38 +2147,6 @@ class SelectSensor:
                 max_y = sensor.y
         return (min_x, max_x, min_y, max_y)
 
-    def compute_interpolated_values(self, sensor_subset, sensor_outputs, interpolated_values, min_x, max_x, min_y, max_y, gradient, residue):
-        for x in range(min_x, max_x + 1):
-            for y in range(min_y, max_y + 1):
-                i = 0
-                for sensor in sensor_subset:
-                    distance = np.sqrt((x - self.sensors[sensor].x) ** 2 + (y - self.sensors[sensor].y) ** 2)
-                    #print('sensor = ', sensor, db_2_amplitude(sensor_outputs[sensor]))
-                    interpolated_values[(x - min_x), (y - min_y), i] = db_2_amplitude(sensor_outputs[sensor]) - distance * gradient + residue
-                    if interpolated_values[(x - min_x), (y - min_y), i] < 0:
-                        interpolated_values[(x - min_x), (y - min_y), i] = 0
-                    i += 1
-        #print(interpolated_values[0, 0, :])
-
-    def get_local_maximum(self, sensor_subset, sensor_outputs, gradient, residue):
-        #First need to compute the area of interpolation
-        min_x, max_x, min_y, max_y = self.get_min_max(sensor_subset)
-
-        interpolated_values = np.zeros((max_x - min_x + 1, max_y - min_y + 1, len(sensor_subset)))
-        self.compute_interpolated_values(sensor_subset, sensor_outputs, interpolated_values, min_x, max_x, min_y, max_y, gradient, residue)
-        interpolated_values = np.mean(interpolated_values, axis=2)
-        #print('main_print = ', gradient, residue, amplitude_2_db(interpolated_values), interpolated_values, min_x, max_x, min_y, max_y)
-
-        position = np.argmax(interpolated_values)
-        position_x = position // (max_y - min_y + 1)
-        position_y = position % (max_y - min_y + 1)
-        value = amplitude_2_db(interpolated_values[position_x, position_y])
-        #print('within_loc', position, value)
-        position = (position_x + min_x, position_y + min_y)
-        if (value < -75):
-            return None
-        return value, position
-
 
     def fill_value(self, x1, y1, x2, y2, gradient, noise):
         try:
@@ -2147,15 +2156,19 @@ class SelectSensor:
         return distance
 
 
-    def euclidean(self, sensor, trans):
-        try:
-            distance = (self.sensors[sensor.index].x - trans.x ) ** 2 + (self.sensors[sensor.index].y - trans.y) ** 2
-        except:
-            distance = (self.sensors[sensor.index].x - trans[0] ) ** 2 + (self.sensors[sensor.index].y - trans[1]) ** 2
-        distance *= 25*25 #SPLAT data=25 * 25; IPSN data = 1; representing the size of grid
-        distance = distance + 30 #SPLAT_data = 30; IPSN_data =1
-        distance = np.sqrt(distance)
-        return distance
+    def euclidean(self, location1, location2, minPL):
+        '''
+        Args:
+            location1 (tuple) (x, y)
+            location2 (tuple) (x, y)
+            minPL     (float) minimum path length
+        Return:
+            float
+        '''
+        dist = np.sqrt( (location1[0] - location2[0])**2 + (location1[1] - location2[1])**2 )
+        dist *= 1             #SPLAT data = 25; IPSN data = 1; representing the size of grid
+        dist = minPL if dist < minPL else dist
+        return dist
 
 
     def compute_path_loss(self, sensor_outputs):
@@ -2165,7 +2178,7 @@ class SelectSensor:
         for trans in self.transmitters:
             for sensor in self.sensors:
                 path_loss_vector[i] = 30 - sensor_outputs[sensor.index]
-                distance_vector[i] = self.euclidean(sensor, trans)
+                distance_vector[i] = self.euclidean((sensor.x, sensor.y), (trans.x, trans.y), minPL=1)
                 i += 1
                 if i == 2000:
                     break
@@ -2192,17 +2205,23 @@ class SelectSensor:
         return (W, n)
 
 
-    def get_splot_localization2(self, intruders, sensor_outputs, size_R1, size_R2, threshold=None):
+    def splot_localization(self, sensor_outputs, intruders, fig, R1, R2, threshold=None):
+        sigma_x_square = 0.5
+        delta_c        = 1
+        n_p            = 2
+        minPL          = 1.5  # in the paper, it is 1.5
+        delta_N_square = 1    # no specification in MobiCom'17 ?
+
+        visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+        weight_global  = np.zeros((self.grid_len, self.grid_len))
         sensor_sorted_index = np.flip(np.argsort(sensor_outputs))
-        
-        threshold = int(0.3*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
-        sensor_sorted_index = np.flip(np.argsort(sensor_outputs))  # decrease
-        threshold = sensor_outputs[sensor_sorted_index[threshold]]
-        threshold = threshold if threshold > -75 else -75
-        # print(sensor_outputs)
-        gradient, noise = self.compute_path_loss(sensor_outputs)
-        #print('--> gradient=', gradient)
-        gradient = 1
+
+        if threshold is None:
+            threshold = int(0.3*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
+            sensor_sorted_index = np.flip(np.argsort(sensor_outputs))  # decrease
+            threshold = sensor_outputs[sensor_sorted_index[threshold]]
+            threshold = threshold if threshold > -75 else -75
+        #gradient, noise = self.compute_path_loss(sensor_outputs)
         detected_intruders = []
 
         sensor_outputs_copy = np.copy(sensor_outputs)
@@ -2210,94 +2229,73 @@ class SelectSensor:
 
         for i in range(len(sensor_outputs_copy)): #Obtain local maximum within radius size_R
             current_sensor = self.sensors[sensor_sorted_index[i]]
-            #print(sensor_outputs[current_sensor.index])
             current_sensor_output = sensor_outputs_copy[current_sensor.index]
             if (current_sensor_output < threshold):
                 continue
-            sensor_subset = self.collect_sensors_in_radius(size_R1, current_sensor)
+            sensor_subset = self.collect_sensors_in_radius(R1, current_sensor)
             local_maximum_list.append(current_sensor.index)
             for sen_num in sensor_subset:
                 sensor_outputs_copy[sen_num] = -85
-            #print(sensor_subset)
 
         #Obtained local maximum list; now compute intruder location
         detected_intruders = []
-        for sensor in local_maximum_list:
-            sensor_subset = self.collect_sensors_in_radius(size_R2, self.sensors[sensor])
-            #print(sensor_subset)
+        for sen_local_max in local_maximum_list:
+            sensor_subset = self.collect_sensors_in_radius(R2, self.sensors[sen_local_max])
             min_x, max_x, min_y, max_y = self.get_min_max(sensor_subset)
             num_rows = (max_x - min_x + 1)
             num_columns = (max_y - min_y + 1)
-
-            W_matrix = np.zeros((len(sensor_subset), num_rows * num_columns))
-            for sensor_num in range(len(sensor_subset)):
-                l = 0
+            total_voxel = num_rows * num_columns
+            W_matrix = np.zeros((len(sensor_subset), total_voxel))
+            for i, sen_index in enumerate(sensor_subset):
+                q = 0
                 for j in range(num_rows):
                     for k in range(num_columns):
-                        trans_point = (min_x + j, min_y + k)
-                        distance = self.euclidean(self.sensors[sensor_num], trans_point)
-                        W_matrix[sensor_num,l] = distance ** (-gradient) #+ noise  # potential bug
-                        l += 1
+                        voxel = (min_x + j, min_y + k)    # a voxel in the paper
+                        sensor = self.sensors[sen_index]
+                        dist = self.euclidean((sensor.x, sensor.y), voxel, minPL)
+                        W_matrix[i, q] = dist ** (-n_p)
+                        q += 1
 
             W_transpose = np.transpose(W_matrix)
             X1 = np.matmul(W_transpose, W_matrix) #+ np.diag(np.ones(len(W_matrix))) * 0.0000001
-            y_mat = np.zeros(len(sensor_subset))
+            y = np.zeros(len(sensor_subset))
             for i in range(len(sensor_subset)):
-                y_mat[i] = db_2_amplitude(sensor_outputs[sensor_subset[i]])
+                y[i] = db_2_amplitude(sensor_outputs[sensor_subset[i]])
+
+            Cx = np.zeros((total_voxel, total_voxel))
+            for j in range(total_voxel):
+                voxel_j = (j//num_columns, j%num_columns)
+                for l in range(total_voxel):
+                    voxel_l = (l//num_columns, l%num_columns)
+                    dist = self.euclidean(voxel_j, voxel_l, minPL)
+                    Cx[j][l] = sigma_x_square * np.power(np.e, -dist/delta_c)
+            Cx = delta_N_square * Cx
 
             try:
+                X1 = X1 + Cx
                 X2 = np.linalg.inv(X1)
-                #X3 = np.matmul(X1, X2)
-                #print(np.matmul(X1, X2))
             except Exception as e:
                 print(e)
                 X2 = X1
-            #except:
-            #X2 = np.zeros((len(W_matrix), len(W_matrix[0])))
             X = np.matmul(X2, W_transpose)
-            #print(X.shape, y_mat.shape)
-            X = np.matmul(X, y_mat)
-            position = np.argmax(X)
-            position_x = position // (max_y - min_y + 1)
-            position_y = position % (max_y - min_y + 1)
-            #value = amplitude_2_db(X[position_x, position_y])
-            # print('within_loc', position, value)
-            position = (position_x + min_x, position_y + min_y)
-            value = np.max(X)
-            if (amplitude_2_db(value) > -80):
-                #print(X)
-                detected_intruders.append(position)
+            X = np.matmul(X, y)
+            weight_local = np.zeros((self.grid_len, self.grid_len))
+            for i, x in enumerate(X):
+                relative_x = i // num_columns
+                relative_y = i % num_columns
+                global_x = relative_x + min_x
+                global_y = relative_y + min_y
+                weight_local[global_x][global_y] = x
+                weight_global[global_x][global_y] = x
+            visualize_splot(weight_local, str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
-                #print(position, min_x, min_y, max_x, max_y, X)
-        return detected_intruders
+            index = np.argmax(X)
+            relative_x = index // num_columns
+            relative_y = index % num_columns
+            global_pos = (relative_x + min_x, relative_y + min_y)
+            detected_intruders.append(global_pos)
 
-
-    def get_splot_localization(self, intruders, sensor_outputs):
-        '''SPLOT algorithm from Mobicom'17'''
-        sensor_sorted_index = np.flip(np.argsort(sensor_outputs))
-
-        #print(sensor_outputs)
-        threshold = -75
-        size_R = 3
-        detected_intruders = []
-        for i in range(len(sensor_outputs)):
-            current_sensor = self.sensors[sensor_sorted_index[i]]
-            current_sensor_output = sensor_outputs[sensor_sorted_index[i]]
-            if (current_sensor_output < threshold):
-                break
-            sensor_subset = self.collect_sensors_in_radius(size_R, current_sensor)
-            #print('sensor_subset = ', sensor_subset)
-            # for i in sensor_subset:
-            #     print(self.sensors[i].x, self.sensors[i].y, self.sensors[i].index)
-            gradient, residue = self.compute_gradient(sensor_subset, sensor_outputs)
-            value, position = self.get_local_maximum(sensor_subset, sensor_outputs, gradient, residue)
-            #interpolated_values[i][k] -> represent interpolated value from i^th sensor in k^th grid cell
-            if value is not None:
-                detected_intruders.append(position)
-
-            #print('Value, position = ', value, position)
-            for sen_num in sensor_subset:
-                sensor_outputs[sen_num] = -80
+        visualize_splot(weight_global, fig)
         return detected_intruders
 
 
@@ -2426,60 +2424,72 @@ def main3():
     selectsensor.interpolate_loc(scale=4, hypo_file='dataSplat/1600-50/hypothesis-25-scale-4', sensor_file='dataSplat/1600-50/sensors-scale-4')
 
 
-def main4():
-    '''main 4: localization IPSN
-        SPLOT
+def main1():
+    '''main 1: IPSN synthetic data + SPLOT
     '''
-    selectsensor = SelectSensor('config/ipsn_config.json')
-    selectsensor.init_data('data50/homogeneous/cov', 'data50/homogeneous/sensors', 'data50/homogeneous/hypothesis')
-    error_sum, miss_sum, false_alarms_sum = 0, 0, 0
-    repeat = 30
-    for _ in range(0, repeat):
-        num_intruders = random.randint(5, 8)
-        true_indices = random.sample(range(selectsensor.grid_len * selectsensor.grid_len), num_intruders)
+    selectsensor = SelectSensor('config/ipsn_50.json')
+    selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
+    #true_powers = [-2, -1, 0, 1, 2]
+    #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
+    true_powers = [0, 0, 0, 0, 0]   # no varing power
+    selectsensor.vary_power(true_powers)
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices)
+    repeat = 10
+    errors = []
+    misses = []
+    false_alarms = []
+    start = time.time()
+    for i in range(0, repeat):
+        print('\n\nTest ', i)
+        random.seed(i)
+        np.random.seed(i)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20, powers=true_powers)
+        #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
+        #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        r1 = 6
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
+
+        r1 = 8
         r2 = 7
         threshold = -65
-        #pred_location = selectsensor.get_splot_localization2(intruders, sensor_outputs, size_R1=r1, size_R2=r2, threshold=threshold)
-        subset_sensors = selectsensor.sensors[0:len(selectsensor.sensors) // 2]
-        pred_location = selectsensor.get_posterior_localization_subset(intruders, sensor_outputs, subset_sensors)
-        #pred_location = selectsensor.get_cluster_localization(intruders, sensor_outputs)
+        pred_locations = selectsensor.splot_localization(sensor_outputs, intruders, fig=i, R1=r1, R2=r2, threshold=threshold)
+        true_locations = selectsensor.convert_to_pos(true_indices)
 
-        true_positions = selectsensor.convert_to_pos(true_indices)
-        print(true_positions)
-        print(pred_location)
-        # if len(pred_location) > 0:
         try:
-            error, misses, false_alarms = selectsensor.compute_error(true_positions, pred_location)
-            error_sum += error
-            miss_sum += misses
-            false_alarms_sum += false_alarms
-            print(error, misses, false_alarms, '\n')
-        except:
-            print('except')
-    print('R1 = {}, R2 = {}, threshold = {} \nerror = {}, miss = {}, false_alarm = {}'.format(r1, r2, threshold, error_sum/repeat, miss_sum/repeat, false_alarms_sum/repeat))
+            error, miss, false_alarm = selectsensor.compute_error2(true_locations, pred_locations)
+            if error >= 0:
+                errors.append(error)
+            misses.append(miss)
+            false_alarms.append(false_alarm)
+            print('error/miss/false/power = {}/{}/{}'.format(error, miss, false_alarm) )
+            visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
+        except Exception as e:
+            print(e)
+
+    try:
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
+              round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms)) )
+        print('Ours! time = ', time.time()-start)
+    except:
+        print('Empty list!')
 
 
-
-def main5():
-    '''main 5: IPSN synthetic data
+def main2():
+    '''main 2: IPSN synthetic data + Our localization
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
     selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
-    true_powers = [-2, -1, 0, 1, 2]
-    #true_powers = [-2, -1.5, -1, -0.5, 0, 0, 0.5, 1, 1.5, 2]
-    #true_powers = [0, 0, 0, 0, 0]   # no varing power
+    #true_powers = [-2, -1, 0, 1, 2]
+    #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
+    true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 50
+    repeat = 5
     errors = []
     misses = []
     false_alarms = []
@@ -2490,13 +2500,12 @@ def main5():
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20, powers=true_powers)
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
 
-        #pred_locations, pred_power, iteration = selectsensor.get_posterior_localization(sensor_outputs, intruders, i, radius=R)
         pred_locations, pred_power, iteration = selectsensor.our_localization(sensor_outputs, intruders, i)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
         iterations += iteration
@@ -2569,10 +2578,9 @@ def main6():
 
 
 if __name__ == '__main__':
-    #main()
-    #main2()
+    main1()
     #main3()
     #main4()
-    main5()
+    #main5()
     #main6()
 

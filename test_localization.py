@@ -27,7 +27,7 @@ def splat_splot(sensor_num=200, num_intruders=None):
         r1 = 25
         r2 = 12
         threshold = -68
-        pred_location = selectsensor.get_splot_localization2(intruders, sensor_outputs, size_R1=r1, size_R2=r2, threshold=threshold)
+        pred_location = selectsensor.splot_localization(intruders, sensor_outputs, R1=r1, R2=r2, threshold=threshold)
 
         true_positions = selectsensor.convert_to_pos(true_indices)
         print(true_positions)

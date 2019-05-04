@@ -164,41 +164,16 @@ def visualize_localization(grid_len, true_locations, pred_locations, fig):
     plt.savefig('visualize/localization/{}-localization'.format(fig))
 
 
-
-def visualize_gupta(grid_len, true_locations, pred_locations, sensors, sensor_outputs, threshold, fig):
-    '''Visualize the localization
+def visualize_splot(weight_global, fig):
+    '''Visualize the weights estimated in SPLOT
     Args:
-        true_locations (list): each element is a coordinate (x, y)
-        pred_locations (list): each element is a coordinate (x, y)
+        weight_global (np.array)
     '''
-    grid = np.zeros((grid_len, grid_len))
-
-    maximum = np.max(sensor_outputs)
-    minimum = np.min(sensor_outputs)
-    for index, sensor in enumerate(sensors):
-        if sensor_outputs[index] > threshold:
-            color = (sensor_outputs[index] - minimum) / (maximum - minimum)
-            color += 0.2
-        else:
-            color = -0.15                    # noise
-        grid[sensor.x][sensor.y] = color
-
-    for true in true_locations:
-        grid[true[0]][true[1]] = -0.4       # miss
-    for pred in pred_locations:
-        if grid[pred[0]][pred[1]] == -0.4:
-            grid[pred[0]][pred[1]] = -0.7  # accurate prediction
-        else:
-            grid[pred[0]][pred[1]] = -1    # false alarm
-    sns.set(style="white")
-    f, ax = plt.subplots(figsize=(8, 8))
-    cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
-    plt.title('Now I only know how to use heatmap with two colors...')
-    plt.xlabel('Red(>0): sensor outputs not noise; -0.15 = noise \n -0.4 = miss; -0.7 = accurate prediction; -1 = false alarm')
-    #plt.show()
-    plt.savefig('visualize/localization/{}-all'.format(fig))
-
+    weight_global[weight_global==0] = np.min(weight_global) - 0.00001
+    plt.subplots(figsize=(8, 8))
+    sns.heatmap(weight_global, vmin=np.min(weight_global), vmax=np.max(weight_global), square=True, linewidth=0.5)
+    plt.title('The estimated power (the weights of ridge regression)')
+    plt.savefig('visualize/splot/{}'.format(fig))
 
 
 def save_data_AGA(plot_data, file_path):
