@@ -164,16 +164,16 @@ def visualize_localization(grid_len, true_locations, pred_locations, fig):
     plt.savefig('visualize/localization/{}-localization'.format(fig))
 
 
-def visualize_splot(weight_global, fig):
+def visualize_splot(weight_global, folder, fig):
     '''Visualize the weights estimated in SPLOT
     Args:
         weight_global (np.array)
     '''
-    weight_global[weight_global==0] = np.min(weight_global) - 0.00001
+    weight_global[weight_global==0] = np.min(weight_global)
     plt.subplots(figsize=(8, 8))
     sns.heatmap(weight_global, vmin=np.min(weight_global), vmax=np.max(weight_global), square=True, linewidth=0.5)
     plt.title('The estimated power (the weights of ridge regression)')
-    plt.savefig('visualize/splot/{}'.format(fig))
+    plt.savefig('visualize/{}/{}'.format(folder, fig))
 
 
 def save_data_AGA(plot_data, file_path):

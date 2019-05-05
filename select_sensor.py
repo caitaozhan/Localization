@@ -2129,31 +2129,27 @@ class SelectSensor:
         return identified, pred_power, counter
 
 
-    def get_min_max(self, sensor_subset):
-        min_x = self.grid_len
-        min_y = self.grid_len
-        max_x = 0
-        max_y = 0
-
-        for sen_num in sensor_subset:
-            sensor = self.sensors[sen_num]
-            if sensor.x < min_x:
-                min_x = sensor.x
-            if sensor.y < min_y:
-                min_y = sensor.y
-            if sensor.x > max_x:
-                max_x = sensor.x
-            if sensor.y > max_y:
-                max_y = sensor.y
-        return (min_x, max_x, min_y, max_y)
-
-
-    def fill_value(self, x1, y1, x2, y2, gradient, noise):
-        try:
-            distance = (math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)) ** gradient + noise
-        except:
-            return 0.5 ** gradient + noise
-        return distance
+    def get_confined_area(self, sensor, R):
+        '''Get the confined area described in MobiCom'17
+        Args:
+            sensor (Sensor)
+            R (int)
+        Return:
+            (list): an element is (int, (int, int)) -- (1D index, 2D index)
+        '''
+        confined_area = []
+        min_x = sensor.x - R
+        min_y = sensor.y - R
+        for x in range(min_x, min_x + 2*R):
+            if x < 0 or x >= self.grid_len:
+                continue
+            for y in range(min_y, min_y + 2*R):
+                if y < 0 or y >= self.grid_len:
+                    continue
+                dist = math.sqrt((x - sensor.x)**2 + (y - sensor.y)**2)
+                if dist < R:
+                    confined_area.append((x, y))
+        return confined_area
 
 
     def euclidean(self, location1, location2, minPL):
@@ -2211,6 +2207,9 @@ class SelectSensor:
         n_p            = 2
         minPL          = 1.5  # in the paper, it is 1.5
         delta_N_square = 1    # no specification in MobiCom'17 ?
+        R1             = 12
+        R2             = 6
+        threshold      = -70
 
         visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
         weight_global  = np.zeros((self.grid_len, self.grid_len))
@@ -2223,14 +2222,13 @@ class SelectSensor:
             threshold = threshold if threshold > -75 else -75
         #gradient, noise = self.compute_path_loss(sensor_outputs)
         detected_intruders = []
-
         sensor_outputs_copy = np.copy(sensor_outputs)
         local_maximum_list = []
 
         for i in range(len(sensor_outputs_copy)): #Obtain local maximum within radius size_R
             current_sensor = self.sensors[sensor_sorted_index[i]]
             current_sensor_output = sensor_outputs_copy[current_sensor.index]
-            if (current_sensor_output < threshold):
+            if current_sensor_output < threshold:
                 continue
             sensor_subset = self.collect_sensors_in_radius(R1, current_sensor)
             local_maximum_list.append(current_sensor.index)
@@ -2241,61 +2239,64 @@ class SelectSensor:
         detected_intruders = []
         for sen_local_max in local_maximum_list:
             sensor_subset = self.collect_sensors_in_radius(R2, self.sensors[sen_local_max])
-            min_x, max_x, min_y, max_y = self.get_min_max(sensor_subset)
-            num_rows = (max_x - min_x + 1)
-            num_columns = (max_y - min_y + 1)
-            total_voxel = num_rows * num_columns
+            confined_area = self.get_confined_area(self.sensors[sen_local_max], R2)
+            total_voxel = len(confined_area)   # the Q in the paper
             W_matrix = np.zeros((len(sensor_subset), total_voxel))
             for i, sen_index in enumerate(sensor_subset):
-                q = 0
-                for j in range(num_rows):
-                    for k in range(num_columns):
-                        voxel = (min_x + j, min_y + k)    # a voxel in the paper
-                        sensor = self.sensors[sen_index]
-                        dist = self.euclidean((sensor.x, sensor.y), voxel, minPL)
-                        W_matrix[i, q] = dist ** (-n_p)
-                        q += 1
+                sensor = self.sensors[sen_index]
+                for q, voxel in enumerate(confined_area):
+                    dist = self.euclidean((sensor.x, sensor.y), voxel, minPL)
+                    W_matrix[i, q] = dist ** (-n_p)
 
+            
             W_transpose = np.transpose(W_matrix)
-            X1 = np.matmul(W_transpose, W_matrix) #+ np.diag(np.ones(len(W_matrix))) * 0.0000001
             y = np.zeros(len(sensor_subset))
             for i in range(len(sensor_subset)):
                 y[i] = db_2_amplitude(sensor_outputs[sensor_subset[i]])
 
+            '''
             Cx = np.zeros((total_voxel, total_voxel))
             for j in range(total_voxel):
-                voxel_j = (j//num_columns, j%num_columns)
+                voxel_j = confined_area[j]
                 for l in range(total_voxel):
-                    voxel_l = (l//num_columns, l%num_columns)
+                    voxel_l = confined_area[l]
                     dist = self.euclidean(voxel_j, voxel_l, minPL)
                     Cx[j][l] = sigma_x_square * np.power(np.e, -dist/delta_c)
             Cx = delta_N_square * Cx
 
             try:
+                X1 = np.matmul(W_transpose, W_matrix)
                 X1 = X1 + Cx
                 X2 = np.linalg.inv(X1)
             except Exception as e:
                 print(e)
-                X2 = X1
             X = np.matmul(X2, W_transpose)
-            X = np.matmul(X, y)
+            X = np.matmul(X, y)               # shape of X: (total_voxel, 1)
             weight_local = np.zeros((self.grid_len, self.grid_len))
             for i, x in enumerate(X):
-                relative_x = i // num_columns
-                relative_y = i % num_columns
-                global_x = relative_x + min_x
-                global_y = relative_y + min_y
-                weight_local[global_x][global_y] = x
-                weight_global[global_x][global_y] = x
-            visualize_splot(weight_local, str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+                voxel = confined_area[i]
+                weight_local[voxel[0]][voxel[1]] = x
+                weight_global[voxel[0]][voxel[1]] = x
+            visualize_splot(weight_local, 'splot', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
             index = np.argmax(X)
-            relative_x = index // num_columns
-            relative_y = index % num_columns
-            global_pos = (relative_x + min_x, relative_y + min_y)
-            detected_intruders.append(global_pos)
+            detected_intruders.append(confined_area[index])
+            '''
 
-        visualize_splot(weight_global, fig)
+            from sklearn.linear_model import Lasso, Ridge
+            linear = Ridge(alpha=0.1)
+            linear.fit(W_matrix, y)
+            X = linear.coef_
+            weight_local = np.zeros((self.grid_len, self.grid_len))
+            for i, x in enumerate(X):
+                voxel = confined_area[i]
+                weight_local[voxel[0]][voxel[1]] = x
+                weight_global[voxel[0]][voxel[1]] = x
+            visualize_splot(weight_local, 'splot-ridge', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+            index = np.argmax(X)
+            detected_intruders.append(confined_area[index])
+
+        visualize_splot(weight_global, 'splot-ridge', fig)
         return detected_intruders
 
 
@@ -2434,7 +2435,7 @@ def main1():
     true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
 
-    repeat = 10
+    repeat = 50
     errors = []
     misses = []
     false_alarms = []
@@ -2450,7 +2451,7 @@ def main1():
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
 
         r1 = 8
-        r2 = 7
+        r2 = 5
         threshold = -65
         pred_locations = selectsensor.splot_localization(sensor_outputs, intruders, fig=i, R1=r1, R2=r2, threshold=threshold)
         true_locations = selectsensor.convert_to_pos(true_indices)
@@ -2481,7 +2482,7 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
-    selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
+    selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
     true_powers = [0, 0, 0, 0, 0]   # no varing power
@@ -2489,7 +2490,7 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 5
+    repeat = 50
     errors = []
     misses = []
     false_alarms = []
@@ -2579,8 +2580,7 @@ def main6():
 
 if __name__ == '__main__':
     main1()
+    #main2()
     #main3()
-    #main4()
-    #main5()
     #main6()
 
