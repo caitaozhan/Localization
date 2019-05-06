@@ -2204,11 +2204,11 @@ class SelectSensor:
     def splot_localization(self, sensor_outputs, intruders, fig, R1, R2, threshold=None):
         sigma_x_square = 0.5
         delta_c        = 1
-        n_p            = 2
-        minPL          = 1.5  # in the paper, it is 1.5
+        n_p            = 2  # 2.46
+        minPL          = 1  # in the paper, it is 1.5
         delta_N_square = 1    # no specification in MobiCom'17 ?
         R1             = 12
-        R2             = 6
+        R2             = 8  # larger R might help for ridge regressoin
         threshold      = -70
 
         visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
@@ -2284,7 +2284,8 @@ class SelectSensor:
             '''
 
             from sklearn.linear_model import Lasso, Ridge
-            linear = Ridge(alpha=0.1)
+            #linear = Ridge(alpha=0.001)
+            linear = Lasso(alpha=0.00001)
             linear.fit(W_matrix, y)
             X = linear.coef_
             weight_local = np.zeros((self.grid_len, self.grid_len))
@@ -2429,6 +2430,7 @@ def main1():
     '''main 1: IPSN synthetic data + SPLOT
     '''
     selectsensor = SelectSensor('config/ipsn_50.json')
+    #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
     #true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
