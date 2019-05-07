@@ -1925,10 +1925,10 @@ class SelectSensor:
             pred_power.extend(pred_power_R)
             counter += counter_R
 
-        print('Procedure 2')
-        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
-        identified.extend(identified2)
-        pred_power.extend(pred_power2)
+        #print('Procedure 2')
+        #identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=8)
+        #identified.extend(identified2)
+        #pred_power.extend(pred_power2)
 
         return identified, pred_power, counter
 
@@ -1961,7 +1961,7 @@ class SelectSensor:
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked]
                 if len(hypotheses_combination) == 0:
                     break
-                q_threshold = np.power(norm(0, 1).pdf(2.2), len(sensor_subset)) * (1./len(hypotheses_combination))
+                q_threshold = np.power(norm(0, 1).pdf(2.5), len(sensor_subset)) * (1./len(hypotheses_combination))
                 combination_checked = combination_checked.union(set(hypotheses_combination))
                 print('q-threshold = {}, inside = {}'.format(q_threshold, len(sensor_subset)))
                 #posterior, H_0, Q, power = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
@@ -2205,10 +2205,10 @@ class SelectSensor:
         sigma_x_square = 0.5
         delta_c        = 1
         n_p            = 2  # 2.46
-        minPL          = 1  # in the paper, it is 1.5
-        delta_N_square = 1    # no specification in MobiCom'17 ?
+        minPL          = 0.5   # For SPLOT 1.5, for Ridge and LASSO 1.0
+        delta_N_square = 1     # no specification in MobiCom'17 ?
         R1             = 12
-        R2             = 8  # larger R might help for ridge regressoin
+        R2             = 8     # larger R might help for ridge regression
         threshold      = -70
 
         visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
@@ -2246,14 +2246,13 @@ class SelectSensor:
                 sensor = self.sensors[sen_index]
                 for q, voxel in enumerate(confined_area):
                     dist = self.euclidean((sensor.x, sensor.y), voxel, minPL)
-                    W_matrix[i, q] = dist ** (-n_p)
+                    W_matrix[i, q] = (dist/0.5) ** (-n_p)
 
             
             W_transpose = np.transpose(W_matrix)
             y = np.zeros(len(sensor_subset))
             for i in range(len(sensor_subset)):
                 y[i] = db_2_amplitude(sensor_outputs[sensor_subset[i]])
-
             '''
             Cx = np.zeros((total_voxel, total_voxel))
             for j in range(total_voxel):
@@ -2277,14 +2276,15 @@ class SelectSensor:
                 voxel = confined_area[i]
                 weight_local[voxel[0]][voxel[1]] = x
                 weight_global[voxel[0]][voxel[1]] = x
-            visualize_splot(weight_local, 'splot', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+            #visualize_splot(weight_local, 'splot', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
             '''
 
+            #'''
             from sklearn.linear_model import Lasso, Ridge
-            #linear = Ridge(alpha=0.001)
+            #linear = Ridge(alpha=0.1)
             linear = Lasso(alpha=0.00001)
             linear.fit(W_matrix, y)
             X = linear.coef_
@@ -2293,11 +2293,12 @@ class SelectSensor:
                 voxel = confined_area[i]
                 weight_local[voxel[0]][voxel[1]] = x
                 weight_global[voxel[0]][voxel[1]] = x
-            visualize_splot(weight_local, 'splot-ridge', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+            #visualize_splot(weight_local, 'splot-ridge', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
+            #'''
 
-        visualize_splot(weight_global, 'splot-ridge', fig)
+        #visualize_splot(weight_global, 'splot-ridge', fig)
         return detected_intruders
 
 
@@ -2432,12 +2433,12 @@ def main1():
     selectsensor = SelectSensor('config/ipsn_50.json')
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
-    #true_powers = [-2, -1, 0, 1, 2]
+    true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
-    true_powers = [0, 0, 0, 0, 0]   # no varing power
+    #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
 
-    repeat = 50
+    repeat = 10
     errors = []
     misses = []
     false_alarms = []
@@ -2484,10 +2485,10 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
-    selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
-    #true_powers = [-2, -1, 0, 1, 2]
+    selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
+    true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
-    true_powers = [0, 0, 0, 0, 0]   # no varing power
+    #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
@@ -2503,11 +2504,11 @@ def main2():
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=20, powers=true_powers)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
         pred_locations, pred_power, iteration = selectsensor.our_localization(sensor_outputs, intruders, i)
         #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
