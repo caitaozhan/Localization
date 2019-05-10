@@ -37,13 +37,13 @@ def print_results(results):
         print()
 
 
-def amplitude_2_db(abso):
-    '''Transform the decibal signal strength into absolute value of iq samples
-       y = 20*log10(x)
-       where y is power in dB and x is the absolute value of iq samples
+def power_2_db(abso):
+    '''Transform the power (dBm) into dB
+       y = 10*log10(x)
+       where y is dB and x is the power (dBm)
     '''
     try:
-        val = 20*np.log10(abso)
+        val = 10*np.log10(abso)
     except:
         pass
     try:
@@ -55,39 +55,39 @@ def amplitude_2_db(abso):
     return val
 
 
-def db_2_amplitude(db):
-    '''Transform the decibal signal strength into absolute value of iq samples
-       x = 10^(y/20)
-       where y is power in dB and x is the absolute value of iq samples
+def db_2_power(db):
+    '''Transform dB into power (dBm)
+       x = 10^(y/10)
+       where y is power and x is the absolute value of iq samples
     '''
     try:
         if db <= -80:
             return 0
     except:
         pass
-    val = np.power(10, np.array(db)/20)
+    val = np.power(10, np.array(db)/10)
     try:
-        val[val <= 0.0001] = 0
+        val[val <= 0.00000001] = 0
     except:
-        if val <= 0.0001:  # noise floor
+        if val <= 0.00000001:  # noise floor
             val = 0
     return val
 
 
-def amplitude_2_db_(abso):
+def power_2_db_(abso):
     '''Transform the decibal signal strength into absolute value of iq samples
        y = 20*log10(x)
        where y is power in dB and x is the absolute value of iq samples
     '''
-    return 20*np.log10(abso)
+    return 10*np.log10(abso)
 
 
-def db_2_amplitude_(db):
+def db_2_power_(db):
     '''Transform the decibal signal strength into absolute value of iq samples
        x = 10^(y/20)
        where y is power in dB and x is the absolute value of iq samples
     '''
-    return np.power(10, np.array(db)/20)
+    return np.power(10, np.array(db)/10)
 
 
 def find_elbow(inertias, num_intruder):

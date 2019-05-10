@@ -82,7 +82,7 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         grid[intr.x][intr.y] = -1.2
 
     sns.set(style="white")
-    plt.subplots(figsize=(8, 8))
+    plt.subplots(figsize=(10, 10))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
@@ -107,7 +107,7 @@ def visualize_q(grid_len, posterior, fig):
 def visualize_q_prime(posterior, fig):
     '''
     '''
-    plt.subplots(figsize=(8, 8))
+    plt.subplots(figsize=(10, 10))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(posterior, vmin=0, vmax=1, cmap=cmap, center=0, square=True, linewidth=0.5)
     plt.title('Q prime')
@@ -135,7 +135,7 @@ def visualize_cluster(grid_len, intruders, sensor_to_cluster, labels):
     for intr in intruders:
         grid[intr.x][intr.y] = -1
     sns.set(style="white")
-    f, ax = plt.subplots(figsize=(8, 8))
+    f, ax = plt.subplots(figsize=(10, 10))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
     plt.show()
@@ -156,7 +156,7 @@ def visualize_localization(grid_len, true_locations, pred_locations, fig):
         else:
             grid[pred[0]][pred[1]] = 1    # false alarm
     sns.set(style="white")
-    f, ax = plt.subplots(figsize=(8, 8))
+    f, ax = plt.subplots(figsize=(10, 10))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
     sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
     plt.xlabel('1 = false alarm; 0.4 = accurate prediction; -1 = miss')
@@ -170,7 +170,7 @@ def visualize_splot(weight_global, folder, fig):
         weight_global (np.array)
     '''
     weight_global[weight_global==0] = np.min(weight_global)
-    plt.subplots(figsize=(8, 8))
+    plt.subplots(figsize=(10, 10))
     sns.heatmap(weight_global, vmin=np.min(weight_global), vmax=np.max(weight_global), square=True, linewidth=0.5)
     plt.title('The estimated power (the weights of ridge regression)')
     plt.savefig('visualize/{}/{}'.format(folder, fig))
