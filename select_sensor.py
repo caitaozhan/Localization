@@ -2202,7 +2202,7 @@ class SelectSensor:
         n_p            = 2  # 2.46
         minPL          = 0.5   # For SPLOT 1.5, for Ridge and LASSO 1.0
         delta_N_square = 1     # no specification in MobiCom'17 ?
-        R1             = 12
+        R1             = 8
         R2             = 8     # larger R might help for ridge regression
         threshold      = -70
 
@@ -2248,7 +2248,7 @@ class SelectSensor:
             y = np.zeros(len(sensor_subset))
             for i in range(len(sensor_subset)):
                 y[i] = db_2_power(sensor_outputs[sensor_subset[i]])
-            '''
+            #'''
             Cx = np.zeros((total_voxel, total_voxel))
             for j in range(total_voxel):
                 voxel_j = confined_area[j]
@@ -2275,12 +2275,12 @@ class SelectSensor:
 
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
-            '''
-
             #'''
+
+            '''
             from sklearn.linear_model import Lasso, Ridge
-            #linear = Ridge(alpha=0.1)
-            linear = Lasso(alpha=0.00001)
+            linear = Ridge(alpha=0.1)
+            #linear = Lasso(alpha=0.0000001)   # 0.00001 for synthetic
             linear.fit(W_matrix, y)
             X = linear.coef_
             weight_local = np.zeros((self.grid_len, self.grid_len))
@@ -2288,10 +2288,10 @@ class SelectSensor:
                 voxel = confined_area[i]
                 weight_local[voxel[0]][voxel[1]] = x
                 weight_global[voxel[0]][voxel[1]] = x
-            #visualize_splot(weight_local, 'splot-ridge', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+            visualize_splot(weight_local, 'splot-ridge', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
-            #'''
+            '''
 
         #visualize_splot(weight_global, 'splot-ridge', fig)
         return detected_intruders
@@ -2522,8 +2522,8 @@ def main2():
             print(e)
 
     try:
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(sum(errors)/len(errors), max(errors), min(errors), \
-              sum(misses)/repeat, max(misses), min(misses), sum(false_alarms)/repeat, max(false_alarms), min(false_alarms), sum(power_errors)/len(power_errors), max(power_errors), min(power_errors) ) )
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
+              round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms)) )
         print('Ours! time = ', time.time()-start, '; iterations =', iterations/repeat)
     except:
         print('Empty list!')
@@ -2533,7 +2533,8 @@ def main4():
     '''main 4: SPLAT data + Our localization
     '''
     selectsensor = SelectSensor(grid_len=40)
-    selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
+    selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
+    #selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
     true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
@@ -2581,9 +2582,61 @@ def main4():
         print('Empty list!')
 
 
+def main5():
+    '''main 4: SPLAT data + SPLOT localization
+    '''
+    selectsensor = SelectSensor(grid_len=40)
+    #selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
+    selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
+    true_powers = [-2, -1, 0, 1, 2]
+    #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
+    #true_powers = [0, 0, 0, 0, 0]   # no varing power
+    selectsensor.vary_power(true_powers)
+
+    repeat = 50
+    errors = []
+    misses = []
+    false_alarms = []
+    start = time.time()
+    for i in range(0, repeat):
+        print('\n\nTest ', i)
+        random.seed(i)
+        np.random.seed(i)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
+        #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
+
+        r1 = 8
+        r2 = 5
+        threshold = -65
+        pred_locations = selectsensor.splot_localization(sensor_outputs, intruders, fig=i, R1=r1, R2=r2, threshold=threshold)
+        true_locations = selectsensor.convert_to_pos(true_indices)
+
+        try:
+            error, miss, false_alarm = selectsensor.compute_error2(true_locations, pred_locations)
+            if error >= 0:
+                errors.append(error)
+            misses.append(miss)
+            false_alarms.append(false_alarm)
+            print('error/miss/false/power = {}/{}/{}'.format(error, miss, false_alarm) )
+            visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
+        except Exception as e:
+            print(e)
+
+    try:
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
+              round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms)) )
+        print('Ours! time = ', time.time()-start)
+    except:
+        print('Empty list!')
+
+
 
 if __name__ == '__main__':
     #main1()
     #main2()
     #main3()
-    main4()
+    #main4()
+    main5()
