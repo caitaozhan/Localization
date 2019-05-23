@@ -56,3 +56,21 @@ time =  328.40410709381104 / 50 = 6.5 (s)
 Procedure 1 + 2:
 (mean/max/min) error=(0.19/1.22/0.0), miss=(0.016/0.2/0.0), false_alarm=(0.0/0.0/0.0), power=(0.18/1.06/-1.14)
 time =  347.0773959159851 / 50 = 6.8 (s)
+
+
+----------------
+
+Settings: 40 x 40 grid; 200 sensors; 10 intruders, min_dist = 1. Intruders are varies power {-2, -1.6, -1.2, 0, ..., 1.6}
+
+offset = 0
+(mean/max/min) error=(0.442/1.01/0.0), miss=(0.11/0.3/0.0), false_alarm=(0.02/0.1/0.0), power=(0.48/0.91/0.16)
+Ours! time =  479.479 ; proc 1 ratio = 0.797
+
+offset = 0.5
+(mean/max/min) error=(0.356/0.884/0.0), miss=(0.07/0.2/0.0), false_alarm=(0.06/0.1/0.0), power=(0.062/0.312/-0.36)
+Ours! time =  487.395 ; proc 1 ratio = 0.746
+
+
+offset = 0.65
+(mean/max/min) error=(0.218/0.828/0.0), miss=(0.03/0.2/0.0), false_alarm=(0.08/0.2/0.0), power=(-0.024/0.17/-0.295)
+Ours! time =  499.10 ; proc 1 ratio = 0.68
