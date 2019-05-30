@@ -1,0 +1,186 @@
+
+
+Test  0
+Procedure 1
+R = 8
+detected peak = [36  6] ; Q' = 1.0; Q = 1.3776498582230031e-270; q-threshold = 4.845329844745635e-50, inside = 14 
+detected peak = [26  7] ; Q' = 1.0; Q = 2.5041442092448667e-46; q-threshold = 4.635576954687262e-53, inside = 30  **Intruder!**
+detected peak = [23 36] ; Q' = 1.0; Q = 2.4812156253764273e-162; q-threshold = 1.4986960788018786e-51, inside = 22 
+detected peak = [19 28] ; Q' = 1.0; Q = 3.6469792844488255e-50; q-threshold = 1.1053663490624866e-52, inside = 28  **Intruder!**
+detected peak = [13 10] ; Q' = 1.0; Q = 3.973779609521729e-62; q-threshold = 1.9440227867487644e-53, inside = 32 
+detected peak = [ 3 28] ; Q' = 1.0; Q = 1.3251034674799248e-139; q-threshold = 5.518451588324995e-51, inside = 19 
+detected peak = [2 2] ; Q' = 1.0; Q = 8.395573931254331e-54; q-threshold = 6.569475219669e-49, inside = 8 
+---
+detected peak = [24 22] ; Q' = 0.915; Q = 4.3772281372913825e-123; q-threshold = 8.521547300122201e-51, inside = 18 
+detected peak = [13 10] ; Q' = 1.0; Q = 4.1321658796374034e-49; q-threshold = 1.9440227867487644e-53, inside = 32  **Intruder!**
+detected peak = [ 8 18] ; Q' = 1.0; Q = 1.149402857633648e-202; q-threshold = 2.6357771159516032e-52, inside = 26 
+detected peak = [2 2] ; Q' = 1.0; Q = 9.015801598831668e-53; q-threshold = 6.569475219669e-49, inside = 8 
+---
+detected peak = [24 22] ; Q' = 1.0; Q = 1.6026371619500495e-133; q-threshold = 8.521547300122201e-51, inside = 18 
+detected peak = [2 2] ; Q' = 1.0; Q = 5.2084052458681325e-49; q-threshold = 6.569475219669e-49, inside = 8 
+---
+R = 6
+detected peak = [22 21] ; Q' = 0.992; Q = 1.6296779629197003e-69; q-threshold = 3.1717904420335084e-49, inside = 11 
+detected peak = [2 2] ; Q' = 1.0; Q = 3.0921190646182043e-46; q-threshold = 4.300429357460183e-48, inside = 5  **Intruder!**
+---
+detected peak = [22 20] ; Q' = 1.0; Q = 5.552537425504769e-72; q-threshold = 7.563223424339422e-49, inside = 9 
+---
+R = 4
+detected peak = [26  5] ; Q' = 1.0; Q = 4.450197996919162e-153; q-threshold = 9.675966054285411e-48, inside = 5 
+detected peak = [25 15] ; Q' = 1.0; Q = 1.15006906356419e-120; q-threshold = 1.4941546752065845e-47, inside = 4 
+detected peak = [21 21] ; Q' = 0.973; Q = 2.616837150440617e-49; q-threshold = 2.307261291447935e-47, inside = 3 
+---
+Procedure 2
+
+center = (24, 8) RSS = -59.273586755030436
+t = 2
+q-threshold = 1.0423965525896784e-19, inside = 12
+combination = [(19, 5), (19, 6)]; max Q = 0.0; posterior = nan
+t = 3
+q-threshold = 2.9226071567934903e-21, inside = 12
+combination = [(19, 5), (19, 6), (19, 7)]; max Q = 0.0; posterior = nan
+
+Pred: (19, 28) -0.5 ; (2, 2)   -0.5 ; (13, 10) 1.5  ; (26, 7)  1.5  ; 
+True: (19, 28) -2   ; (2, 2)   0    ; (13, 10) 1    ; (26, 7)  2    ; 
+Miss: (21, 21) -1;  
+False Alarm: 
+error/miss/false/power = 0.0/0.2/0.0/0.25
+(mean/max/min) error=(0.0/0.0/0.0), miss=(0.2/0.2/0.2), false_alarm=(0.0/0.0/0.0), power=(0.25/0.25/0.25)
+Ours! time =  23.342 ; proc 1 ratio = 1.0
+300 sensors
+Wrote profile results to select_sensor.py.lprof
+Timer unit: 1e-06 s
+
+Total time: 6.32622 s
+File: select_sensor.py
+Function: posterior_iteration at line 1818
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+  1818                                               @profile
+  1819                                               def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
+  1820                                                   '''
+  1821                                                   Args:
+  1822                                                       hypothesis (list): an element is potential hypothesis
+  1823                                                       radius (int): the transmission radius
+  1824                                                       sensor_outputs (list): a list of residual RSS of each sensor
+  1825                                                       fig (int): for plotting
+  1826                                                       previous_identified (list): an element is a 2D index, identified intruder in previous
+  1827                                                       subset_index (list): a list of sensor index
+  1828                                                   Return:
+  1829                                                       posterior (np.array): 1D array of posterior
+  1830                                                       H_0 (bool): whether H_0 is the largest likelihood or not
+  1831                                                       q (np.array): 2D array of Q
+  1832                                                       power_grid (np.array): 2D array of power
+  1833                                                   '''
+  1834         6         11.0      1.8      0.0          position_to_check = []
+  1835         6         36.0      6.0      0.0          self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
+  1836         6         12.0      2.0      0.0          power_grid = np.zeros((self.grid_len, self.grid_len))
+  1837         6          5.0      0.8      0.0          out_prob = 0.2 # probability of sensor outside the radius
+  1838         6          6.0      1.0      0.0          constant = 3
+  1839         6     542351.0  90391.8      8.6          self.prune_hypothesis(hypotheses, sensor_outputs, radius)
+  1840      9606       8245.0      0.9      0.1          for trans in self.transmitters: #For each location, first collect sensors in vicinity
+  1841      9600      44450.0      4.6      0.7              if self.grid_priori[trans.x * self.grid_len + trans.y] == 0 or trans.hypothesis not in hypotheses:
+  1842      5475       5996.0      1.1      0.1                  self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
+  1843      5475       4425.0      0.8      0.1                  continue
+  1844      4125       4174.0      1.0      0.1              if (trans.x, trans.y) in position_to_check:
+  1845                                                           print(trans.x, trans.y)
+  1846      4125      15012.0      3.6      0.2              my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
+  1847      4125     375343.0     91.0      5.9              subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
+  1848      4125     238253.0     57.8      3.8              self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
+  1849      4125      14418.0      3.5      0.2              subset_sensors = np.array(subset_sensors)
+  1850      4125      18871.0      4.6      0.3              all_sensors = np.arange(0, len(self.sensors), 1).astype(int)
+  1851      4125     149926.0     36.3      2.4              remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
+  1852      4125       4863.0      1.2      0.1              if len(subset_sensors) < 3:
+  1853                                                           likelihood = 0
+  1854                                                           power_max = 0
+  1855                                                       else:
+  1856      4125       3615.0      0.9      0.1                  likelihood_max = 0
+  1857      4125       3366.0      0.8      0.1                  power_max = 0
+  1858     24750      24394.0      1.0      0.4                  for power in trans.powers:                       # varies power
+  1859     20625      59147.0      2.9      0.9                      sensor_outputs_copy = np.copy(sensor_outputs)
+  1860     20625      25646.0      1.2      0.4                      sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+  1861     20625      47333.0      2.3      0.7                      mean_vec = np.copy(trans.mean_vec)
+  1862     20625      64617.0      3.1      1.0                      mean_vec = mean_vec[subset_sensors] + power  # add the delta of power
+  1863     20625      96725.0      4.7      1.5                      stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+  1864     20625     354399.0     17.2      5.6                      array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+  1865     20625     162166.0      7.9      2.6                      likelihood = np.prod(array_of_pdfs)
+  1866     20625      28675.0      1.4      0.5                      if likelihood > likelihood_max:
+  1867      1173       1054.0      0.9      0.0                          likelihood_max = likelihood
+  1868      1173        961.0      0.8      0.0                          power_max = power
+  1869     20625     332915.0     16.1      5.3                      if len(np.unique(trans.powers)) == 1:        # no varying power
+  1870                                                                   break
+  1871      4125       3920.0      1.0      0.1                  likelihood = likelihood_max
+  1872                                                       #likelihood *= np.power(out_prob, len(remaining_sensors)) * np.power(3., self.sen_num)
+  1873      4125      25011.0      6.1      0.4              likelihood *= np.power(out_prob*constant, len(remaining_sensors)) * np.power(constant, len(subset_sensors))
+  1874                                           
+  1875      4125       8124.0      2.0      0.1              self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
+  1876      4125       6026.0      1.5      0.1              power_grid[trans.x][trans.y] = power_max
+  1877                                           
+  1878                                                   # Also check the probability of no transmitter to avoid false alarms
+  1879         6         44.0      7.3      0.0          mean_vec = np.full(len(sensor_outputs), -80)
+  1880         6         51.0      8.5      0.0          sensor_outputs_copy = copy.copy(sensor_outputs)
+  1881         6         33.0      5.5      0.0          sensor_outputs_copy[sensor_outputs_copy < -80] = -80
+  1882         6        496.0     82.7      0.0          array_of_pdfs = self.get_pdfs(mean_vec, np.sqrt(np.diagonal(self.covariance)), sensor_outputs_copy)
+  1883         6         78.0     13.0      0.0          likelihood = np.prod(array_of_pdfs) * np.power(2., len(self.sensors))
+  1884         6         12.0      2.0      0.0          self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
+  1885                                                   # check if H_0's likelihood*prior is one of the largest
+  1886         6         49.0      8.2      0.0          if self.grid_posterior[len(self.transmitters)] == self.grid_posterior[np.argmax(self.grid_posterior)]:
+  1887                                                       H_0 = True
+  1888                                                   else:
+  1889         6          5.0      0.8      0.0              H_0 = False
+  1890                                           
+  1891         6         34.0      5.7      0.0          q = copy.copy(self.grid_posterior)
+  1892         6    2080577.0 346762.8     32.9          visualize_q(self.grid_len, q, fig)
+  1893                                           
+  1894         6         52.0      8.7      0.0          grid_posterior_copy = np.copy(self.grid_posterior)
+  1895      9606       9060.0      0.9      0.1          for trans in self.transmitters:
+  1896      9600      10616.0      1.1      0.2              if (trans.x, trans.y) in position_to_check:
+  1897                                                           pass#print(self.grid_posterior[trans.x * self.grid_len + trans.y])
+  1898      9600      13203.0      1.4      0.2              min_x = int(max(0, trans.x - radius))
+  1899      9600      11832.0      1.2      0.2              max_x = int(min(trans.x + radius, self.grid_len - 1))
+  1900      9600      10567.0      1.1      0.2              min_y = int(max(0, trans.y - radius))
+  1901      9600      11004.0      1.1      0.2              max_y = int(min(trans.y + radius, self.grid_len - 1))
+  1902      9600    1466870.0    152.8     23.2              den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
+  1903                                                                                                                         if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) < radius]))
+  1904      9600      36784.0      3.8      0.6              grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
+  1905                                           
+  1906         6        346.0     57.7      0.0          grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
+  1907         6         10.0      1.7      0.0          self.grid_posterior = grid_posterior_copy
+  1908         6          6.0      1.0      0.0          return self.grid_posterior, H_0, q, power_grid
+
+Total time: 11.5746 s
+File: select_sensor.py
+Function: procedure2_iteration at line 1986
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+  1986                                               @profile
+  1987                                               def procedure2_iteration(self, hypotheses_combination, sensor_outputs, sensor_subset):
+  1988                                                   '''MAP over combinaton of hypotheses
+  1989                                                   Args:
+  1990                                                       hypotheses_combination (list): an element is a tuple of transmitter index, i.e. (t1, t2)
+  1991                                                       sensor_outputs (np.array)
+  1992                                                   Return:
+  1993                                                       posterior (np.array): 1D array of posterior
+  1994                                                       H_0 (bool): whether H_0 is the largest likelihood or not
+  1995                                                       q (np.array): 2D array of Q
+  1996                                                       power_grid (np.array): 2D array of power
+  1997                                                   '''
+  1998                                                   # Note try single power first
+  1999         2         60.0     30.0      0.0          posterior = np.zeros(len(hypotheses_combination))
+  2000         2          1.0      0.5      0.0          prior = 1./len(hypotheses_combination)
+  2001    215822      80215.0      0.4      0.7          for i in range(len(hypotheses_combination)):
+  2002    215820      88475.0      0.4      0.8              combination = hypotheses_combination[i]
+  2003                                                       #if combination == (27*40+34, 29*40+29):
+  2004                                                       #    print(combination)
+  2005    215820     291163.0      1.3      2.5              mean_vec = np.zeros(len(sensor_subset))
+  2006    857394     345659.0      0.4      3.0              for hypo in combination:
+  2007    641574    4435907.0      6.9     38.3                  mean_vec += db_2_power_(self.means[hypo][sensor_subset])
+  2008    215820     582283.0      2.7      5.0              mean_vec = power_2_db_(mean_vec)
+  2009    215820    1163969.0      5.4     10.1              stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
+  2010    215820    2997577.0     13.9     25.9              array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs[sensor_subset])
+  2011    215820    1396173.0      6.5     12.1              likelihood = np.prod(array_of_pdfs)
+  2012    215820     192851.0      0.9      1.7              posterior[i] = likelihood * prior
+  2013         2        288.0    144.0      0.0          return posterior/np.sum(posterior), posterior  # question: is the denometer the summation of everything?
+

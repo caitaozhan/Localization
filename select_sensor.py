@@ -89,7 +89,7 @@ class SelectSensor:
         del cov[len(cov)]
         #self.covariance = cov.values
         self.covariance = np.zeros(cov.values.shape)
-        np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor
+        np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor NOTE: need to modify three places
 
         self.sensors = []
         with open(sensor_file, 'r') as f:
@@ -99,7 +99,7 @@ class SelectSensor:
             for line in lines:
                 line = line.split(' ')
                 x, y, std, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
-                self.sensors.append(Sensor(x, y, std, cost, gain_up_bound=max_gain, index=index))  # uniform sensors
+                self.sensors.append(Sensor(x, y, 1, cost, gain_up_bound=max_gain, index=index))  # uniform sensors
                 index += 1
         self.sen_num = len(self.sensors)
 
@@ -114,7 +114,7 @@ class SelectSensor:
                 #sen_x, sen_y = int(line[2]), int(line[3])
                 mean, std = float(line[4]), float(line[5])
                 self.means[tran_x*self.grid_len + tran_y, count] = mean  # count equals to the index of the sensors
-                self.stds[tran_x*self.grid_len + tran_y, count] = std
+                self.stds[tran_x*self.grid_len + tran_y, count] = 1      # std = 1 for every sensor
                 count = (count + 1) % len(self.sensors)
 
         #temp_mean = np.zeros(self.grid_len * self.grid_len, )
@@ -1534,7 +1534,7 @@ class SelectSensor:
             sensor_output_from_transmitter = db_2_power_(self.means[trans_index, sen_index] + power)
             sensor_output -= sensor_output_from_transmitter
             sensor_outputs[sen_index] = power_2_db_(sensor_output)
-            #if sen_index == 6:
+            #if sen_index == 182:
             #    print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
         sensor_outputs[np.isnan(sensor_outputs)] = -120
 
@@ -1555,11 +1555,11 @@ class SelectSensor:
             power = powers[i]                                # varies power
             for sen_index in range(len(self.sensors)):
                 if randomness:
-                    dBm = db_2_power_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, self.stds[tran_x * self.grid_len + tran_y, sen_index]))
+                    dBm = db_2_power_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, self.sensors[sen_index].std))
                 else:
                     dBm = db_2_power_(self.means[tran_x * self.grid_len + tran_y, sen_index] + power)
                 sensor_outputs[sen_index] += dBm
-                #if sen_index == 6:
+                #if sen_index == 182:
                 #    print('+', (tran_x, tran_y), power, dBm, sensor_outputs[sen_index])
         sensor_outputs = power_2_db_(sensor_outputs)
         return (true_transmitters, sensor_outputs)
@@ -1607,7 +1607,7 @@ class SelectSensor:
 
     def compute_error2(self, true_locations, pred_locations):
         '''Given the true location and localization location, computer the error
-           Comparing to compute_error, this one do not include error, used for SPLOT and clustering
+           Comparing to compute_error, this one do not include error, ** used for SPLOT and clustering **
         Args:
             true_locations (list): an element is a tuple (true transmitter 2D location)
             pred_locations (list): an element is a tuple (predicted transmitter 2D location)
@@ -1712,10 +1712,10 @@ class SelectSensor:
 
         print('\nPred:', end=' ')
         for match in matches:
-            print(str(pred_locations[match[1]]).ljust(9) + str(round(pred_powers[match[1]], 3)).ljust(5), end='; ')
+            print(str(pred_locations[match[1]]).ljust(9) + str(round(pred_powers[match[1]], 3)).ljust(6), end='; ')
         print('\nTrue:', end=' ')
         for match in matches:
-            print(str(true_locations[match[0]]).ljust(9) + str(round(true_powers[match[0]], 3)).ljust(5), end='; ')
+            print(str(true_locations[match[0]]).ljust(9) + str(round(true_powers[match[0]], 3)).ljust(6), end='; ')
         print('\nMiss:', end=' ')
         for miss in misses:
             print(true_locations[miss], true_powers[miss], end=';  ')
@@ -1761,7 +1761,7 @@ class SelectSensor:
         '''
         prior = 1./(3.14 * radius**2)
         outside = self.sen_num - inside
-        q = np.power(norm(0, 1).pdf(1.5), inside) * prior
+        q = np.power(norm(0, 1).pdf(2), inside) * prior  # [1.5, 2] change smaller because of change of db - power ratio function
         q *= np.power(0.6, outside)
         q *= np.power(3, inside)
         return q
@@ -1815,6 +1815,25 @@ class SelectSensor:
             subset_sensors.remove(screw)
 
 
+    def mle_closedform(self, sensor_outputs, mean_vec, variance):
+        '''Solve the vaires power issue: from discrete values to continueous values
+        Args:
+            sensor_outputs (np.array): sensor outputs, the data D={x1, x2, ... , xn} of MLE
+            mean_vec (np.array):       the mean of the guassian distributions
+            variance (np.array):       the variance of sensors (inside a circle)
+        Return:
+            delta_p (float):  the power
+        '''
+        prod = np.prod(variance)
+        tmp = prod/variance
+        delta_p = np.sum(tmp*(sensor_outputs - mean_vec))/(np.sum(tmp))   # closed form solution by doing derivatation on the MLE expresstion
+        if delta_p > 2:
+            delta_p = 2
+        elif delta_p < -2:
+            delta_p = -2
+        return delta_p
+
+
     #@profile
     def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
         '''
@@ -1831,7 +1850,7 @@ class SelectSensor:
             q (np.array): 2D array of Q
             power_grid (np.array): 2D array of power
         '''
-        position_to_check = []
+        position_to_check = [(24, 42)]
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
         power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
@@ -1851,10 +1870,24 @@ class SelectSensor:
             remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
             if len(subset_sensors) < 3:
                 likelihood = 0
-                power_max = 0
+                #power_max = 0
+                delta_p = 0
             else:
+                sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
+                sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+                mean_vec = np.copy(trans.mean_vec)
+                mean_vec = mean_vec[subset_sensors]
+                variance = np.diagonal(self.covariance)[subset_sensors]
+                delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                mean_vec = mean_vec + delta_p  # add the delta of power
+                stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+                array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+                likelihood = np.prod(array_of_pdfs)
+
+                '''
                 likelihood_max = 0
                 power_max = 0
+
                 for power in trans.powers:                       # varies power
                     sensor_outputs_copy = np.copy(sensor_outputs)
                     sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
@@ -1869,11 +1902,13 @@ class SelectSensor:
                     if len(np.unique(trans.powers)) == 1:        # no varying power
                         break
                 likelihood = likelihood_max
-            #likelihood *= np.power(out_prob, len(remaining_sensors)) * np.power(3., self.sen_num)
+                '''
+
             likelihood *= np.power(out_prob*constant, len(remaining_sensors)) * np.power(constant, len(subset_sensors))
 
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
-            power_grid[trans.x][trans.y] = power_max
+            power_grid[trans.x][trans.y] = delta_p
+            #power_grid[trans.x][trans.y] = power_max
 
         # Also check the probability of no transmitter to avoid false alarms
         mean_vec = np.full(len(sensor_outputs), -80)
@@ -1889,10 +1924,12 @@ class SelectSensor:
             H_0 = False
 
         q = copy.copy(self.grid_posterior)
-        visualize_q(self.grid_len, q, fig)
+        #visualize_q(self.grid_len, q, fig)
 
         grid_posterior_copy = np.copy(self.grid_posterior)
         for trans in self.transmitters:
+            if self.grid_posterior[trans.x * self.grid_len + trans.y] == 0:
+                continue
             if (trans.x, trans.y) in position_to_check:
                 pass#print(self.grid_posterior[trans.x * self.grid_len + trans.y])
             min_x = int(max(0, trans.x - radius))
@@ -1921,6 +1958,14 @@ class SelectSensor:
             identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
             pred_power.extend(pred_power_R)
+        
+        hypotheses = list(range(len(self.transmitters)))
+        R_list = [6]
+        for R in R_list:
+            identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
+            identified.extend(identified_R)
+            pred_power.extend(pred_power_R)
+
         proc_1_count = len(identified)
 
         print('Procedure 2')
@@ -1954,10 +1999,8 @@ class SelectSensor:
                           if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             for t in range(2, 4):
                 print('t =', t)
-                if t == 3:
-                    pass
                 hypotheses_combination = list(combinations(hypotheses, t))
-                hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked]
+                hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked] # prevent checking the same combination again
                 if len(hypotheses_combination) == 0:
                     break
                 q_threshold = np.power(norm(0, 1).pdf(2), len(sensor_subset)) * (1./len(hypotheses_combination))
@@ -1967,7 +2010,7 @@ class SelectSensor:
                 posterior, Q = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
                 print('combination = {}; max Q = {}; posterior = {}'.format([ (hypo//self.grid_len, hypo%self.grid_len) for hypo in \
                        hypotheses_combination[np.argmax(Q)] ], np.max(Q), np.max(posterior)))
-                if np.max(Q) > q_threshold and np.max(posterior) > 0.3:
+                if np.max(Q) > q_threshold and np.max(posterior) > 0.1:  # 
                     print('** Intruder! **')
                     hypo_comb = hypotheses_combination[np.argmax(Q)]
                     for hypo in hypo_comb:
@@ -2000,7 +2043,7 @@ class SelectSensor:
         prior = 1./len(hypotheses_combination)
         for i in range(len(hypotheses_combination)):
             combination = hypotheses_combination[i]
-            #if combination == (27*40+34, 29*40+29):
+            #if combination == (7*50+34, 9*50+32):
             #    print(combination)
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
@@ -2033,6 +2076,7 @@ class SelectSensor:
         Return:
             (int)
         '''
+        sensor_outputs = np.copy(sensor_outputs)
         flag = True
         while flag:
             sen_descent = np.flip(np.argsort(sensor_outputs))
@@ -2045,7 +2089,7 @@ class SelectSensor:
                 flag = False
                 break
             center_sensor = self.sensors[center]
-            counter = 0
+            counter = 1
             for sen_index in range(len(self.sensors)):
                 if sensor_outputs[sen_index] > -75:  # inaccurate residual power during deleting intruders
                     dist = math.sqrt((self.sensors[sen_index].x - center_sensor.x)**2 + (self.sensors[sen_index].y - center_sensor.y)**2)
@@ -2056,7 +2100,7 @@ class SelectSensor:
                         print('\ncenter =', (self.sensors[center].x, self.sensors[center].y), 'RSS =', sensor_outputs[center])
                         break
             else:
-                sensor_outputs[center] = -80
+                sensor_outputs[center] = -80         # bug here ... shouldn't change the origin sensor output
         return center
 
 
@@ -2082,7 +2126,7 @@ class SelectSensor:
         pred_power = []
         detected = True
         print('R = {}'.format(radius))
-        offset = 0.5 #0.74 for synthetic, 0.5 for splat
+        offset = 0 #0.74 for synthetic, 0.5 for splat
         counter = 0
         while detected:
             counter += 1
@@ -2107,7 +2151,9 @@ class SelectSensor:
             for index in indices:  # 2D index
                 print('detected peak =', index, "; Q' =", round(posterior[index[0]][index[1]], 3), end='; ')
                 q = Q[index[0]*self.grid_len + index[1]]
-                sen_inside = len(self.collect_sensors_in_radius(radius, Sensor(index[0], index[1], 1)))
+                subset_sensors = self.collect_sensors_in_radius(radius, Sensor(index[0], index[1], 1))
+                self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
+                sen_inside = len(subset_sensors)
                 q_threshold = self.get_q_threshold_custom(sen_inside, radius)
                 print('Q =', q, end='; ')
                 print('q-threshold = {}, inside = {}'.format(q_threshold, sen_inside), end=' ')
@@ -2481,25 +2527,29 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
     selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
+    num_of_intruders = 5
     #true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
-    true_powers = [0, 0, 0, 0, 0]   # no varing power
-    selectsensor.vary_power(true_powers)
+    #true_powers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]   # no varing power
+    #selectsensor.vary_power(true_powers)
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    repeat = 2
+    a, b = 0, 50
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
     proc_1_ratio = 0
     start = time.time()
-    for i in range(0, repeat):
+    for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)
+        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
+        #print(true_powers)
+        random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
@@ -2514,7 +2564,7 @@ def main2():
             error, miss, false_alarm, power_error = selectsensor.compute_error(true_locations, true_powers, pred_locations, pred_power)
             if error >= 0:
                 errors.append(error)
-                power_errors.append(power_error)
+                power_errors.append(abs(power_error))
             misses.append(miss)
             false_alarms.append(false_alarm)
             print('error/miss/false/power = {}/{}/{}/{}'.format(error, miss, false_alarm, power_error) )
@@ -2523,11 +2573,12 @@ def main2():
             print(e)
 
     try:
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
-              round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms)) )
-        print('Ours! time = ', time.time()-start, '; proc 1 ratio =', proc_1_ratio/repeat)
-    except:
-        print('Empty list!')
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
+              round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms), round(sum(power_errors)/len(power_errors), 3), round(max(power_errors), 3), round(min(power_errors), 3) ) )
+        print('Ours! time = ', round(time.time()-start, 3), '; proc 1 ratio =', round(proc_1_ratio/(b-a), 3))
+    except Exception as e:
+        print(e)
+    print('true power continuous, during localization continuous power, have noise')
 
 
 def main4():
@@ -2536,9 +2587,9 @@ def main4():
     selectsensor = SelectSensor(grid_len=40)
     #selectsensor.init_data('dataSplat/homogeneous-100/cov', 'dataSplat/homogeneous-100/sensors', 'dataSplat/homogeneous-100/hypothesis')
     #selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
+    selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
     #selectsensor.init_data('dataSplat/homogeneous-250/cov', 'dataSplat/homogeneous-250/sensors', 'dataSplat/homogeneous-250/hypothesis')
-    selectsensor.init_data('dataSplat/homogeneous-300/cov', 'dataSplat/homogeneous-300/sensors', 'dataSplat/homogeneous-300/hypothesis')
+    #selectsensor.init_data('dataSplat/homogeneous-300/cov', 'dataSplat/homogeneous-300/sensors', 'dataSplat/homogeneous-300/hypothesis')
     #true_powers = np.array([-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8]) * 2     # 10 intruders
     #true_powers = [-2, -1.4, -0.8, -0.2, 0.4, 1, 1.6]                                  # 7 intruders
     true_powers = [-2, -1, 0, 1, 2]                                                    # 5 intruders
@@ -2547,7 +2598,7 @@ def main4():
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
 
-    repeat = 20
+    repeat = 1
     errors = []
     misses = []
     false_alarms = []
@@ -2573,7 +2624,7 @@ def main4():
             error, miss, false_alarm, power_error = selectsensor.compute_error(true_locations, true_powers, pred_locations, pred_power)
             if error >= 0:
                 errors.append(error)
-                power_errors.append(power_error)
+                power_errors.append(abs(power_error))
             misses.append(miss)
             false_alarms.append(false_alarm)
             print('error/miss/false/power = {}/{}/{}/{}'.format(error, miss, false_alarm, power_error) )
@@ -2651,7 +2702,7 @@ def main5():
 
 if __name__ == '__main__':
     #main1()
-    #main2()
+    main2()
     #main3()
     #main4()
-    main5()
+    #main5()
