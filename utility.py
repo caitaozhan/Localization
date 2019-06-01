@@ -106,13 +106,11 @@ def find_elbow(inertias, num_intruder):
     #print('ratio1 = ', deltas[9]/inertias[0])
     #print('ratio2 = ', inertias[9]/inertias[0])
 
-    param ={1:0.5,
-            2:0.5,
-            4:0.15,
-            8:0.08,
-            16:0.02,
-            24:0.006,
-            30:0.003
+    param ={1:1.1,
+            3:0.15,
+            5:0.06,
+            7:0.04,
+            10:0.03,
         }
 
     i = 0

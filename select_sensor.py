@@ -76,6 +76,8 @@ class SelectSensor:
         self.secondary_trans = []              # they include primary and secondary
         self.lookup_table_q = np.array([1. - 0.5*(1. + math.erf(i/1.4142135623730951)) for i in np.arange(0, 8.3, 0.0001)])
         self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
+        self.time_1 = 0                        # time counter for procedure 1
+        self.time_2 = 0                        # time counter for procedure 2
 
 
     #@profile
@@ -1565,7 +1567,7 @@ class SelectSensor:
         return (true_transmitters, sensor_outputs)
 
 
-    def get_cluster_localization(self, intruders, sensor_outputs, num_of_intruders):
+    def cluster_localization(self, intruders, sensor_outputs, num_of_intruders):
         '''A baseline clustering localization method
         Args:
             intruders (list): a list of integers (transmitter index)
@@ -1577,7 +1579,7 @@ class SelectSensor:
         threshold = int(0.25*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
         arg_decrease = np.flip(np.argsort(sensor_outputs))
         threshold = sensor_outputs[arg_decrease[threshold]]
-        threshold = threshold if threshold > -75 else -75
+        threshold = threshold if threshold > -70 else -70
         #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, threshold)
 
         sensor_to_cluster = []
@@ -1615,7 +1617,7 @@ class SelectSensor:
             (tuple): (distance error, miss, false alarm)
         '''
         if len(pred_locations) == 0:
-            return -1, 1, 0
+            return [], 1, 0
         distances = np.zeros((len(true_locations), len(pred_locations)))
         for i in range(len(true_locations)):
             for j in range(len(pred_locations)):
@@ -1635,13 +1637,13 @@ class SelectSensor:
             distances[:, j] = np.inf
             k += 1
 
-        tot_error = 0              # distance error
+        errors = []              # distance error
         detected = 0
         threshold = self.grid_len / 5
         for match in matches:
             error = match[2]
             if error <= threshold:
-                tot_error += error
+                errors.append(error)
                 detected += 1
                 misses.remove(match[0])
                 falses.remove(match[1])
@@ -1660,13 +1662,13 @@ class SelectSensor:
             print(pred_locations[false], end=' ')
         print()
         try:
-            return tot_error / detected, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations)
+            return errors, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations)
         except:
-            return 0, 0, 0
+            return [], 0, 0
 
 
     def compute_error(self, true_locations, true_powers, pred_locations, pred_powers):
-        '''Given the true location and localization location, computer the error
+        '''Given the true location and localization location, computer the error **for our localization**
         Args:
             true_locations (list): an element is a tuple (true transmitter 2D location)
             true_powers (list):    an element is a float 
@@ -1676,7 +1678,7 @@ class SelectSensor:
             (tuple): (distance error, miss, false alarm, power error)
         '''
         if len(pred_locations) == 0:
-            return -1, 1, 0, -1
+            return [], 1, 0, []
         distances = np.zeros((len(true_locations), len(pred_locations)))
         for i in range(len(true_locations)):
             for j in range(len(pred_locations)):
@@ -1697,15 +1699,15 @@ class SelectSensor:
             distances[:, j] = np.inf
             k += 1
 
-        tot_error = 0              # distance error
-        tot_power_error = 0        # power error
+        errors = []              # distance error
+        power_errors = []         # power error
         detected = 0
         threshold = self.grid_len / 5
         for match in matches:
             error = match[2]
             if error <= threshold:
-                tot_error += error
-                tot_power_error += match[3]
+                errors.append(error)
+                power_errors.append(match[3])
                 detected += 1
                 misses.remove(match[0])
                 falses.remove(match[1])
@@ -1724,9 +1726,9 @@ class SelectSensor:
             print(pred_locations[false], pred_powers[false], end=';  ')
         print()
         try:
-            return tot_error / detected, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations), tot_power_error / detected
+            return errors, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations), power_errors
         except:
-            return 0, 0, 0, 0
+            return [], 0, 0, []
 
 
     def ignore_boarders(self, edge):
@@ -1953,26 +1955,28 @@ class SelectSensor:
         proc_1_count = 0
         print('Procedure 1')
         hypotheses = list(range(len(self.transmitters)))
+        start = time.time()
         R_list = [8, 6, 4]
         for R in R_list:
             identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
             pred_power.extend(pred_power_R)
-        
+        self.time_1 += (time.time() - start)
+        '''
         hypotheses = list(range(len(self.transmitters)))
         R_list = [6]
         for R in R_list:
             identified_R, pred_power_R, counter_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
             pred_power.extend(pred_power_R)
-
+        '''
         proc_1_count = len(identified)
-
+        start = time.time()
         print('Procedure 2')
         identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         identified.extend(identified2)
         pred_power.extend(pred_power2)
-
+        self.time_2 += (time.time()-start)
         return identified, pred_power, float(proc_1_count)/len(identified)
 
 
@@ -1986,7 +1990,7 @@ class SelectSensor:
         Return:
             (list, list)
         '''
-        visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+        #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
         detected, power = [], []
         center_list = []
         center = self.get_center_sensor(sensor_outputs, R, center_list)
@@ -2019,7 +2023,7 @@ class SelectSensor:
                         detected.append((x, y))
                         power.append(0)
                         self.delete_transmitter((x, y), 0, range(len(self.sensors)), sensor_outputs)
-                    visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+                    #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
                     break
             center = self.get_center_sensor(sensor_outputs, R, center_list)
             center_list.append(center)
@@ -2130,7 +2134,7 @@ class SelectSensor:
         counter = 0
         while detected:
             counter += 1
-            visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+            #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
             detected = False
             previous_identified = list(set(previous_identified).union(set(identified)))
             posterior, H_0, Q, power = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig, previous_identified)
@@ -2140,7 +2144,7 @@ class SelectSensor:
                 continue
 
             posterior = np.reshape(posterior[:-1], (self.grid_len, self.grid_len))
-            visualize_q_prime(posterior, fig)
+            #visualize_q_prime(posterior, fig)
             indices = peak_local_max(posterior, 2, threshold_abs=0.8, exclude_border = False)  # change 2?
             sensor_subset = range(len(self.sensors))
 
@@ -2253,7 +2257,7 @@ class SelectSensor:
         R2             = 8     # larger R might help for ridge regression
         threshold      = -70
 
-        visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+        #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
         weight_global  = np.zeros((self.grid_len, self.grid_len))
         sensor_sorted_index = np.flip(np.argsort(sensor_outputs))
 
@@ -2472,14 +2476,13 @@ def main1():
     '''main 1: synthetic data + SPLOT
     '''
     selectsensor = SelectSensor(grid_len=50)
-    #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
     true_powers = [-2, -1, 0, 1, 2]
     #true_powers = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
     selectsensor.vary_power(true_powers)
 
-    repeat = 10
+    repeat = 5
     errors = []
     misses = []
     false_alarms = []
@@ -2492,7 +2495,7 @@ def main1():
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
         r1 = 8
         r2 = 5
@@ -2502,17 +2505,18 @@ def main1():
 
         try:
             error, miss, false_alarm = selectsensor.compute_error2(true_locations, pred_locations)
-            if error >= 0:
-                errors.append(error)
+            if len(error) != 0:
+                errors.extend(error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {}/{}/{}'.format(error, miss, false_alarm) )
+            print('error/miss/false/power = {}/{}/{}'.format(np.array(error).mean(), miss, false_alarm) )
             visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
         except Exception as e:
             print(e)
 
     try:
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
+        errors = np.array(errors)
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(errors.mean(), 3), round(errors.max(), 3), round(errors.min(), 3), \
               round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms)) )
         print('Ours! time = ', time.time()-start)
     except:
@@ -2535,7 +2539,7 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    a, b = 0, 50
+    a, b = 0, 2
     errors = []
     misses = []
     false_alarms = []
@@ -2556,25 +2560,28 @@ def main2():
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
         pred_locations, pred_power, ratio = selectsensor.our_localization(sensor_outputs, intruders, i)
-        #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
         proc_1_ratio += ratio
         true_locations = selectsensor.convert_to_pos(true_indices)
 
         try:
             error, miss, false_alarm, power_error = selectsensor.compute_error(true_locations, true_powers, pred_locations, pred_power)
-            if error >= 0:
-                errors.append(error)
-                power_errors.append(abs(power_error))
+            if len(error) != 0:
+                errors.extend(error)
+                power_errors.extend(power_error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {}/{}/{}/{}'.format(error, miss, false_alarm, power_error) )
-            visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
+            print('error/miss/false/power = {}/{}/{}/{}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
+            #visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
         except Exception as e:
             print(e)
 
     try:
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
-              round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms), round(sum(power_errors)/len(power_errors), 3), round(max(power_errors), 3), round(min(power_errors), 3) ) )
+        errors = np.array(errors)
+        power_errors = np.array(power_errors)
+        print(errors)
+        print(power_errors)
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(errors.mean(), 3), round(errors.max(), 3), round(errors.min(), 3), \
+              round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms), round(power_errors.mean(), 3), round(power_errors.max(), 3), round(power_errors.min(), 3) ) )
         print('Ours! time = ', round(time.time()-start, 3), '; proc 1 ratio =', round(proc_1_ratio/(b-a), 3))
     except Exception as e:
         print(e)
@@ -2616,7 +2623,6 @@ def main4():
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
         pred_locations, pred_power, ratio = selectsensor.our_localization(sensor_outputs, intruders, i)
-        #pred_locations = selectsensor.get_cluster_localization(intruders, sensor_outputs)
         proc_1_ratio += ratio
         true_locations = selectsensor.convert_to_pos(true_indices)
 
@@ -2699,10 +2705,62 @@ def main5():
         print('Empty list!')
 
 
+def main6():
+    ''' Clusting
+    '''
+    # SelectSensor version on May 31, 2019
+    selectsensor = SelectSensor(grid_len=50)
+    selectsensor.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
+
+    num_of_intruders = 5
+
+    a, b = 0, 2
+    errors = []
+    misses = []
+    false_alarms = []
+    power_errors = []
+    start = time.time()
+    for i in range(a, b):
+        print('\n\nTest ', i)
+        random.seed(i)
+        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
+        random.seed(i)
+        np.random.seed(i)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
+        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
+
+        pred_locations = selectsensor.cluster_localization(intruders, sensor_outputs, num_of_intruders)
+
+        true_locations = selectsensor.convert_to_pos(true_indices)
+
+        try:
+            error, miss, false_alarm = selectsensor.compute_error2(true_locations, pred_locations)
+            if len(error) != 0:
+                errors.extend(error)
+            misses.append(miss)
+            false_alarms.append(false_alarm)
+            print('error/miss/false/power = {}/{}/{}'.format(np.array(error).mean(), miss, false_alarm) )
+        except Exception as e:
+            print(e)
+
+    try:
+        errors = np.array(errors)
+        power_errors = np.array(power_errors)
+        #np.savetxt('{}-cluster-error.txt'.format(num_of_intruders), errors, delimiter=',')
+        #np.savetxt('{}-cluster-miss.txt'.format(num_of_intruders), misses, delimiter=',')
+        #np.savetxt('{}-cluster-false.txt'.format(num_of_intruders), false_alarms, delimiter=',')
+        #np.savetxt('{}-cluster-time.txt'.format(num_of_intruders), [(time.time()-start)/(b-a)], delimiter=',')
+        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(errors.mean(), 3), round(errors.max(), 3), round(errors.min(), 3), \
+              round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms) ) )
+        print('Ours! time = ', round(time.time()-start, 3))
+    except Exception as e:
+        print(e)
+
 
 if __name__ == '__main__':
     #main1()
-    main2()
+    #main2()
     #main3()
     #main4()
     #main5()
+    main6()
