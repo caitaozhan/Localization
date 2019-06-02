@@ -1675,7 +1675,7 @@ class SelectSensor:
             pred_locations (list): an element is a tuple (predicted transmitter 2D location)
             pred_powers (list):    an element is a float
         Return:
-            (tuple): (distance error, miss, false alarm, power error)
+            (tuple): (list, float, float, list), (distance error, miss, false alarm, power error)
         '''
         if len(pred_locations) == 0:
             return [], 1, 0, []
@@ -2599,12 +2599,12 @@ def main4():
     #selectsensor.init_data('dataSplat/homogeneous-300/cov', 'dataSplat/homogeneous-300/sensors', 'dataSplat/homogeneous-300/hypothesis')
     #true_powers = np.array([-1, -0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8]) * 2     # 10 intruders
     #true_powers = [-2, -1.4, -0.8, -0.2, 0.4, 1, 1.6]                                  # 7 intruders
-    true_powers = [-2, -1, 0, 1, 2]                                                    # 5 intruders
+    #true_powers = [-2, -1, 0, 1, 2]                                                    # 5 intruders
     #true_powers = [-2, 0, 2]                                                           # 3 intruders
     #true_powers = [0]                                                                  # 1 intruders
     #true_powers = [0, 0, 0, 0, 0]   # no varing power
-    selectsensor.vary_power(true_powers)
-
+    #selectsensor.vary_power(true_powers)
+    num_of_intruders = 1
     repeat = 1
     errors = []
     misses = []
@@ -2615,8 +2615,10 @@ def main4():
     for i in range(0, repeat):
         print('\n\nTest ', i)
         random.seed(i)
+        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
+        random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
@@ -2628,12 +2630,12 @@ def main4():
 
         try:
             error, miss, false_alarm, power_error = selectsensor.compute_error(true_locations, true_powers, pred_locations, pred_power)
-            if error >= 0:
-                errors.append(error)
-                power_errors.append(abs(power_error))
+            if len(error) != 0:
+                errors.extend(error)
+                power_errors.extend(power_error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {}/{}/{}/{}'.format(error, miss, false_alarm, power_error) )
+            print('error/miss/false/power = {}/{}/{}/{}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
             visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
         except Exception as e:
             print(e)
@@ -2642,11 +2644,9 @@ def main4():
         print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
               round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms), round(sum(power_errors)/len(power_errors), 3), round(max(power_errors), 3), round(min(power_errors), 3) ) )
         print('Ours! time = ', round(time.time()-start, 3), '; proc 1 ratio =', round(proc_1_ratio/repeat, 3))
-    except:
-        print('Empty list!')
+    except Exception as e:
+        print(e)
     
-    print('300 sensors')
-
 
 def main5():
     '''main 5: SPLAT data + SPLOT localization
@@ -2761,6 +2761,6 @@ if __name__ == '__main__':
     #main1()
     #main2()
     #main3()
-    #main4()
+    main4()
     #main5()
-    main6()
+    #main6()

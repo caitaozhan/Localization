@@ -106,13 +106,23 @@ def find_elbow(inertias, num_intruder):
     #print('ratio1 = ', deltas[9]/inertias[0])
     #print('ratio2 = ', inertias[9]/inertias[0])
 
-    param ={1:1.1,
-            3:0.15,
-            5:0.06,
-            7:0.04,
-            10:0.03,
-        }
 
+    '''
+    param = { # lognormal
+        1:1.1,
+        3:0.15,
+        5:0.06,
+        7:0.04,
+        10:0.03,
+    }
+    '''
+    param = {  # splat
+        1:1.1,
+        3:0.15,
+        5:0.06,
+        7:0.05,
+        10:0.03,
+    }
     i = 0
     while i < len(inertias):
         if inertias[i] < param[num_intruder]*inertias[0] or inertias[i] < 5: # after elbow point: slope is small

@@ -9,10 +9,10 @@ from utility import generate_intruders
 
 
 # SelectSensor version on May 31, 2019
-selectsensor = SelectSensor(grid_len=50)
-selectsensor.init_data('../../data50/homogeneous-200/cov', '../../data50/homogeneous-200/sensors', '../../data50/homogeneous-200/hypothesis')
+selectsensor = SelectSensor(grid_len=40)
+selectsensor.init_data('../../dataSplat/homogeneous-200/cov', '../../dataSplat/homogeneous-200/sensors', '../../dataSplat/homogeneous-200/hypothesis')
 
-num_of_intruders = 1
+num_of_intruders = 7
 
 a, b = 0, 50
 errors = []
@@ -29,6 +29,7 @@ for i in range(a, b):
     true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
     intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
+    threshold = -65
     pred_locations = selectsensor.cluster_localization(intruders, sensor_outputs, num_of_intruders)
 
     true_locations = selectsensor.convert_to_pos(true_indices)
