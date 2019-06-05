@@ -59,6 +59,9 @@ class SelectSensor:
         self.transmitters = []                 # transmitters are the hypothesises
         self.intruders = []
         self.sensors = []
+        self.sensors_uses = np.array(0)
+        self.sensors_collect = {}              # precomputed collected sensors
+        self.key = '{}-{}'                     # key template for self.sensors_collect
         self.data = np.zeros(0)
         self.covariance = np.zeros(0)
         self.init_transmitters()
@@ -1511,16 +1514,29 @@ class SelectSensor:
             print('denominator', denominator)
 
 
-    @profile
-    def collect_sensors_in_radius(self, size_R, sensor, given_sensors = None, num_sensors = None):
+    def collect_sensors_in_radius_precompute(self, radius):
+        '''For every location, collect sensors within a radius, store them. Avoid computing over and over again
+        Args:
+            radius (list<int>)
+        '''
+        for r in radius:
+            for l in range(len(self.transmitters)):
+                x = self.transmitters[l].x
+                y = self.transmitters[l].y
+                subset_sensors = self.collect_sensors_in_radius(r, Sensor(x, y))
+                self.sensors_collect[self.key.format(l, r)] = subset_sensors
+
+
+    #@profile
+    def collect_sensors_in_radius(self, radius, sensor, given_sensors = None):
         '''Returns a subset of sensors that are within a radius of given sensor'''
         if given_sensors is None:
             given_sensors = self.sensors
         subset_sensors = []
         for cur_sensor in given_sensors:
-            if (cur_sensor.x > sensor.x - size_R) and (cur_sensor.x < sensor.x + size_R) and (cur_sensor.y > sensor.y - size_R) and (cur_sensor.y < sensor.y + size_R):
+            if (cur_sensor.x > sensor.x - radius) and (cur_sensor.x < sensor.x + radius) and (cur_sensor.y > sensor.y - radius) and (cur_sensor.y < sensor.y + radius):
                 distance_euc = math.sqrt((cur_sensor.x - sensor.x)**2 + (cur_sensor.y - sensor.y)**2)
-                if (distance_euc < size_R):
+                if (distance_euc < radius):
                     subset_sensors.append(cur_sensor.index)
         return subset_sensors
 
@@ -1774,9 +1790,9 @@ class SelectSensor:
         return q
 
 
-    @profile
+    #@profile
     def prune_hypothesis(self, hypotheses, sensor_outputs, radius):
-        '''Prune hypothesis who has less than 2 sensors with RSS > -80 in radius
+        '''Prune hypothesis who has less than 3 sensors with RSS > -80 in radius
         Args:
             transmitters (list): a list of candidate transmitter (hypothesis, location)
             sensor_outputs (list)
@@ -1785,16 +1801,12 @@ class SelectSensor:
             (list): an element is a transmitter index (int)
         '''
         prunes = []
-        radius2 = radius**2                    # square of radius
         for tran in hypotheses:
             counter = 0
-            x = tran // self.grid_len
-            y = tran % self.grid_len
-            for sen, output in enumerate(sensor_outputs):
-                if output > -80:
-                    dist2 = (x - self.sensors[sen].x)**2 + (y - self.sensors[sen].y)**2 # square of distance
-                    if dist2 < radius2:
-                        counter += 1
+            subset_sensors = self.sensors_collect[self.key.format(tran, radius)]
+            for sensor in subset_sensors:
+                if sensor_outputs[sensor] > -80:
+                    counter += 1
                 if counter == 3:
                     break
             else:
@@ -1843,7 +1855,7 @@ class SelectSensor:
         return delta_p
 
 
-    #@profile
+    @profile
     def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
         '''
         Args:
@@ -1871,12 +1883,9 @@ class SelectSensor:
                 continue
             if (trans.x, trans.y) in position_to_check:
                 print(trans.x, trans.y)
-            my_sensor = Sensor(trans.x, trans.y, 1, 1, gain_up_bound=1, index=0)
-            subset_sensors = self.collect_sensors_in_radius(radius, my_sensor)
+            subset_sensors = self.sensors_collect[self.key.format(trans.hypothesis, radius)]
             self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
             subset_sensors = np.array(subset_sensors)
-            all_sensors = np.arange(0, len(self.sensors), 1).astype(int)
-            remaining_sensors = np.setdiff1d(all_sensors, subset_sensors, assume_unique=True)
             if len(subset_sensors) < 3:
                 likelihood = 0
                 #power_max = 0
@@ -1913,7 +1922,7 @@ class SelectSensor:
                 likelihood = likelihood_max
                 '''
 
-            likelihood *= np.power(out_prob*constant, len(remaining_sensors)) * np.power(constant, len(subset_sensors))
+            likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant, len(subset_sensors))
 
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
             power_grid[trans.x][trans.y] = delta_p
@@ -1941,7 +1950,7 @@ class SelectSensor:
             if self.grid_posterior[trans.x * self.grid_len + trans.y] == 0:
                 continue
             if (trans.x, trans.y) in position_to_check:
-                pass#print(self.grid_posterior[trans.x * self.grid_len + trans.y])
+                pass #print(self.grid_posterior[trans.x * self.grid_len + trans.y])
             min_x = int(max(0, trans.x - radius))
             max_x = int(min(trans.x + radius, self.grid_len - 1))
             min_y = int(max(0, trans.y - radius))
@@ -1956,9 +1965,17 @@ class SelectSensor:
 
 
     def reset_time(self):
-        '''Reset the members for our localization
+        '''Reset the time members for our localization
         '''
         self.time_1 = self.time_2_2 = self.time_2_3 = 0
+
+
+    def reset(self):
+        '''Reset some members for our localization
+        '''
+        self.sensors_used = np.zeros(self.sen_num, dtype=bool)
+        self.sensors_collect = {}
+
 
     #@profile
     def our_localization(self, sensor_outputs, intruders, fig):
@@ -1968,13 +1985,15 @@ class SelectSensor:
             intruders (list): location of intruders, used only for visualization
             fig (int):        used for log's filenames
         '''
+        self.reset()
         identified   = []
         pred_power   = []
         proc_1_count = 0
         print('Procedure 1')
         start = time.time()
-        hypotheses = list(range(len(self.transmitters)))
         R_list = [8, 6, 5, 4]
+        self.collect_sensors_in_radius_precompute(R_list)
+        hypotheses = list(range(len(self.transmitters)))
         for R in R_list:
             identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
@@ -1983,19 +2002,22 @@ class SelectSensor:
         self.time_1 += time.time() - start
         proc_1_count = len(identified)
 
+        print('Procedure 1.1')
+        identified1_1, pred_power1_1 = self.procedure1_1(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+        
+
         print('Procedure 2')
         identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         identified.extend(identified2)
         pred_power.extend(pred_power2)
 
-        #print('Procedure 3')
-        #identified3, pred_power3 = self.procedure3(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         return identified, pred_power, float(proc_1_count)/len(identified)
 
 
-    def procedure3(self, sensor_outputs, intruders, fig, R, previous_identified):
-        '''Our hypothesis-based localization algorithm's procedure 3
+    def procedure1_1(self, sensor_outputs, intruders, fig, R, previous_identified):
+        '''Our hypothesis-based localization algorithm's procedure 1_1
            The key here is locate transmitters with unused sensors (sensors not being deleted)
+           and neglect Q' (thus is MLE-based, not MAP-based)
         Args:
             sensor_outputs (np.array)
             intruders (list): for plotting
@@ -2005,7 +2027,10 @@ class SelectSensor:
         Return:
             (list, list)
         '''
-        pass
+        identified, pred_power = [], []
+
+
+        return identified, pred_power
 
 
 
@@ -2029,7 +2054,8 @@ class SelectSensor:
         combination_checked = {0}
         while center != -1:
             center_list.append(center)
-            sensor_subset = self.collect_sensors_in_radius(R, self.sensors[center])  # sensor in R, hypothesis in R
+            location = self.sensors[center].x*self.grid_len + self.sensors[center].y
+            sensor_subset = self.sensors_collect[self.key.format(location, R)]
             self.ignore_screwed_sensor(sensor_subset, previous_identified, min_dist=2)
             hypotheses = [h for h in range(len(self.transmitters)) \
                           if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
@@ -2205,7 +2231,8 @@ class SelectSensor:
             for index in indices:  # 2D index
                 print('detected peak =', index, "; Q' =", round(posterior[index[0]][index[1]], 3), end='; ')
                 q = Q[index[0]*self.grid_len + index[1]]
-                subset_sensors = self.collect_sensors_in_radius(radius, Sensor(index[0], index[1], 1))
+                location = index[0]*self.grid_len + index[1]
+                subset_sensors = self.sensors_collect[self.key.format(location, radius)]
                 self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
                 sen_inside = len(subset_sensors)
                 q_threshold = self.get_q_threshold_custom(sen_inside, radius)
@@ -2596,6 +2623,7 @@ def main2():
     proc_1_ratio = 0
     start = time.time()
     selectsensor.reset_time()
+    # for i in [2, 6, 10, 12, 13, 19]:
     for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)

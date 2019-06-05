@@ -11,7 +11,7 @@ class Sensor:
         gain_up_bound (float): upper bound of gain, gain: in context of submodular
         index (int):  a sensor will have an index, like it's ID
     '''
-    def __init__(self, x, y, std, cost=1, battery=100, gain_up_bound=0, index=0):
+    def __init__(self, x, y, std=1, cost=1, battery=100, gain_up_bound=0, index=0):
         self.x = x
         self.y = y
         self.std = std

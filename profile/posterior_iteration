@@ -1,0 +1,360 @@
+
+
+Test  0
+Procedure 1
+R = 8
+detected peak = [41 44] ; Q' = 1.0; Q = 9.66764928742294e-79; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [41  2] ; Q' = 1.0; Q = 3.4447616394767873e-211; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [37 33] ; Q' = 1.0; Q = 2.8081683450244335e-87; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [29 16] ; Q' = 1.0; Q = 4.7882617336484445e-57; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [28 33] ; Q' = 1.0; Q = 3.681333945405904e-78; q-threshold = 8.689407549440236e-51, inside = 7 
+detected peak = [24 42] ; Q' = 1.0; Q = 2.5394846548955237e-49; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+detected peak = [21 10] ; Q' = 1.0; Q = 3.314006027339597e-60; q-threshold = 4.4331360641937345e-57, inside = 20 
+detected peak = [20 21] ; Q' = 1.0; Q = 3.276734297592402e-102; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [ 3 15] ; Q' = 1.0; Q = 2.683322210728425e-47; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+---
+detected peak = [41 44] ; Q' = 1.0; Q = 2.9043077869304898e-78; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [41  2] ; Q' = 1.0; Q = 3.3702369443519866e-211; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [37 33] ; Q' = 1.0; Q = 2.015255153224058e-88; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [29 16] ; Q' = 1.0; Q = 5.0812363385308935e-57; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [21 21] ; Q' = 1.0; Q = 1.0250006317441698e-111; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [21 10] ; Q' = 1.0; Q = 2.858884654294125e-60; q-threshold = 4.4331360641937345e-57, inside = 20 
+---
+R = 6
+detected peak = [47 10] ; Q' = 1.0; Q = 2.2e-322; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [41 44] ; Q' = 0.814; Q = 5.8637273357698686e-49; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [39  2] ; Q' = 1.0; Q = 1.7328072366551664e-45; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [36 31] ; Q' = 1.0; Q = 6.510638545567162e-48; q-threshold = 1.4351938989183028e-49, inside = 5  **Intruder!**
+detected peak = [33  8] ; Q' = 0.992; Q = 3.7012922288252406e-54; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [31 47] ; Q' = 0.986; Q = 2.7982343762285123e-126; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [31 39] ; Q' = 1.0; Q = 3.182519174047409e-128; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [31 27] ; Q' = 1.0; Q = 2.0321199085114635e-46; q-threshold = 4.3745365468575826e-49, inside = 4  **Intruder!**
+detected peak = [29 16] ; Q' = 1.0; Q = 2.854173489817656e-49; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [21 10] ; Q' = 1.0; Q = 2.182476332988674e-45; q-threshold = 1.789706277559936e-52, inside = 11  **Intruder!**
+detected peak = [20 21] ; Q' = 1.0; Q = 4.337559896185138e-80; q-threshold = 1.4351938989183028e-49, inside = 5 
+---
+detected peak = [39 40] ; Q' = 1.0; Q = 9.343781011316483e-47; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [33  8] ; Q' = 1.0; Q = 8.72243080188139e-46; q-threshold = 1.544783564344931e-50, inside = 7  **Intruder!**
+detected peak = [31 46] ; Q' = 1.0; Q = 1.988165512933043e-264; q-threshold = 4.3745365468575826e-49, inside = 4 
+---
+detected peak = [38 16] ; Q' = 1.0; Q = 1.2215171619230399e-297; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [31  6] ; Q' = 0.999; Q = 5.37829955196001e-129; q-threshold = 1.4351938989183028e-49, inside = 5 
+---
+R = 5
+detected peak = [37 11] ; Q' = 1.0; Q = 3.440596244661904e-235; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [36 17] ; Q' = 1.0; Q = 6.1753045064627885e-142; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [35 22] ; Q' = 1.0; Q = 7.26198925044491e-70; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [30  4] ; Q' = 1.0; Q = 1.2367991334445232e-83; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [37 11] ; Q' = 1.0; Q = 5.375931632284225e-235; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [35 17] ; Q' = 1.0; Q = 2.1527712157457667e-101; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [34 22] ; Q' = 1.0; Q = 4.661683835889847e-48; q-threshold = 3.000102113866671e-48, inside = 3  **Intruder!**
+detected peak = [32  3] ; Q' = 1.0; Q = 2.5207196917113325e-274; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [30  8] ; Q' = 1.0; Q = 2.3671729667861842e-202; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+detected peak = [30  8] ; Q' = 1.0; Q = 9.023884487654415e-206; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+time proc 1 = 1.7261641025543213
+Procedure 1.1
+Procedure 2
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+center = (1, 13) RSS = -61.02101902538813
+q-threshold = 2.905644131528463e-14, inside = 8
+combination = [(0, 8), (0, 9)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.077
+q-threshold = 1.263323535447158e-15, inside = 8
+combination = [(0, 8), (0, 9), (0, 10)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 2.054 
+
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+center = (0, 15) RSS = -61.81736236927887
+q-threshold = 7.153085495163629e-15, inside = 9
+combination = [(0, 10), (0, 19)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.022
+q-threshold = 2.666505878840067e-16, inside = 9
+combination = [(0, 10), (0, 11), (0, 19)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 0.547 
+
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+center = (3, 12) RSS = -63.7204500694813
+q-threshold = 1.8276753843713916e-15, inside = 9
+combination = [(0, 7), (0, 8)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.077
+q-threshold = 4.6406585182774773e-17, inside = 9
+combination = [(0, 7), (0, 8), (0, 9)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 3.11 
+
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+Pred: (31, 27) 1.935 ; (34, 22) 0.976 ; (3, 15)  -0.476; (21, 10) -0.92 ; (41, 44) 1.014 ; (39, 40) 0.23  ; (33, 8)  -0.093; (24, 42) -0.44 ; (39, 2)  0.253 ; (29, 16) 2.0   ; 
+True: (31, 27) 1.378 ; (34, 22) 1.032 ; (3, 15)  -0.318; (21, 10) -0.964; (41, 44) 0.045 ; (39, 40) -0.38 ; (33, 8)  1.135 ; (24, 42) -0.787; (39, 2)  -0.094; (29, 16) 0.334 ; 
+Miss: 
+False Alarm: (36, 31) -2.0;  
+error/miss/false/power = 0.0/0.0/0.1/0.30975775734064204
+
+
+Test  1
+Procedure 1
+R = 8
+detected peak = [46 31] ; Q' = 1.0; Q = 1.5478895620983584e-187; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [36 40] ; Q' = 1.0; Q = 8.052319032312881e-93; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [31  4] ; Q' = 1.0; Q = 1.6289125549709887e-48; q-threshold = 3.302804126515744e-53, inside = 12  **Intruder!**
+detected peak = [29 32] ; Q' = 1.0; Q = 1.087533552302099e-195; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [20 44] ; Q' = 1.0; Q = 6.145593203425648e-47; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+detected peak = [19 22] ; Q' = 0.923; Q = 7.018598100098424e-210; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [17  9] ; Q' = 1.0; Q = 1.3947904264923592e-68; q-threshold = 5.528180860680004e-60, inside = 26 
+detected peak = [ 8 33] ; Q' = 1.0; Q = 1.6446929791106175e-53; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [5 8] ; Q' = 1.0; Q = 3.5237471718022157e-60; q-threshold = 3.8264579033650465e-55, inside = 16 
+---
+detected peak = [46 31] ; Q' = 1.0; Q = 1.547077172036382e-187; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [36 40] ; Q' = 1.0; Q = 6.078636819325162e-93; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [29 27] ; Q' = 1.0; Q = 2.01614941969957e-217; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [18 22] ; Q' = 0.976; Q = 6.919592302337843e-231; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [17  9] ; Q' = 1.0; Q = 3.521091634877287e-69; q-threshold = 5.528180860680004e-60, inside = 26 
+detected peak = [ 8 33] ; Q' = 1.0; Q = 2.3644479221248197e-53; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [5 8] ; Q' = 1.0; Q = 3.890488704964255e-60; q-threshold = 3.8264579033650465e-55, inside = 16 
+---
+R = 6
+detected peak = [46 31] ; Q' = 1.0; Q = 9.936381495660958e-72; q-threshold = 5.871651780472434e-53, inside = 12 
+detected peak = [38 34] ; Q' = 1.0; Q = 5.591671938672322e-54; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [36 41] ; Q' = 0.985; Q = 2.4785912094896076e-69; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [32 47] ; Q' = 1.0; Q = 4.966503511450688e-108; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [17 21] ; Q' = 1.0; Q = 7.451325957472812e-193; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [17  9] ; Q' = 1.0; Q = 1.4293815748346885e-48; q-threshold = 2.0734610555593932e-54, inside = 15  **Intruder!**
+detected peak = [ 8 33] ; Q' = 1.0; Q = 7.727550093391114e-53; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [ 6 15] ; Q' = 1.0; Q = 4.034321703701015e-257; q-threshold = 1.789706277559936e-52, inside = 11 
+detected peak = [5 8] ; Q' = 1.0; Q = 1.2959214395297977e-46; q-threshold = 5.455106466956942e-52, inside = 10  **Intruder!**
+---
+detected peak = [46 31] ; Q' = 1.0; Q = 9.942763595577487e-72; q-threshold = 5.871651780472434e-53, inside = 12 
+detected peak = [38 34] ; Q' = 1.0; Q = 5.59193749347824e-54; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [36 41] ; Q' = 0.985; Q = 2.475252010050176e-69; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [32 47] ; Q' = 1.0; Q = 4.664502408195024e-108; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [ 8 33] ; Q' = 1.0; Q = 7.750104231391368e-53; q-threshold = 4.708570851858464e-50, inside = 6 
+---
+R = 5
+detected peak = [46 31] ; Q' = 1.0; Q = 5.377182363923416e-46; q-threshold = 2.394347563736921e-51, inside = 9  **Intruder!**
+detected peak = [38 34] ; Q' = 0.998; Q = 1.3758501932888726e-46; q-threshold = 1.9200653528746696e-48, inside = 3  **Intruder!**
+detected peak = [33 47] ; Q' = 1.0; Q = 7.942884401563389e-110; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [30 38] ; Q' = 1.0; Q = 2.1425442061559733e-75; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17 45] ; Q' = 1.0; Q = 7.27142515040367e-152; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.600848719754255e-58; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+detected peak = [40 29] ; Q' = 1.0; Q = 2.1904437427882032e-45; q-threshold = 7.298080720201562e-51, inside = 8  **Intruder!**
+detected peak = [36 41] ; Q' = 1.0; Q = 3.8643696692690345e-48; q-threshold = 2.0666792144423556e-49, inside = 5  **Intruder!**
+detected peak = [33 47] ; Q' = 1.0; Q = 3.348334798035503e-111; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17 45] ; Q' = 1.0; Q = 4.205140578027982e-152; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.580882306602457e-58; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+detected peak = [17 45] ; Q' = 1.0; Q = 1.4651517768178092e-152; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.5602246290599615e-58; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [19 45] ; Q' = 1.0; Q = 9.874391774524108e-150; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 8 33] ; Q' = 0.998; Q = 6.917167333911552e-53; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 4 28] ; Q' = 0.938; Q = 7.983181106458774e-107; q-threshold = 9.842707230429562e-49, inside = 4 
+---
+time proc 1 = 1.8901219367980957
+Procedure 1.1
+Procedure 2
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+
+center = (8, 35) RSS = -42.70436458293553
+q-threshold = 2.673886990765566e-08, inside = 3
+combination = [(6, 33), (7, 36)]; max Q = 2.8934101799929486e-06; posterior = 0.12161244001541793
+** Intruder! **
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (48, 30) RSS = -59.97182727925957
+q-threshold = 1.5687853500459469e-15, inside = 9
+combination = [(43, 27), (43, 28)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.079
+q-threshold = 6.820805869764987e-17, inside = 9
+combination = [(43, 27), (43, 28), (43, 29)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 2.096 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (18, 46) RSS = -60.47957185450619
+q-threshold = 1.6878274116054775e-14, inside = 8
+combination = [(13, 43), (13, 44)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.138
+q-threshold = 5.564266192105969e-16, inside = 8
+combination = [(13, 43), (13, 44), (13, 45)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 4.693 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (38, 27) RSS = -62.829529945482705
+q-threshold = 1.0434602225413003e-19, inside = 12
+combination = [(33, 24), (33, 25)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.225
+q-threshold = 2.9226628440636623e-21, inside = 12
+combination = [(33, 24), (33, 25), (33, 26)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 8.258 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (7, 29) RSS = -64.63128837125889
+q-threshold = 6.592319691272799e-21, inside = 13
+combination = [(2, 26), (2, 27)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.227
+q-threshold = 1.5779438513364112e-22, inside = 13
+combination = [(2, 26), (2, 27), (2, 28)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 8.456 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+Pred: (46, 31) -0.717; (5, 8)   0.961 ; (20, 44) 1.319 ; (40, 29) -0.115; (36, 41) 0.364 ; (38, 34) 2.0   ; (31, 4)  1.031 ; (17, 9)  -1.053; (6, 33)  0     ; (7, 36)  0     ; 
+True: (46, 31) -1.463; (5, 8)   1.39  ; (20, 44) 1.055 ; (40, 29) -0.018; (36, 41) -0.202; (38, 34) 0.606 ; (31, 4)  1.155 ; (17, 9)  -1.625; (7, 34)  -1.887; (9, 32)  -0.98 ; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.5886349517372674/0.0/0.0/0.5758189471251502
+(mean/max/min) error=(0.294/4.472/0.0), miss=(0.0/0.0/0.0), false_alarm=(0.05/0.1/0.0), power=(0.443/1.887/-1.229)
+Ours! time =  33.939 ; proc 1 ratio = 0.9
+Proc-1 time = 1.8081450462341309, Proc-2-2 time = 0.42324602603912354, Proc-2-3 time = 14.60666573047638
+true power continuous, during localization continuous power, have noise
+Wrote profile results to select_sensor.py.lprof
+Timer unit: 1e-06 s
+
+Total time: 2.53271 s
+File: select_sensor.py
+Function: posterior_iteration at line 1858
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+  1858                                               @profile
+  1859                                               def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
+  1860                                                   '''
+  1861                                                   Args:
+  1862                                                       hypothesis (list): an element is potential hypothesis
+  1863                                                       radius (int): the transmission radius
+  1864                                                       sensor_outputs (list): a list of residual RSS of each sensor
+  1865                                                       fig (int): for plotting
+  1866                                                       previous_identified (list): an element is a 2D index, identified intruder in previous
+  1867                                                       subset_index (list): a list of sensor index
+  1868                                                   Return:
+  1869                                                       posterior (np.array): 1D array of posterior
+  1870                                                       H_0 (bool): whether H_0 is the largest likelihood or not
+  1871                                                       q (np.array): 2D array of Q
+  1872                                                       power_grid (np.array): 2D array of power
+  1873                                                   '''
+  1874        16         23.0      1.4      0.0          position_to_check = []
+  1875        16         70.0      4.4      0.0          self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
+  1876        16         37.0      2.3      0.0          power_grid = np.zeros((self.grid_len, self.grid_len))
+  1877        16         12.0      0.8      0.0          out_prob = 0.2 # probability of sensor outside the radius
+  1878        16         14.0      0.9      0.0          constant = 3
+  1879        16      98024.0   6126.5      3.9          self.prune_hypothesis(hypotheses, sensor_outputs, radius)
+  1880     40016      32301.0      0.8      1.3          for trans in self.transmitters: #For each location, first collect sensors in vicinity
+  1881     40000     222949.0      5.6      8.8              if self.grid_priori[trans.x * self.grid_len + trans.y] == 0 or trans.hypothesis not in hypotheses:
+  1882     26457      27056.0      1.0      1.1                  self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
+  1883     26457      20035.0      0.8      0.8                  continue
+  1884     13543      12923.0      1.0      0.5              if (trans.x, trans.y) in position_to_check:
+  1885                                                           print(trans.x, trans.y)
+  1886     13543      25788.0      1.9      1.0              subset_sensors = self.sensors_collect[self.key.format(trans.hypothesis, radius)]
+  1887     13543     534601.0     39.5     21.1              self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
+  1888     13543      38116.0      2.8      1.5              subset_sensors = np.array(subset_sensors)
+  1889     13543      13407.0      1.0      0.5              if len(subset_sensors) < 3:
+  1890        26         26.0      1.0      0.0                  likelihood = 0
+  1891                                                           #power_max = 0
+  1892        26         35.0      1.3      0.0                  delta_p = 0
+  1893                                                       else:
+  1894     13517      46434.0      3.4      1.8                  sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
+  1895     13517      17675.0      1.3      0.7                  sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+  1896     13517      32833.0      2.4      1.3                  mean_vec = np.copy(trans.mean_vec)
+  1897     13517      14120.0      1.0      0.6                  mean_vec = mean_vec[subset_sensors]
+  1898     13517      46869.0      3.5      1.9                  variance = np.diagonal(self.covariance)[subset_sensors]
+  1899     13517     293143.0     21.7     11.6                  delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+  1900     13517      36657.0      2.7      1.4                  mean_vec = mean_vec + delta_p  # add the delta of power
+  1901     13517      56761.0      4.2      2.2                  stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+  1902     13517     195202.0     14.4      7.7                  array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+  1903     13517      90680.0      6.7      3.6                  likelihood = np.prod(array_of_pdfs)
+  1904                                           
+  1905                                                           '''
+  1906                                                           likelihood_max = 0
+  1907                                                           power_max = 0
+  1908                                           
+  1909                                                           for power in trans.powers:                       # varies power
+  1910                                                               sensor_outputs_copy = np.copy(sensor_outputs)
+  1911                                                               sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+  1912                                                               mean_vec = np.copy(trans.mean_vec)
+  1913                                                               mean_vec = mean_vec[subset_sensors] + power  # add the delta of power
+  1914                                                               stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+  1915                                                               array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+  1916                                                               likelihood = np.prod(array_of_pdfs)
+  1917                                                               if likelihood > likelihood_max:
+  1918                                                                   likelihood_max = likelihood
+  1919                                                                   power_max = power
+  1920                                                               if len(np.unique(trans.powers)) == 1:        # no varying power
+  1921                                                                   break
+  1922                                                           likelihood = likelihood_max
+  1923                                                           '''
+  1924                                           
+  1925     13543      74631.0      5.5      2.9              likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant, len(subset_sensors))
+  1926                                           
+  1927     13543      25460.0      1.9      1.0              self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
+  1928     13543      18662.0      1.4      0.7              power_grid[trans.x][trans.y] = delta_p
+  1929                                                       #power_grid[trans.x][trans.y] = power_max
+  1930                                           
+  1931                                                   # Also check the probability of no transmitter to avoid false alarms
+  1932        16        134.0      8.4      0.0          mean_vec = np.full(len(sensor_outputs), -80)
+  1933        16        111.0      6.9      0.0          sensor_outputs_copy = copy.copy(sensor_outputs)
+  1934        16        102.0      6.4      0.0          sensor_outputs_copy[sensor_outputs_copy < -80] = -80
+  1935        16       1335.0     83.4      0.1          array_of_pdfs = self.get_pdfs(mean_vec, np.sqrt(np.diagonal(self.covariance)), sensor_outputs_copy)
+  1936        16        196.0     12.2      0.0          likelihood = np.prod(array_of_pdfs) * np.power(2., len(self.sensors))
+  1937        16         30.0      1.9      0.0          self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
+  1938                                                   # check if H_0's likelihood*prior is one of the largest
+  1939        16        124.0      7.8      0.0          if self.grid_posterior[len(self.transmitters)] == self.grid_posterior[np.argmax(self.grid_posterior)]:
+  1940                                                       H_0 = True
+  1941                                                   else:
+  1942        16         15.0      0.9      0.0              H_0 = False
+  1943                                           
+  1944        16         88.0      5.5      0.0          q = copy.copy(self.grid_posterior)
+  1945        16         16.0      1.0      0.0          if self.debug:
+  1946                                                       visualize_q(self.grid_len, q, fig)
+  1947                                           
+  1948        16         64.0      4.0      0.0          grid_posterior_copy = np.copy(self.grid_posterior)
+  1949     40016      32004.0      0.8      1.3          for trans in self.transmitters:
+  1950     40000      51097.0      1.3      2.0              if self.grid_posterior[trans.x * self.grid_len + trans.y] == 0:
+  1951     37405      29468.0      0.8      1.2                  continue
+  1952      2595       2403.0      0.9      0.1              if (trans.x, trans.y) in position_to_check:
+  1953                                                           pass #print(self.grid_posterior[trans.x * self.grid_len + trans.y])
+  1954      2595       3384.0      1.3      0.1              min_x = int(max(0, trans.x - radius))
+  1955      2595       2964.0      1.1      0.1              max_x = int(min(trans.x + radius, self.grid_len - 1))
+  1956      2595       2735.0      1.1      0.1              min_y = int(max(0, trans.y - radius))
+  1957      2595       2815.0      1.1      0.1              max_y = int(min(trans.y + radius, self.grid_len - 1))
+  1958      2595     423555.0    163.2     16.7              den = np.sum(np.array([self.grid_posterior[x * self.grid_len + y] for x in range(min_x, max_x + 1) for y in range(min_y, max_y + 1)
+  1959                                                                                                                         if math.sqrt((x-trans.x)**2 + (y-trans.y)**2) < radius]))
+  1960      2595       4611.0      1.8      0.2              grid_posterior_copy[trans.x * self.grid_len + trans.y] /= den
+  1961                                           
+  1962        16        872.0     54.5      0.0          grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
+  1963        16         23.0      1.4      0.0          self.grid_posterior = grid_posterior_copy
+  1964        16         16.0      1.0      0.0          return self.grid_posterior, H_0, q, power_grid
+
