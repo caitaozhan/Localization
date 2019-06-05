@@ -76,8 +76,9 @@ class SelectSensor:
         self.secondary_trans = []              # they include primary and secondary
         self.lookup_table_q = np.array([1. - 0.5*(1. + math.erf(i/1.4142135623730951)) for i in np.arange(0, 8.3, 0.0001)])
         self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
-        self.time_1 = 0                        # time counter for procedure 1
-        self.time_2 = 0                        # time counter for procedure 2
+        self.time_1   = 0                      # time counter for procedure 1
+        self.time_2_2 = 0                      # time counter for procedure 2 (t=2)
+        self.time_2_3 = 0                      # time counter for procedure 2 (t=3)
         self.debug  = debug                    # debug mode do visulization stuff, which is time expensive 
 
 
@@ -838,7 +839,7 @@ class SelectSensor:
             complement_sensors.sort()                       # sorting the gain descendingly
             new_base_ot_approx = 0
             max_gain = 0
-            start = time.time()
+            #start = time.time()
             for i in range(len(complement_sensors)):
                 candidate = complement_sensors[i].index
 
@@ -1949,9 +1950,16 @@ class SelectSensor:
         return self.grid_posterior, H_0, q, power_grid
 
 
+    def reset(self):
+        '''Reset the members for our localization
+        '''
+        self.time_1 = self.time_2_2 = self.time_2_3 = 0
+
+
     def our_localization(self, sensor_outputs, intruders, fig):
         '''Our localization, reduce R procedure 1 + procedure 2
         '''
+        self.reset()
         identified   = []
         pred_power   = []
         proc_1_count = 0
@@ -1963,7 +1971,9 @@ class SelectSensor:
             identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
             pred_power.extend(pred_power_R)
-        self.time_1 += (time.time() - start)
+        delta = (time.time() - start)
+        print('time proc 1 =', delta)
+        self.time_1 += delta
         '''
         hypotheses = list(range(len(self.transmitters)))
         R_list = [6]
@@ -1973,12 +1983,10 @@ class SelectSensor:
             pred_power.extend(pred_power_R)
         '''
         proc_1_count = len(identified)
-        start = time.time()
         print('Procedure 2')
         identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         identified.extend(identified2)
         pred_power.extend(pred_power2)
-        self.time_2 += (time.time()-start)
         return identified, pred_power, float(proc_1_count)/len(identified)
 
 
@@ -2006,7 +2014,7 @@ class SelectSensor:
             hypotheses = [h for h in range(len(self.transmitters)) \
                           if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             for t in range(2, 4):
-                print('t =', t)
+                start = time.time()
                 hypotheses_combination = list(combinations(hypotheses, t))
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked] # prevent checking the same combination again
                 if len(hypotheses_combination) == 0:
@@ -2014,7 +2022,6 @@ class SelectSensor:
                 q_threshold = np.power(norm(0, 1).pdf(2), len(sensor_subset)) * (1./len(hypotheses_combination))
                 combination_checked = combination_checked.union(set(hypotheses_combination))     # union of all combinations checked
                 print('q-threshold = {}, inside = {}'.format(q_threshold, len(sensor_subset)))
-                #posterior, H_0, Q, power = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
                 posterior, Q = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
                 print('combination = {}; max Q = {}; posterior = {}'.format([ (hypo//self.grid_len, hypo%self.grid_len) for hypo in \
                        hypotheses_combination[np.argmax(Q)] ], np.max(Q), np.max(posterior)))
@@ -2030,6 +2037,14 @@ class SelectSensor:
                     if self.debug:
                         visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
                     break
+                if t == 2:
+                    delta = time.time() - start
+                    print('proc-2-2 time =', round(delta, 3))
+                    self.time_2_2 += delta
+                elif t == 3:
+                    delta = time.time() - start
+                    print('proc-2-3 time =', round(delta, 3), '\n')
+                    self.time_2_3 += delta
             center = self.get_center_sensor(sensor_outputs, R, center_list, previous_identified)
             center_list.append(center)
         return detected, power
@@ -2160,7 +2175,7 @@ class SelectSensor:
             posterior = np.reshape(posterior[:-1], (self.grid_len, self.grid_len))
             if self.debug:
                 visualize_q_prime(posterior, fig)
-            indices = peak_local_max(posterior, 2, threshold_abs=0.8, exclude_border = False)  # change 2?
+            indices = peak_local_max(posterior, 2, threshold_abs=0.8, exclude_border = False)
             sensor_subset = range(len(self.sensors))
 
             if len(indices) == 0:
@@ -2184,7 +2199,6 @@ class SelectSensor:
                     identified.append(tuple(index))
                     pred_power.append(p)
                 else:
-                    #pass
                     print()
             print('---')
         return identified, pred_power
@@ -2597,6 +2611,7 @@ def main2():
         print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(errors.mean(), 3), round(errors.max(), 3), round(errors.min(), 3), \
               round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms), round(power_errors.mean(), 3), round(power_errors.max(), 3), round(power_errors.min(), 3) ) )
         print('Ours! time = ', round(time.time()-start, 3), '; proc 1 ratio =', round(proc_1_ratio/(b-a), 3))
+        print('Proc-1 time = {}, Proc-2-2 time = {}, Proc-2-3 time = {}'.format(selectsensor.time_1/(b-a), selectsensor.time_2_2/(b-a), selectsensor.time_2_3/(b-a)))
     except Exception as e:
         print(e)
     print('true power continuous, during localization continuous power, have noise')
@@ -2660,7 +2675,7 @@ def main4():
         print('Ours! time = ', round(time.time()-start, 3), '; proc 1 ratio =', round(proc_1_ratio/repeat, 3))
     except Exception as e:
         print(e)
-    
+
 
 def main5():
     '''main 5: SPLAT data + SPLOT localization
