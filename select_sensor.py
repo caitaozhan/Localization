@@ -1511,6 +1511,7 @@ class SelectSensor:
             print('denominator', denominator)
 
 
+    @profile
     def collect_sensors_in_radius(self, size_R, sensor, given_sensors = None, num_sensors = None):
         '''Returns a subset of sensors that are within a radius of given sensor'''
         if given_sensors is None:
@@ -1547,6 +1548,8 @@ class SelectSensor:
         '''Create intruders and return sensor outputs accordingly
         Args:
             true_indices (list): a list of integers (transmitter index)
+        Return:
+            (list<Transmitters>, np.array<float>): a list of true transmitters and np.array of sensor outputs
         '''
         true_transmitters = []
         for i in true_indices:
@@ -1771,6 +1774,7 @@ class SelectSensor:
         return q
 
 
+    @profile
     def prune_hypothesis(self, hypotheses, sensor_outputs, radius):
         '''Prune hypothesis who has less than 2 sensors with RSS > -80 in radius
         Args:
@@ -1781,14 +1785,15 @@ class SelectSensor:
             (list): an element is a transmitter index (int)
         '''
         prunes = []
+        radius2 = radius**2                    # square of radius
         for tran in hypotheses:
             counter = 0
             x = tran // self.grid_len
             y = tran % self.grid_len
-            for sensor, output in enumerate(sensor_outputs):
+            for sen, output in enumerate(sensor_outputs):
                 if output > -80:
-                    dist = math.sqrt((x - self.sensors[sensor].x)**2 + (y - self.sensors[sensor].y)**2)
-                    if dist < radius:
+                    dist2 = (x - self.sensors[sen].x)**2 + (y - self.sensors[sen].y)**2 # square of distance
+                    if dist2 < radius2:
                         counter += 1
                 if counter == 3:
                     break
@@ -1950,46 +1955,61 @@ class SelectSensor:
         return self.grid_posterior, H_0, q, power_grid
 
 
-    def reset(self):
+    def reset_time(self):
         '''Reset the members for our localization
         '''
         self.time_1 = self.time_2_2 = self.time_2_3 = 0
 
-
+    #@profile
     def our_localization(self, sensor_outputs, intruders, fig):
         '''Our localization, reduce R procedure 1 + procedure 2
+        Args:
+            sensor_outputs (np.array): the RSS of the sensors, information used to do localization
+            intruders (list): location of intruders, used only for visualization
+            fig (int):        used for log's filenames
         '''
-        self.reset()
         identified   = []
         pred_power   = []
         proc_1_count = 0
         print('Procedure 1')
-        hypotheses = list(range(len(self.transmitters)))
         start = time.time()
+        hypotheses = list(range(len(self.transmitters)))
         R_list = [8, 6, 5, 4]
         for R in R_list:
             identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
             pred_power.extend(pred_power_R)
-        delta = (time.time() - start)
-        print('time proc 1 =', delta)
-        self.time_1 += delta
-        '''
-        hypotheses = list(range(len(self.transmitters)))
-        R_list = [6]
-        for R in R_list:
-            identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
-            identified.extend(identified_R)
-            pred_power.extend(pred_power_R)
-        '''
+        print('time proc 1 =', time.time() - start)
+        self.time_1 += time.time() - start
         proc_1_count = len(identified)
+
         print('Procedure 2')
         identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         identified.extend(identified2)
         pred_power.extend(pred_power2)
+
+        #print('Procedure 3')
+        #identified3, pred_power3 = self.procedure3(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         return identified, pred_power, float(proc_1_count)/len(identified)
 
 
+    def procedure3(self, sensor_outputs, intruders, fig, R, previous_identified):
+        '''Our hypothesis-based localization algorithm's procedure 3
+           The key here is locate transmitters with unused sensors (sensors not being deleted)
+        Args:
+            sensor_outputs (np.array)
+            intruders (list): for plotting
+            fig (int)       : for plotting
+            R (int)
+            previous_identified (list): list<(a, b)>
+        Return:
+            (list, list)
+        '''
+        pass
+
+
+
+    #@profile
     def procedure2(self, sensor_outputs, intruders, fig, R, previous_identified):
         '''Our hypothesis-based localization algorithm's procedure 2
         Args:
@@ -2555,7 +2575,7 @@ def main1():
 def main2():
     '''main 2: synthetic data + Our localization
     '''
-    selectsensor = SelectSensor(grid_len=50, debug=True)
+    selectsensor = SelectSensor(grid_len=50, debug=False)
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
@@ -2568,13 +2588,14 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    a, b = 0, 50
+    a, b = 0, 2
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
     proc_1_ratio = 0
     start = time.time()
+    selectsensor.reset_time()
     for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)

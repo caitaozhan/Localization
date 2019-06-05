@@ -1,0 +1,1080 @@
+
+
+Test  0
+Procedure 1
+R = 8
+detected peak = [41 44] ; Q' = 1.0; Q = 9.66764928742294e-79; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [41  2] ; Q' = 1.0; Q = 3.4447616394767873e-211; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [37 33] ; Q' = 1.0; Q = 2.8081683450244335e-87; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [29 16] ; Q' = 1.0; Q = 4.7882617336484445e-57; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [28 33] ; Q' = 1.0; Q = 3.681333945405904e-78; q-threshold = 8.689407549440236e-51, inside = 7 
+detected peak = [24 42] ; Q' = 1.0; Q = 2.5394846548955237e-49; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+detected peak = [21 10] ; Q' = 1.0; Q = 3.314006027339597e-60; q-threshold = 4.4331360641937345e-57, inside = 20 
+detected peak = [20 21] ; Q' = 1.0; Q = 3.276734297592402e-102; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [ 3 15] ; Q' = 1.0; Q = 2.683322210728425e-47; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+---
+detected peak = [41 44] ; Q' = 1.0; Q = 2.9043077869304898e-78; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [41  2] ; Q' = 1.0; Q = 3.3702369443519866e-211; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [37 33] ; Q' = 1.0; Q = 2.015255153224058e-88; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [29 16] ; Q' = 1.0; Q = 5.0812363385308935e-57; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [21 21] ; Q' = 1.0; Q = 1.0250006317441698e-111; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [21 10] ; Q' = 1.0; Q = 2.858884654294125e-60; q-threshold = 4.4331360641937345e-57, inside = 20 
+---
+R = 6
+detected peak = [47 10] ; Q' = 1.0; Q = 2.2e-322; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [41 44] ; Q' = 0.814; Q = 5.8637273357698686e-49; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [39  2] ; Q' = 1.0; Q = 1.7328072366551664e-45; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [36 31] ; Q' = 1.0; Q = 6.510638545567162e-48; q-threshold = 1.4351938989183028e-49, inside = 5  **Intruder!**
+detected peak = [33  8] ; Q' = 0.992; Q = 3.7012922288252406e-54; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [31 47] ; Q' = 0.986; Q = 2.7982343762285123e-126; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [31 39] ; Q' = 1.0; Q = 3.182519174047409e-128; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [31 27] ; Q' = 1.0; Q = 2.0321199085114635e-46; q-threshold = 4.3745365468575826e-49, inside = 4  **Intruder!**
+detected peak = [29 16] ; Q' = 1.0; Q = 2.854173489817656e-49; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [21 10] ; Q' = 1.0; Q = 2.182476332988674e-45; q-threshold = 1.789706277559936e-52, inside = 11  **Intruder!**
+detected peak = [20 21] ; Q' = 1.0; Q = 4.337559896185138e-80; q-threshold = 1.4351938989183028e-49, inside = 5 
+---
+detected peak = [39 40] ; Q' = 1.0; Q = 9.343781011316483e-47; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [33  8] ; Q' = 1.0; Q = 8.72243080188139e-46; q-threshold = 1.544783564344931e-50, inside = 7  **Intruder!**
+detected peak = [31 46] ; Q' = 1.0; Q = 1.988165512933043e-264; q-threshold = 4.3745365468575826e-49, inside = 4 
+---
+detected peak = [38 16] ; Q' = 1.0; Q = 1.2215171619230399e-297; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [31  6] ; Q' = 0.999; Q = 5.37829955196001e-129; q-threshold = 1.4351938989183028e-49, inside = 5 
+---
+R = 5
+detected peak = [37 11] ; Q' = 1.0; Q = 3.440596244661904e-235; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [36 17] ; Q' = 1.0; Q = 6.1753045064627885e-142; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [35 22] ; Q' = 1.0; Q = 7.26198925044491e-70; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [30  4] ; Q' = 1.0; Q = 1.2367991334445232e-83; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [37 11] ; Q' = 1.0; Q = 5.375931632284225e-235; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [35 17] ; Q' = 1.0; Q = 2.1527712157457667e-101; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [34 22] ; Q' = 1.0; Q = 4.661683835889847e-48; q-threshold = 3.000102113866671e-48, inside = 3  **Intruder!**
+detected peak = [32  3] ; Q' = 1.0; Q = 2.5207196917113325e-274; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [30  8] ; Q' = 1.0; Q = 2.3671729667861842e-202; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+detected peak = [32  3] ; Q' = 1.0; Q = 1.7931948093886415e-276; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [30  8] ; Q' = 1.0; Q = 9.023884487654415e-206; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+time proc 1 = 3.0289149284362793
+Procedure 2
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+center = (1, 13) RSS = -61.02101902538813
+q-threshold = 2.905644131528463e-14, inside = 8
+combination = [(0, 8), (0, 9)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.104
+q-threshold = 1.263323535447158e-15, inside = 8
+combination = [(0, 8), (0, 9), (0, 10)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 2.698 
+
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+center = (0, 15) RSS = -61.81736236927887
+q-threshold = 7.153085495163629e-15, inside = 9
+combination = [(0, 10), (0, 19)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.029
+q-threshold = 2.666505878840067e-16, inside = 9
+combination = [(0, 10), (0, 11), (0, 19)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 0.724 
+
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+center = (3, 12) RSS = -63.7204500694813
+q-threshold = 1.8276753843713916e-15, inside = 9
+combination = [(0, 7), (0, 8)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.097
+q-threshold = 4.6406585182774773e-17, inside = 9
+combination = [(0, 7), (0, 8), (0, 9)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 4.155 
+
+(35, 22) is close to transmitter (34, 22)
+(2, 14) is close to transmitter (3, 15)
+(33, 6) is close to transmitter (33, 8)
+
+Pred: (31, 27) 1.935 ; (34, 22) 0.976 ; (3, 15)  -0.476; (21, 10) -0.92 ; (41, 44) 1.014 ; (39, 40) 0.23  ; (33, 8)  -0.093; (24, 42) -0.44 ; (39, 2)  0.253 ; (29, 16) 2.0   ; 
+True: (31, 27) 1.378 ; (34, 22) 1.032 ; (3, 15)  -0.318; (21, 10) -0.964; (41, 44) 0.045 ; (39, 40) -0.38 ; (33, 8)  1.135 ; (24, 42) -0.787; (39, 2)  -0.094; (29, 16) 0.334 ; 
+Miss: 
+False Alarm: (36, 31) -2.0;  
+error/miss/false/power = 0.0/0.0/0.1/0.30975775734064204
+
+
+Test  1
+Procedure 1
+R = 8
+detected peak = [46 31] ; Q' = 1.0; Q = 1.5478895620983584e-187; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [36 40] ; Q' = 1.0; Q = 8.052319032312881e-93; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [31  4] ; Q' = 1.0; Q = 1.6289125549709887e-48; q-threshold = 3.302804126515744e-53, inside = 12  **Intruder!**
+detected peak = [29 32] ; Q' = 1.0; Q = 1.087533552302099e-195; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [20 44] ; Q' = 1.0; Q = 6.145593203425648e-47; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+detected peak = [19 22] ; Q' = 0.923; Q = 7.018598100098424e-210; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [17  9] ; Q' = 1.0; Q = 1.3947904264923592e-68; q-threshold = 5.528180860680004e-60, inside = 26 
+detected peak = [ 8 33] ; Q' = 1.0; Q = 1.6446929791106175e-53; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [5 8] ; Q' = 1.0; Q = 3.5237471718022157e-60; q-threshold = 3.8264579033650465e-55, inside = 16 
+---
+detected peak = [46 31] ; Q' = 1.0; Q = 1.547077172036382e-187; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [36 40] ; Q' = 1.0; Q = 6.078636819325162e-93; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [29 27] ; Q' = 1.0; Q = 2.01614941969957e-217; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [18 22] ; Q' = 0.976; Q = 6.919592302337843e-231; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [17  9] ; Q' = 1.0; Q = 3.521091634877287e-69; q-threshold = 5.528180860680004e-60, inside = 26 
+detected peak = [ 8 33] ; Q' = 1.0; Q = 2.3644479221248197e-53; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [5 8] ; Q' = 1.0; Q = 3.890488704964255e-60; q-threshold = 3.8264579033650465e-55, inside = 16 
+---
+R = 6
+detected peak = [46 31] ; Q' = 1.0; Q = 9.936381495660958e-72; q-threshold = 5.871651780472434e-53, inside = 12 
+detected peak = [38 34] ; Q' = 1.0; Q = 5.591671938672322e-54; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [36 41] ; Q' = 0.985; Q = 2.4785912094896076e-69; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [32 47] ; Q' = 1.0; Q = 4.966503511450688e-108; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [17 21] ; Q' = 1.0; Q = 7.451325957472812e-193; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [17  9] ; Q' = 1.0; Q = 1.4293815748346885e-48; q-threshold = 2.0734610555593932e-54, inside = 15  **Intruder!**
+detected peak = [ 8 33] ; Q' = 1.0; Q = 7.727550093391114e-53; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [ 6 15] ; Q' = 1.0; Q = 4.034321703701015e-257; q-threshold = 1.789706277559936e-52, inside = 11 
+detected peak = [5 8] ; Q' = 1.0; Q = 1.2959214395297977e-46; q-threshold = 5.455106466956942e-52, inside = 10  **Intruder!**
+---
+detected peak = [46 31] ; Q' = 1.0; Q = 9.942763595577487e-72; q-threshold = 5.871651780472434e-53, inside = 12 
+detected peak = [38 34] ; Q' = 1.0; Q = 5.59193749347824e-54; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [36 41] ; Q' = 0.985; Q = 2.475252010050176e-69; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [32 47] ; Q' = 1.0; Q = 4.664502408195024e-108; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [ 8 33] ; Q' = 1.0; Q = 7.750104231391368e-53; q-threshold = 4.708570851858464e-50, inside = 6 
+---
+R = 5
+detected peak = [46 31] ; Q' = 1.0; Q = 5.377182363923416e-46; q-threshold = 2.394347563736921e-51, inside = 9  **Intruder!**
+detected peak = [38 34] ; Q' = 0.998; Q = 1.3758501932888726e-46; q-threshold = 1.9200653528746696e-48, inside = 3  **Intruder!**
+detected peak = [33 47] ; Q' = 1.0; Q = 7.942884401563389e-110; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [30 38] ; Q' = 1.0; Q = 2.1425442061559733e-75; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17 45] ; Q' = 1.0; Q = 7.27142515040367e-152; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.600848719754255e-58; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+detected peak = [40 29] ; Q' = 1.0; Q = 2.1904437427882032e-45; q-threshold = 7.298080720201562e-51, inside = 8  **Intruder!**
+detected peak = [36 41] ; Q' = 1.0; Q = 3.8643696692690345e-48; q-threshold = 2.0666792144423556e-49, inside = 5  **Intruder!**
+detected peak = [33 47] ; Q' = 1.0; Q = 3.348334798035503e-111; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17 45] ; Q' = 1.0; Q = 4.205140578027982e-152; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.580882306602457e-58; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+detected peak = [17 45] ; Q' = 1.0; Q = 1.4651517768178092e-152; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.5602246290599615e-58; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [19 45] ; Q' = 1.0; Q = 9.874391774524108e-150; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 8 33] ; Q' = 0.998; Q = 6.917167333911552e-53; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 4 28] ; Q' = 0.938; Q = 7.983181106458774e-107; q-threshold = 9.842707230429562e-49, inside = 4 
+---
+time proc 1 = 3.5502700805664062
+Procedure 2
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+
+center = (8, 35) RSS = -42.70436458293553
+q-threshold = 2.673886990765566e-08, inside = 3
+combination = [(6, 33), (7, 36)]; max Q = 2.8934101799929486e-06; posterior = 0.12161244001541793
+** Intruder! **
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (48, 30) RSS = -59.97182727925957
+q-threshold = 1.5687853500459469e-15, inside = 9
+combination = [(43, 27), (43, 28)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.108
+q-threshold = 6.820805869764987e-17, inside = 9
+combination = [(43, 27), (43, 28), (43, 29)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 2.841 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (18, 46) RSS = -60.47957185450619
+q-threshold = 1.6878274116054775e-14, inside = 8
+combination = [(13, 43), (13, 44)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.21
+q-threshold = 5.564266192105969e-16, inside = 8
+combination = [(13, 43), (13, 44), (13, 45)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 6.262 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (38, 27) RSS = -62.829529945482705
+q-threshold = 1.0434602225413003e-19, inside = 12
+combination = [(33, 24), (33, 25)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.289
+q-threshold = 2.9226628440636623e-21, inside = 12
+combination = [(33, 24), (33, 25), (33, 26)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 10.684 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+center = (7, 29) RSS = -64.63128837125889
+q-threshold = 6.592319691272799e-21, inside = 13
+combination = [(2, 26), (2, 27)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.263
+q-threshold = 1.5779438513364112e-22, inside = 13
+combination = [(2, 26), (2, 27), (2, 28)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 10.868 
+
+(17, 10) is close to transmitter (17, 9)
+(18, 9) is close to transmitter (17, 9)
+(16, 9) is close to transmitter (17, 9)
+(47, 31) is close to transmitter (46, 31)
+
+Pred: (46, 31) -0.717; (5, 8)   0.961 ; (20, 44) 1.319 ; (40, 29) -0.115; (36, 41) 0.364 ; (38, 34) 2.0   ; (31, 4)  1.031 ; (17, 9)  -1.053; (6, 33)  0     ; (7, 36)  0     ; 
+True: (46, 31) -1.463; (5, 8)   1.39  ; (20, 44) 1.055 ; (40, 29) -0.018; (36, 41) -0.202; (38, 34) 0.606 ; (31, 4)  1.155 ; (17, 9)  -1.625; (7, 34)  -1.887; (9, 32)  -0.98 ; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.5886349517372674/0.0/0.0/0.5758189471251502
+
+
+Test  2
+Procedure 1
+R = 8
+detected peak = [47 30] ; Q' = 1.0; Q = 1.2085555980356333e-45; q-threshold = 3.8264579033650465e-55, inside = 16  **Intruder!**
+detected peak = [29 27] ; Q' = 1.0; Q = 8.958549908800767e-53; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [25 12] ; Q' = 0.999; Q = 3.566566951821635e-75; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [18 19] ; Q' = 1.0; Q = 2.104864100978214e-94; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [15 42] ; Q' = 1.0; Q = 1.2705733966213235e-88; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [ 7 24] ; Q' = 1.0; Q = 4.941371843773668e-242; q-threshold = 1.6850147726317708e-59, inside = 25 
+detected peak = [ 5 47] ; Q' = 1.0; Q = 9.14908688100372e-234; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [ 4 33] ; Q' = 1.0; Q = 9.433575589088537e-187; q-threshold = 9.352920170847345e-52, inside = 9 
+---
+detected peak = [29 27] ; Q' = 1.0; Q = 6.068698660389232e-53; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [25 12] ; Q' = 0.999; Q = 3.386458516654937e-75; q-threshold = 1.2553807651514914e-55, inside = 17 
+detected peak = [18 19] ; Q' = 1.0; Q = 2.0713347990966302e-94; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [15 42] ; Q' = 1.0; Q = 1.2245750758705423e-88; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [ 7 24] ; Q' = 1.0; Q = 4.948140298998743e-242; q-threshold = 1.6850147726317708e-59, inside = 25 
+detected peak = [ 5 47] ; Q' = 1.0; Q = 9.153600460880879e-234; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [ 4 33] ; Q' = 1.0; Q = 9.43344333128589e-187; q-threshold = 9.352920170847345e-52, inside = 9 
+---
+R = 6
+detected peak = [29 28] ; Q' = 0.862; Q = 4.817009708294421e-46; q-threshold = 4.3745365468575826e-49, inside = 4  **Intruder!**
+detected peak = [27  4] ; Q' = 1.0; Q = 1.7120928816352475e-135; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [25 12] ; Q' = 1.0; Q = 3.535948065152332e-47; q-threshold = 1.6627413637061948e-51, inside = 9  **Intruder!**
+detected peak = [20 30] ; Q' = 1.0; Q = 1.8757451044463832e-47; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [17 19] ; Q' = 1.0; Q = 8.606455885053388e-53; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [13 40] ; Q' = 0.831; Q = 3.729575741002887e-48; q-threshold = 1.3333787172740762e-48, inside = 3  **Intruder!**
+detected peak = [ 7 25] ; Q' = 1.0; Q = 4.484273396598975e-65; q-threshold = 2.2317880269359847e-55, inside = 17 
+detected peak = [ 7 17] ; Q' = 0.99; Q = 1.2708461712632372e-141; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [ 5 47] ; Q' = 1.0; Q = 4.5774997329285443e-213; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [ 4 31] ; Q' = 1.0; Q = 3.1603951796360664e-68; q-threshold = 1.544783564344931e-50, inside = 7 
+---
+detected peak = [17 20] ; Q' = 1.0; Q = 2.7464804831755395e-55; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [14 46] ; Q' = 1.0; Q = 1.0672257643650319e-150; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [ 8 39] ; Q' = 1.0; Q = 1.7592490942107882e-59; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [ 7 25] ; Q' = 1.0; Q = 5.937945718598758e-65; q-threshold = 2.2317880269359847e-55, inside = 17 
+detected peak = [ 7 17] ; Q' = 0.846; Q = 4.804055044309415e-145; q-threshold = 1.544783564344931e-50, inside = 7 
+detected peak = [ 5 47] ; Q' = 1.0; Q = 3.947349157358587e-213; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [ 4 31] ; Q' = 1.0; Q = 5.0819170712220995e-68; q-threshold = 1.544783564344931e-50, inside = 7 
+---
+R = 5
+detected peak = [17 19] ; Q' = 1.0; Q = 2.022625136281164e-46; q-threshold = 6.780342026676188e-50, inside = 6  **Intruder!**
+detected peak = [14 45] ; Q' = 1.0; Q = 4.417345255250454e-84; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [10 31] ; Q' = 1.0; Q = 1.0898983457089485e-53; q-threshold = 6.780342026676188e-50, inside = 6 
+detected peak = [ 7 25] ; Q' = 1.0; Q = 2.469183776121464e-49; q-threshold = 7.855353312417997e-52, inside = 10  **Intruder!**
+detected peak = [ 6 17] ; Q' = 1.0; Q = 1.0621007052434542e-97; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [ 4 31] ; Q' = 1.0; Q = 3.72020038541312e-47; q-threshold = 2.0666792144423556e-49, inside = 5  **Intruder!**
+detected peak = [ 2 45] ; Q' = 1.0; Q = 8.220367445124234e-124; q-threshold = 2.0666792144423556e-49, inside = 5 
+---
+detected peak = [14 45] ; Q' = 1.0; Q = 2.1648111514030104e-84; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [10 42] ; Q' = 1.0; Q = 2.304478658218978e-81; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [ 2 45] ; Q' = 1.0; Q = 5.04574760137332e-124; q-threshold = 2.0666792144423556e-49, inside = 5 
+---
+R = 4
+detected peak = [14 46] ; Q' = 1.0; Q = 6.77630064551519e-133; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 7 47] ; Q' = 1.0; Q = 2.477225188389973e-74; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [ 6 39] ; Q' = 1.0; Q = 1.9140024474411117e-100; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 2 46] ; Q' = 1.0; Q = 1.05282321418304e-45; q-threshold = 9.842707230429562e-49, inside = 4  **Intruder!**
+---
+detected peak = [14 46] ; Q' = 1.0; Q = 1.398851600324413e-136; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 7 47] ; Q' = 1.0; Q = 8.086728540135303e-75; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [ 6 39] ; Q' = 1.0; Q = 7.746150639718847e-169; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+time proc 1 = 3.32065749168396
+Procedure 2
+
+center = (6, 48) RSS = -36.40746093359623
+q-threshold = 5.381722756933271e-13, inside = 7
+combination = [(1, 45), (1, 46)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.101
+q-threshold = 2.339879459536205e-14, inside = 7
+combination = [(1, 45), (1, 46), (1, 47)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 2.683 
+
+(8, 25) is close to transmitter (7, 25)
+(47, 31) is close to transmitter (47, 30)
+
+center = (7, 46) RSS = -42.9845295605973
+q-threshold = 3.3851503360751207e-14, inside = 8
+combination = [(2, 43), (2, 44)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.095
+q-threshold = 8.595249942680561e-16, inside = 8
+combination = [(2, 43), (2, 44), (2, 45)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 4.087 
+
+(8, 25) is close to transmitter (7, 25)
+(47, 31) is close to transmitter (47, 30)
+(14, 41) is close to transmitter (13, 40)
+(3, 31) is close to transmitter (4, 31)
+
+center = (7, 45) RSS = -52.525943965584496
+q-threshold = 3.691696586045623e-15, inside = 9
+combination = [(2, 42), (2, 43)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.063
+q-threshold = 7.76348022476188e-17, inside = 9
+combination = [(2, 42), (2, 43), (2, 44)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 2.529 
+
+(8, 25) is close to transmitter (7, 25)
+(47, 31) is close to transmitter (47, 30)
+(14, 41) is close to transmitter (13, 40)
+(3, 31) is close to transmitter (4, 31)
+(49, 30) is close to transmitter (47, 30)
+
+center = (3, 48) RSS = -58.80001588715154
+q-threshold = 4.9540069069563665e-11, inside = 6
+combination = [(0, 43), (0, 44)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.028
+q-threshold = 1.8173172806149545e-12, inside = 6
+combination = [(0, 43), (0, 44), (0, 45)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 0.654 
+
+(8, 25) is close to transmitter (7, 25)
+(47, 31) is close to transmitter (47, 30)
+(14, 41) is close to transmitter (13, 40)
+(3, 31) is close to transmitter (4, 31)
+(49, 30) is close to transmitter (47, 30)
+
+center = (8, 49) RSS = -59.67606819866525
+q-threshold = 5.814600456947469e-12, inside = 7
+combination = [(6, 47), (13, 46)]; max Q = 3.4684802333948406e-119; posterior = 1.0
+proc-2-2 time = 0.017
+q-threshold = 2.0574740078429507e-13, inside = 7
+combination = [(4, 45), (6, 47), (13, 46)]; max Q = 6.0239359920483354e-123; posterior = 0.921236039649083
+proc-2-3 time = 0.334 
+
+(8, 25) is close to transmitter (7, 25)
+(47, 31) is close to transmitter (47, 30)
+(14, 41) is close to transmitter (13, 40)
+(3, 31) is close to transmitter (4, 31)
+(49, 30) is close to transmitter (47, 30)
+(47, 32) is close to transmitter (47, 30)
+
+center = (11, 46) RSS = -64.91517690308135
+q-threshold = 5.574648207994656e-13, inside = 7
+combination = [(6, 47), (13, 42)]; max Q = 6.452385482416746e-10; posterior = 0.6583664522653188
+** Intruder! **
+(8, 25) is close to transmitter (7, 25)
+(47, 31) is close to transmitter (47, 30)
+(3, 31) is close to transmitter (4, 31)
+(49, 30) is close to transmitter (47, 30)
+(47, 32) is close to transmitter (47, 30)
+
+Pred: (4, 31)  1.424 ; (7, 25)  2.0   ; (6, 47)  0     ; (29, 28) -1.368; (13, 42) 0     ; (25, 12) 1.568 ; (20, 30) 0.758 ; (17, 19) -1.076; (2, 46)  1.401 ; (47, 30) 0.149 ; 
+True: (4, 31)  1.824 ; (7, 25)  1.791 ; (6, 47)  -1.774; (29, 28) -1.661; (13, 42) 1.342 ; (25, 12) 0.944 ; (20, 30) 0.679 ; (17, 19) -0.767; (2, 46)  0.424 ; (47, 30) 0.427 ; 
+Miss: 
+False Alarm: (13, 40) -1.7989424359000405;  
+error/miss/false/power = 0.0/0.0/0.1/0.16256710537544036
+
+
+Test  3
+Procedure 1
+R = 8
+detected peak = [45 29] ; Q' = 1.0; Q = 8.810380139970124e-274; q-threshold = 1.4544191742953743e-57, inside = 21 
+detected peak = [45  6] ; Q' = 1.0; Q = 2.7324644823851222e-46; q-threshold = 1.0067097811274637e-52, inside = 11  **Intruder!**
+detected peak = [39 20] ; Q' = 1.0; Q = 3.1253025039421884e-226; q-threshold = 4.4331360641937345e-57, inside = 20 
+detected peak = [38 41] ; Q' = 1.0; Q = 3.035168673281627e-45; q-threshold = 3.302804126515744e-53, inside = 12  **Intruder!**
+detected peak = [30 15] ; Q' = 1.0; Q = 5.612982990157944e-50; q-threshold = 3.0684973876632796e-52, inside = 10  **Intruder!**
+detected peak = [28  2] ; Q' = 1.0; Q = 2.0918256326657768e-204; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [21 12] ; Q' = 1.0; Q = 1.6488313917648419e-52; q-threshold = 1.3512401177725326e-56, inside = 19  **Intruder!**
+detected peak = [18 24] ; Q' = 1.0; Q = 1.9344191019615445e-57; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [10 34] ; Q' = 1.0; Q = 1.6924616559951967e-48; q-threshold = 9.352920170847345e-52, inside = 9  **Intruder!**
+detected peak = [ 5 18] ; Q' = 1.0; Q = 4.14518820249535e-52; q-threshold = 4.771644957265169e-58, inside = 22  **Intruder!**
+---
+detected peak = [45 29] ; Q' = 1.0; Q = 5.3560276148984504e-276; q-threshold = 1.4544191742953743e-57, inside = 21 
+detected peak = [39 21] ; Q' = 1.0; Q = 1.4902731720784797e-296; q-threshold = 1.3512401177725326e-56, inside = 19 
+detected peak = [18 24] ; Q' = 1.0; Q = 1.088103759099876e-57; q-threshold = 1.0067097811274637e-52, inside = 11 
+---
+R = 6
+detected peak = [45 29] ; Q' = 1.0; Q = 2.3994517479182557e-164; q-threshold = 2.0734610555593932e-54, inside = 15 
+detected peak = [41 41] ; Q' = 1.0; Q = 1.9210989354767424e-98; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [38 31] ; Q' = 1.0; Q = 9.508080356126108e-77; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [38 21] ; Q' = 1.0; Q = 5.340757766040186e-49; q-threshold = 1.789706277559936e-52, inside = 11  **Intruder!**
+detected peak = [19 24] ; Q' = 0.997; Q = 7.20367351866274e-47; q-threshold = 1.3333787172740762e-48, inside = 3  **Intruder!**
+---
+detected peak = [45 29] ; Q' = 1.0; Q = 3.721450032113979e-160; q-threshold = 2.0734610555593932e-54, inside = 15 
+detected peak = [41 41] ; Q' = 1.0; Q = 4.4788036373001215e-100; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [38 31] ; Q' = 1.0; Q = 3.067177362316188e-106; q-threshold = 4.3745365468575826e-49, inside = 4 
+---
+R = 5
+detected peak = [39 42] ; Q' = 1.0; Q = 7.557246371182498e-248; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [39 31] ; Q' = 1.0; Q = 2.5103163002279558e-79; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [47 34] ; Q' = 1.0; Q = 1.1331820136741634e-184; q-threshold = 3.2291862725661804e-49, inside = 5 
+detected peak = [45 25] ; Q' = 1.0; Q = 2.863633558083594e-118; q-threshold = 1.0594284416681542e-49, inside = 6 
+detected peak = [44 29] ; Q' = 1.0; Q = 1.109986010204196e-71; q-threshold = 3.4757630197760944e-50, inside = 7 
+---
+time proc 1 = 2.276108741760254
+Procedure 2
+
+center = (44, 29) RSS = -19.567063751778825
+q-threshold = 3.0386114530599616e-22, inside = 14
+combination = [(44, 29), (47, 29)]; max Q = 2.6110789304929756e-16; posterior = 1.0
+** Intruder! **
+(46, 6) is close to transmitter (45, 6)
+(44, 7) is close to transmitter (45, 6)
+
+Pred: (19, 24) -1.412; (44, 29) 0     ; (10, 34) -0.084; (30, 15) 1.6   ; (38, 41) 0.786 ; (47, 29) 0     ; (5, 18)  -1.5  ; (38, 21) 1.396 ; (21, 12) 0.052 ; (45, 6)  -0.558; 
+True: (19, 24) -1.048; (44, 29) 0.177 ; (10, 34) -0.52 ; (30, 15) 0.416 ; (38, 41) 0.503 ; (47, 29) -1.738; (5, 18)  -1.947; (38, 21) 1.35  ; (21, 12) -0.963; (45, 6)  -1.063; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.0/0.0/0.0/0.5115134103429745
+
+
+Test  4
+Procedure 1
+R = 8
+detected peak = [39 11] ; Q' = 1.0; Q = 2.8856861049407603e-46; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+detected peak = [32 44] ; Q' = 1.0; Q = 3.5238577255287786e-56; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [32 22] ; Q' = 1.0; Q = 8.398780424691943e-46; q-threshold = 1.0067097811274637e-52, inside = 11  **Intruder!**
+detected peak = [23 35] ; Q' = 1.0; Q = 5.613285254923496e-125; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [21 44] ; Q' = 1.0; Q = 2.5964168299110263e-262; q-threshold = 3.5550022437648137e-54, inside = 14 
+detected peak = [19 16] ; Q' = 1.0; Q = 3.650267799503759e-56; q-threshold = 1.1663218437521584e-54, inside = 15 
+detected peak = [12 35] ; Q' = 1.0; Q = 2.805625332248693e-64; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [ 7 22] ; Q' = 1.0; Q = 1.580166350546538e-231; q-threshold = 5.136001978846343e-59, inside = 24 
+---
+detected peak = [36 33] ; Q' = 1.0; Q = 1.3704846902683398e-302; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [32 44] ; Q' = 1.0; Q = 3.4934055378863736e-56; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [24 25] ; Q' = 1.0; Q = 8.635321897768545e-85; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [23 35] ; Q' = 1.0; Q = 1.6138532137371434e-125; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [21 44] ; Q' = 1.0; Q = 1.8949125641391975e-262; q-threshold = 3.5550022437648137e-54, inside = 14 
+detected peak = [19 16] ; Q' = 1.0; Q = 1.0140852753690377e-56; q-threshold = 1.1663218437521584e-54, inside = 15 
+detected peak = [12 35] ; Q' = 1.0; Q = 2.7062108982384274e-64; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [ 7 22] ; Q' = 1.0; Q = 1.711379912818794e-231; q-threshold = 5.136001978846343e-59, inside = 24 
+---
+R = 6
+detected peak = [37 34] ; Q' = 1.0; Q = 2.830260034209269e-250; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [32 44] ; Q' = 1.0; Q = 5.0733211674554465e-46; q-threshold = 1.544783564344931e-50, inside = 7  **Intruder!**
+detected peak = [26 25] ; Q' = 0.991; Q = 4.400689326296519e-66; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [23 35] ; Q' = 1.0; Q = 1.4915781332334506e-50; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [19 16] ; Q' = 1.0; Q = 1.8395205053904873e-45; q-threshold = 1.544783564344931e-50, inside = 7  **Intruder!**
+detected peak = [17 22] ; Q' = 0.999; Q = 1.1251055069377252e-62; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [ 7 18] ; Q' = 1.0; Q = 2.5248931374608738e-129; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [ 4 26] ; Q' = 1.0; Q = 2.4860503740206918e-113; q-threshold = 6.320003988915225e-54, inside = 14 
+---
+detected peak = [30 47] ; Q' = 1.0; Q = 2.2758251998300434e-47; q-threshold = 1.3333787172740762e-48, inside = 3  **Intruder!**
+detected peak = [26 26] ; Q' = 1.0; Q = 4.297539233128999e-99; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [25 41] ; Q' = 0.996; Q = 1.0063958299110788e-70; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [23 35] ; Q' = 1.0; Q = 1.7927532547307135e-50; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [17 24] ; Q' = 1.0; Q = 2.0972324817514773e-100; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [ 7 18] ; Q' = 1.0; Q = 1.9335671476937096e-129; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [ 4 26] ; Q' = 1.0; Q = 2.0711928574989068e-113; q-threshold = 6.320003988915225e-54, inside = 14 
+---
+detected peak = [26 26] ; Q' = 1.0; Q = 2.957451129650526e-99; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [23 35] ; Q' = 1.0; Q = 2.0343021663257475e-50; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [17 24] ; Q' = 1.0; Q = 1.6520990480494746e-100; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [ 7 18] ; Q' = 1.0; Q = 1.9344819799758292e-129; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [ 4 26] ; Q' = 1.0; Q = 2.0290876549389973e-113; q-threshold = 6.320003988915225e-54, inside = 14 
+---
+R = 5
+detected peak = [24 42] ; Q' = 1.0; Q = 4.285547788181705e-46; q-threshold = 1.9200653528746696e-48, inside = 3  **Intruder!**
+detected peak = [23 35] ; Q' = 1.0; Q = 3.348313216803154e-46; q-threshold = 6.29933262747492e-49, inside = 4  **Intruder!**
+detected peak = [23 25] ; Q' = 1.0; Q = 1.6448971723580634e-108; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [18 34] ; Q' = 1.0; Q = 2.7188834162889355e-66; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [16 24] ; Q' = 1.0; Q = 5.300830488339605e-85; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [14 44] ; Q' = 1.0; Q = 8.197519910294684e-269; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [11 33] ; Q' = 0.95; Q = 1.9080782130954342e-55; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [ 7 19] ; Q' = 0.857; Q = 2.1914548793406967e-73; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [ 4 26] ; Q' = 1.0; Q = 1.0612063356409717e-93; q-threshold = 2.394347563736921e-51, inside = 9 
+detected peak = [2 8] ; Q' = 1.0; Q = 1.986e-321; q-threshold = 2.0666792144423556e-49, inside = 5 
+---
+detected peak = [15 23] ; Q' = 0.874; Q = 8.050066317545475e-94; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [11 33] ; Q' = 0.966; Q = 2.209400185409069e-55; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [ 7 19] ; Q' = 0.857; Q = 2.2012675129895285e-73; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [ 4 26] ; Q' = 1.0; Q = 9.635937816838133e-94; q-threshold = 2.394347563736921e-51, inside = 9 
+detected peak = [2 8] ; Q' = 1.0; Q = 1.176e-321; q-threshold = 2.0666792144423556e-49, inside = 5 
+---
+R = 4
+detected peak = [14 38] ; Q' = 1.0; Q = 1.7359316735665983e-237; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [14 22] ; Q' = 1.0; Q = 4.902815226443599e-70; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [13 29] ; Q' = 1.0; Q = 5.545252835704852e-85; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [10 32] ; Q' = 1.0; Q = 7.967895066543038e-83; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 5 34] ; Q' = 1.0; Q = 4.719012037648785e-156; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [ 5 21] ; Q' = 1.0; Q = 1.4533802760540006e-59; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [ 4 26] ; Q' = 1.0; Q = 4.1258552408594466e-63; q-threshold = 3.2291862725661804e-49, inside = 5 
+---
+time proc 1 = 3.349919557571411
+Procedure 2
+
+center = (6, 20) RSS = -38.67319054578513
+q-threshold = 5.6279997364332006e-21, inside = 13
+combination = [(5, 21), (8, 22)]; max Q = 2.432676294999842e-46; posterior = 0.9999999797169384
+proc-2-2 time = 0.265
+q-threshold = 1.5779438513364112e-22, inside = 13
+combination = [(5, 22), (7, 19), (8, 22)]; max Q = 1.7639604146474767e-16; posterior = 0.9900181774618801
+** Intruder! **
+(19, 15) is close to transmitter (19, 16)
+
+center = (9, 20) RSS = -55.681637155352945
+q-threshold = 6.93280927840139e-17, inside = 10
+combination = [(4, 17), (10, 15)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.159
+q-threshold = 1.5073699077034688e-18, inside = 10
+combination = [(4, 17), (4, 18), (10, 15)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 6.857 
+
+(19, 15) is close to transmitter (19, 16)
+
+center = (3, 20) RSS = -58.95908440137372
+q-threshold = 4.296600916346531e-19, inside = 12
+combination = [(0, 15), (0, 16)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.096
+q-threshold = 1.0317738049545702e-20, inside = 12
+combination = [(0, 15), (0, 16), (0, 17)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 3.107 
+
+(19, 15) is close to transmitter (19, 16)
+
+center = (4, 24) RSS = -61.93444632987035
+q-threshold = 1.0762315285459979e-20, inside = 13
+combination = [(0, 20), (0, 26)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.177
+q-threshold = 2.5480283096921587e-22, inside = 13
+combination = [(0, 20), (0, 21), (0, 26)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 6.872 
+
+(19, 15) is close to transmitter (19, 16)
+
+center = (2, 23) RSS = -62.61038617804337
+q-threshold = 1.4126180516259475e-15, inside = 10
+combination = [(5, 18), (5, 28)]; max Q = 2.890221403697723e-91; posterior = 1.0
+proc-2-2 time = 0.056
+q-threshold = 2.1024881599467202e-17, inside = 10
+combination = [(5, 18), (5, 28), (7, 21)]; max Q = 4.413260188414193e-76; posterior = 0.9999999999965298
+proc-2-3 time = 0.618 
+
+(19, 15) is close to transmitter (19, 16)
+
+center = (6, 25) RSS = -63.33290045354513
+q-threshold = 1.3436145771440998e-25, inside = 17
+combination = [(1, 22), (3, 30)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.158
+q-threshold = 2.548687605589157e-27, inside = 17
+combination = [(1, 22), (1, 23), (3, 30)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 6.251 
+
+(19, 15) is close to transmitter (19, 16)
+
+Pred: (19, 16) -0.536; (24, 42) -1.742; (8, 22)  0     ; (32, 22) -1.636; (39, 11) -1.568; (7, 19)  0     ; (5, 22)  0     ; (32, 44) 0.858 ; (23, 35) -1.074; (30, 47) -1.507; 
+True: (19, 16) -1.056; (24, 42) -1.587; (8, 22)  -0.416; (32, 22) -1.38 ; (39, 11) -1.734; (7, 19)  1.672 ; (5, 22)  1.202 ; (32, 44) 1.061 ; (23, 35) -1.112; (12, 34) -0.394; 
+Miss: (12, 34) -0.39363594205970065;  
+False Alarm: (30, 47) -1.5073782507023665;  
+error/miss/false/power = 0.0/0.1/0.1/-0.2607146939002979
+
+
+Test  5
+Procedure 1
+R = 8
+detected peak = [47 11] ; Q' = 1.0; Q = 3.264290016095921e-284; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [43 21] ; Q' = 1.0; Q = 7.44892200268488e-46; q-threshold = 4.771644957265169e-58, inside = 22  **Intruder!**
+detected peak = [38  7] ; Q' = 1.0; Q = 7.27937429794504e-51; q-threshold = 3.5550022437648137e-54, inside = 14  **Intruder!**
+detected peak = [33 18] ; Q' = 1.0; Q = 1.548912209977334e-85; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [20 47] ; Q' = 1.0; Q = 1.3999861611420135e-101; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [20 20] ; Q' = 1.0; Q = 4.8760225802025644e-54; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [11 40] ; Q' = 1.0; Q = 2.3355212225033117e-87; q-threshold = 2.850812781328735e-51, inside = 8 
+---
+detected peak = [20 47] ; Q' = 1.0; Q = 1.4218887332696407e-101; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [20 20] ; Q' = 1.0; Q = 5.159471581145525e-54; q-threshold = 3.0684973876632796e-52, inside = 10 
+detected peak = [11 40] ; Q' = 1.0; Q = 2.1656437098752704e-87; q-threshold = 2.850812781328735e-51, inside = 8 
+---
+R = 6
+detected peak = [29 25] ; Q' = 1.0; Q = 1.7745937575777478e-59; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [20 46] ; Q' = 1.0; Q = 4.9459812711602534e-49; q-threshold = 5.455106466956942e-52, inside = 10  **Intruder!**
+detected peak = [20 20] ; Q' = 0.999; Q = 2.6521390405757186e-47; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [12 42] ; Q' = 0.964; Q = 3.1340744306748103e-46; q-threshold = 4.3745365468575826e-49, inside = 4  **Intruder!**
+detected peak = [10 14] ; Q' = 1.0; Q = 1.8133770347645585e-50; q-threshold = 5.068111611251084e-51, inside = 8  **Intruder!**
+detected peak = [ 2 18] ; Q' = 1.0; Q = 2.2053236305308357e-63; q-threshold = 5.455106466956942e-52, inside = 10 
+detected peak = [ 2 11] ; Q' = 1.0; Q = 6.54117902527146e-159; q-threshold = 5.068111611251084e-51, inside = 8 
+---
+detected peak = [29 25] ; Q' = 1.0; Q = 3.75770835948177e-64; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [29 18] ; Q' = 1.0; Q = 3.507001529546186e-46; q-threshold = 1.4351938989183028e-49, inside = 5  **Intruder!**
+detected peak = [ 5 12] ; Q' = 1.0; Q = 6.628401476904874e-113; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [ 2 18] ; Q' = 1.0; Q = 3.504963193691322e-63; q-threshold = 5.455106466956942e-52, inside = 10 
+---
+detected peak = [30 23] ; Q' = 1.0; Q = 6.306581382231794e-64; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [ 5 12] ; Q' = 1.0; Q = 6.602861598448586e-113; q-threshold = 5.068111611251084e-51, inside = 8 
+detected peak = [ 2 18] ; Q' = 1.0; Q = 3.5036691023172934e-63; q-threshold = 5.455106466956942e-52, inside = 10 
+---
+R = 5
+detected peak = [30 22] ; Q' = 1.0; Q = 1.7119269928174371e-46; q-threshold = 1.9200653528746696e-48, inside = 3  **Intruder!**
+detected peak = [ 4 12] ; Q' = 1.0; Q = 4.6428690195208906e-49; q-threshold = 2.224488332656701e-50, inside = 7  **Intruder!**
+detected peak = [ 2 18] ; Q' = 1.0; Q = 5.396213216232479e-50; q-threshold = 2.224488332656701e-50, inside = 7  **Intruder!**
+---
+detected peak = [ 7 11] ; Q' = 1.0; Q = 4.1547509797438034e-145; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [3 8] ; Q' = 1.0; Q = 5.549504371929677e-216; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [ 8 10] ; Q' = 1.0; Q = 2.551052168720103e-181; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+time proc 1 = 3.4254508018493652
+Procedure 2
+(9, 14) is close to transmitter (10, 14)
+(4, 11) is close to transmitter (4, 12)
+(1, 18) is close to transmitter (2, 18)
+(21, 47) is close to transmitter (20, 46)
+(18, 46) is close to transmitter (20, 46)
+
+Pred: (20, 46) 0.585 ; (29, 18) 1.278 ; (43, 21) 1.549 ; (2, 18)  2.0   ; (38, 7)  1.865 ; (20, 20) 2.0   ; (4, 12)  -1.317; (12, 42) -0.094; (30, 22) 1.183 ; (10, 14) -0.294; 
+True: (20, 46) 0.492 ; (29, 18) 0.967 ; (43, 21) 1.181 ; (2, 18)  1.77  ; (38, 7)  0.96  ; (20, 20) 1.689 ; (4, 12)  -1.884; (12, 42) -0.138; (30, 22) 0.596 ; (9, 13)  1.773 ; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.1414213562373095/0.0/0.0/0.13491850481951176
+
+
+Test  6
+Procedure 1
+R = 8
+detected peak = [40  2] ; Q' = 1.0; Q = 9.302641417661609e-45; q-threshold = 1.0835809190124728e-53, inside = 13  **Intruder!**
+detected peak = [39 36] ; Q' = 1.0; Q = 3.840813579269814e-48; q-threshold = 1.0067097811274637e-52, inside = 11  **Intruder!**
+detected peak = [38 26] ; Q' = 1.0; Q = 9.832982763666537e-128; q-threshold = 4.118641587893601e-56, inside = 18 
+detected peak = [29 27] ; Q' = 0.992; Q = 6.861810809430418e-63; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [26  8] ; Q' = 1.0; Q = 2.35404191136669e-85; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [22 17] ; Q' = 0.968; Q = 1.7320494287835062e-179; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [11 46] ; Q' = 1.0; Q = 4.177841870248188e-47; q-threshold = 1.0835809190124728e-53, inside = 13  **Intruder!**
+detected peak = [11 38] ; Q' = 1.0; Q = 2.1441110497594253e-73; q-threshold = 2.6485711041703855e-50, inside = 6 
+detected peak = [11 16] ; Q' = 1.0; Q = 7.888693813948713e-283; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [ 6 30] ; Q' = 1.0; Q = 4.983145212080745e-47; q-threshold = 4.118641587893601e-56, inside = 18  **Intruder!**
+---
+detected peak = [38 26] ; Q' = 1.0; Q = 1.3697340034038945e-128; q-threshold = 4.118641587893601e-56, inside = 18 
+detected peak = [29 27] ; Q' = 0.99; Q = 3.1792502078635297e-62; q-threshold = 8.072965681415451e-50, inside = 5 
+detected peak = [26  8] ; Q' = 1.0; Q = 1.5121634911700334e-86; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [22 17] ; Q' = 0.972; Q = 2.130862683157643e-179; q-threshold = 2.850812781328735e-51, inside = 8 
+---
+R = 6
+detected peak = [38 26] ; Q' = 1.0; Q = 7.308028731758904e-59; q-threshold = 1.9263660782443966e-53, inside = 13 
+detected peak = [26  8] ; Q' = 1.0; Q = 1.478622313128024e-49; q-threshold = 1.544783564344931e-50, inside = 7  **Intruder!**
+detected peak = [22 16] ; Q' = 1.0; Q = 1.1149714779213119e-55; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [18 31] ; Q' = 0.997; Q = 8.318036265951875e-184; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [16 11] ; Q' = 1.0; Q = 5.0133658199675875e-75; q-threshold = 2.2317880269359847e-55, inside = 17 
+---
+detected peak = [38 26] ; Q' = 1.0; Q = 7.333219486905912e-59; q-threshold = 1.9263660782443966e-53, inside = 13 
+detected peak = [24  7] ; Q' = 1.0; Q = 2.504236427352608e-155; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [22 16] ; Q' = 1.0; Q = 1.1610721021145687e-55; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [18 31] ; Q' = 0.998; Q = 2.1798508264979483e-184; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [16 11] ; Q' = 1.0; Q = 3.0460058405341104e-69; q-threshold = 2.2317880269359847e-55, inside = 17 
+---
+R = 5
+detected peak = [39  3] ; Q' = 1.0; Q = 1.2369057777193648e-199; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [38 26] ; Q' = 1.0; Q = 1.536112372688041e-45; q-threshold = 2.224488332656701e-50, inside = 7  **Intruder!**
+detected peak = [24 26] ; Q' = 0.966; Q = 1.0245586087099407e-85; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [22 16] ; Q' = 1.0; Q = 1.671943827044979e-55; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [17 20] ; Q' = 1.0; Q = 1.131769900515059e-114; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [16 11] ; Q' = 1.0; Q = 2.212281772285103e-45; q-threshold = 7.855353312417997e-52, inside = 10  **Intruder!**
+detected peak = [12 15] ; Q' = 1.0; Q = 3.842738900309891e-164; q-threshold = 2.224488332656701e-50, inside = 7 
+---
+detected peak = [39  3] ; Q' = 1.0; Q = 1.0071449446983754e-199; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [25  7] ; Q' = 1.0; Q = 1.3058546100821625e-107; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [24 26] ; Q' = 0.973; Q = 2.7766063849966423e-86; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [22 16] ; Q' = 1.0; Q = 1.757057680846566e-55; q-threshold = 2.0666792144423556e-49, inside = 5 
+detected peak = [17 20] ; Q' = 1.0; Q = 3.525065987242519e-139; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [40  3] ; Q' = 1.0; Q = 3.281401991143478e-157; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [32 23] ; Q' = 1.0; Q = 3.1048813701722742e-124; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [28 19] ; Q' = 0.98; Q = 1.69988438848912e-227; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [24 27] ; Q' = 1.0; Q = 1.4824375431843848e-120; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [24  7] ; Q' = 1.0; Q = 3.943642186902266e-186; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [23 11] ; Q' = 1.0; Q = 2.6312044890570847e-227; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [22 16] ; Q' = 1.0; Q = 1.0821609333557348e-45; q-threshold = 9.842707230429562e-49, inside = 4  **Intruder!**
+detected peak = [18 30] ; Q' = 1.0; Q = 7.632455676570529e-154; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+detected peak = [40  3] ; Q' = 1.0; Q = 2.6317574958823172e-157; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [32 23] ; Q' = 1.0; Q = 1.0155704573747492e-125; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [24 27] ; Q' = 1.0; Q = 8.136090878371619e-124; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [18 30] ; Q' = 1.0; Q = 6.053561662583444e-159; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [18 18] ; Q' = 1.0; Q = 4.714280089117549e-191; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+time proc 1 = 3.4192206859588623
+Procedure 2
+(11, 46) is close to transmitter (11, 46)
+(7, 30) is close to transmitter (6, 30)
+(38, 27) is close to transmitter (38, 26)
+(17, 10) is close to transmitter (16, 11)
+(22, 17) is close to transmitter (22, 16)
+(40, 0) is close to transmitter (40, 2)
+
+center = (32, 26) RSS = -55.62920092664143
+q-threshold = 2.673886990765566e-08, inside = 3
+combination = [(30, 28), (30, 29)]; max Q = 8.361960294161322e-06; posterior = 0.046636760178269135
+proc-2-2 time = 0.233
+q-threshold = 7.496879413361399e-10, inside = 3
+combination = [(29, 31), (30, 28), (31, 30)]; max Q = 1.6299764009304533e-07; posterior = 0.0034237055962182132
+proc-2-3 time = 9.085 
+
+(11, 46) is close to transmitter (11, 46)
+(7, 30) is close to transmitter (6, 30)
+(38, 27) is close to transmitter (38, 26)
+(17, 10) is close to transmitter (16, 11)
+(22, 17) is close to transmitter (22, 16)
+(40, 0) is close to transmitter (40, 2)
+(40, 26) is close to transmitter (38, 26)
+(37, 27) is close to transmitter (38, 26)
+
+Pred: (6, 30)  1.655 ; (39, 36) 1.415 ; (11, 46) -1.147; (38, 26) -2.0  ; (26, 8)  1.276 ; (22, 16) 1.409 ; (40, 2)  -0.211; (16, 11) 1.141 ; 
+True: (6, 30)  1.173 ; (39, 36) 1.288 ; (11, 46) -0.954; (38, 26) -1.998; (26, 8)  -0.119; (22, 16) 1.039 ; (40, 2)  -0.507; (16, 11) 1.081 ; 
+Miss: (21, 21) -0.05986148827621873;  (30, 28) 0.6512742515350705;  
+False Alarm: 
+error/miss/false/power = 0.0/0.2/0.0/0.3168671747705045
+
+
+Test  7
+Procedure 1
+R = 8
+detected peak = [47 37] ; Q' = 1.0; Q = 2.2776570513300393e-45; q-threshold = 3.0684973876632796e-52, inside = 10  **Intruder!**
+detected peak = [43 44] ; Q' = 1.0; Q = 5.465559438538108e-74; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [32 17] ; Q' = 1.0; Q = 2.3217196040890552e-45; q-threshold = 1.0067097811274637e-52, inside = 11  **Intruder!**
+detected peak = [29 47] ; Q' = 1.0; Q = 8.484769248399066e-47; q-threshold = 2.850812781328735e-51, inside = 8  **Intruder!**
+detected peak = [26 26] ; Q' = 1.0; Q = 5.066795055924659e-47; q-threshold = 8.689407549440236e-51, inside = 7  **Intruder!**
+detected peak = [12 17] ; Q' = 1.0; Q = 2.3203877745759563e-45; q-threshold = 3.8264579033650465e-55, inside = 16  **Intruder!**
+detected peak = [10 35] ; Q' = 1.0; Q = 1.164001776955485e-115; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [ 4 47] ; Q' = 1.0; Q = 1.4879348594530934e-180; q-threshold = 3.302804126515744e-53, inside = 12 
+---
+detected peak = [10 35] ; Q' = 1.0; Q = 7.295700082798379e-123; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [ 4 47] ; Q' = 1.0; Q = 1.6163921184224056e-180; q-threshold = 3.302804126515744e-53, inside = 12 
+---
+R = 6
+detected peak = [42 44] ; Q' = 0.944; Q = 1.2181244346795102e-103; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [40 38] ; Q' = 1.0; Q = 1.2818567799340625e-241; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [ 9 35] ; Q' = 1.0; Q = 8.370696599910352e-47; q-threshold = 1.3333787172740762e-48, inside = 3  **Intruder!**
+detected peak = [ 4 47] ; Q' = 1.0; Q = 7.453557168475084e-130; q-threshold = 1.6627413637061948e-51, inside = 9 
+detected peak = [ 2 37] ; Q' = 1.0; Q = 5.049592328705503e-51; q-threshold = 4.3745365468575826e-49, inside = 4 
+---
+detected peak = [42 44] ; Q' = 0.942; Q = 1.1813039221783023e-103; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [40 38] ; Q' = 1.0; Q = 8.03757579051012e-242; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [ 5 38] ; Q' = 1.0; Q = 2.4680114022365306e-47; q-threshold = 4.3745365468575826e-49, inside = 4  **Intruder!**
+detected peak = [ 4 47] ; Q' = 1.0; Q = 1.5683863491548146e-129; q-threshold = 1.6627413637061948e-51, inside = 9 
+---
+detected peak = [42 44] ; Q' = 0.941; Q = 1.1555253478535981e-103; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [40 38] ; Q' = 1.0; Q = 6.175662561282345e-242; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [ 4 47] ; Q' = 1.0; Q = 2.0425218324236967e-122; q-threshold = 1.6627413637061948e-51, inside = 9 
+---
+R = 5
+detected peak = [43 44] ; Q' = 1.0; Q = 7.483360730893446e-46; q-threshold = 6.29933262747492e-49, inside = 4  **Intruder!**
+detected peak = [ 9 44] ; Q' = 1.0; Q = 4.0425283737236997e-106; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [ 4 47] ; Q' = 1.0; Q = 1.0530493341810245e-121; q-threshold = 7.298080720201562e-51, inside = 8 
+detected peak = [ 4 34] ; Q' = 1.0; Q = 1.0008054671542357e-128; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+detected peak = [44 44] ; Q' = 1.0; Q = 2.5628773360418706e-166; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [ 9 44] ; Q' = 1.0; Q = 4.004320932848962e-106; q-threshold = 6.29933262747492e-49, inside = 4 
+detected peak = [ 4 47] ; Q' = 1.0; Q = 1.0529111357902824e-121; q-threshold = 7.298080720201562e-51, inside = 8 
+detected peak = [ 4 34] ; Q' = 1.0; Q = 9.91964823943502e-129; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [45 47] ; Q' = 1.0; Q = 1.5078330585160428e-298; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [12 17] ; Q' = 1.0; Q = 7.270834560438603e-83; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [ 8 44] ; Q' = 1.0; Q = 1.422115713787129e-87; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [ 5 34] ; Q' = 1.0; Q = 2.5896646373555056e-109; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [ 3 47] ; Q' = 1.0; Q = 4.771906203397481e-61; q-threshold = 3.2291862725661804e-49, inside = 5 
+---
+time proc 1 = 2.2379565238952637
+Procedure 2
+
+center = (2, 47) RSS = -34.77979226161151
+q-threshold = 7.307967787420316e-13, inside = 7
+combination = [(3, 47), (5, 46)]; max Q = 3.4445723409052784e-07; posterior = 0.9963740910001881
+** Intruder! **
+(31, 18) is close to transmitter (32, 17)
+(46, 36) is close to transmitter (47, 37)
+
+center = (13, 19) RSS = -58.1511690873224
+q-threshold = 3.575944439216211e-17, inside = 10
+combination = [(8, 16), (8, 17)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.256
+q-threshold = 1.002601244640059e-18, inside = 10
+combination = [(8, 16), (8, 17), (8, 18)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 10.427 
+
+(31, 18) is close to transmitter (32, 17)
+(46, 36) is close to transmitter (47, 37)
+
+center = (11, 19) RSS = -58.96479819082291
+q-threshold = 2.860394456197131e-19, inside = 12
+combination = [(6, 16), (6, 17)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.127
+q-threshold = 5.903025917646741e-21, inside = 12
+combination = [(6, 16), (6, 17), (6, 18)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 5.297 
+
+(31, 18) is close to transmitter (32, 17)
+(46, 36) is close to transmitter (47, 37)
+
+Pred: (26, 26) -0.487; (12, 17) -1.057; (32, 17) 0.628 ; (3, 47)  0     ; (5, 46)  0     ; (43, 44) -1.672; (29, 47) 0.747 ; (47, 37) -1.841; (5, 38)  0.125 ; (9, 35)  -0.112; 
+True: (26, 26) -0.705; (12, 17) -1.397; (32, 17) 0.604 ; (3, 47)  -1.71 ; (5, 46)  0.144 ; (43, 44) -0.537; (29, 47) 0.03  ; (47, 37) -1.85 ; (4, 37)  -0.265; (7, 35)  -1.768; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.3414213562373095/0.0/0.0/0.37863709414310964
+
+
+Test  8
+Procedure 1
+R = 8
+detected peak = [41 24] ; Q' = 1.0; Q = 1.8925020131227223e-46; q-threshold = 1.4544191742953743e-57, inside = 21  **Intruder!**
+detected peak = [30 37] ; Q' = 1.0; Q = 3.644354937752985e-48; q-threshold = 3.302804126515744e-53, inside = 12  **Intruder!**
+detected peak = [30 17] ; Q' = 1.0; Q = 1.3693001319569485e-54; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [27  2] ; Q' = 1.0; Q = 7.88602990069258e-217; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [18 28] ; Q' = 1.0; Q = 1.277303710267721e-49; q-threshold = 8.689407549440236e-51, inside = 7  **Intruder!**
+detected peak = [15 41] ; Q' = 1.0; Q = 6.430287659322507e-46; q-threshold = 9.352920170847345e-52, inside = 9  **Intruder!**
+detected peak = [ 3 29] ; Q' = 1.0; Q = 1.4316595747520554e-46; q-threshold = 1.2553807651514914e-55, inside = 17  **Intruder!**
+detected peak = [2 7] ; Q' = 1.0; Q = 1.3409124676119788e-180; q-threshold = 3.302804126515744e-53, inside = 12 
+---
+detected peak = [30 17] ; Q' = 1.0; Q = 8.190915765751684e-54; q-threshold = 1.0067097811274637e-52, inside = 11 
+detected peak = [27  2] ; Q' = 1.0; Q = 8.266711162390157e-222; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [19 19] ; Q' = 1.0; Q = 1.6180670530877013e-143; q-threshold = 9.352920170847345e-52, inside = 9 
+detected peak = [ 8 17] ; Q' = 1.0; Q = 9.309175419692772e-307; q-threshold = 1.3512401177725326e-56, inside = 19 
+detected peak = [2 7] ; Q' = 1.0; Q = 4.348772381801645e-182; q-threshold = 3.302804126515744e-53, inside = 12 
+---
+R = 6
+detected peak = [30 17] ; Q' = 1.0; Q = 1.800494197756751e-46; q-threshold = 4.708570851858464e-50, inside = 6  **Intruder!**
+detected peak = [27  3] ; Q' = 1.0; Q = 1.8660822308249125e-155; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [19 22] ; Q' = 1.0; Q = 1.0288981298962236e-49; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [10 10] ; Q' = 1.0; Q = 1.5109743118527503e-133; q-threshold = 5.871651780472434e-53, inside = 12 
+detected peak = [ 9 18] ; Q' = 1.0; Q = 7.247441501523834e-94; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [2 7] ; Q' = 1.0; Q = 7.97341369875622e-143; q-threshold = 1.6627413637061948e-51, inside = 9 
+---
+detected peak = [25 16] ; Q' = 0.99; Q = 1.4756284482722426e-112; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [19 22] ; Q' = 1.0; Q = 3.811584194404765e-57; q-threshold = 1.3333787172740762e-48, inside = 3 
+detected peak = [10 10] ; Q' = 1.0; Q = 1.508264538164346e-133; q-threshold = 5.871651780472434e-53, inside = 12 
+detected peak = [ 9 18] ; Q' = 1.0; Q = 7.16696483327058e-94; q-threshold = 4.708570851858464e-50, inside = 6 
+detected peak = [2 7] ; Q' = 1.0; Q = 5.499443138895399e-143; q-threshold = 1.6627413637061948e-51, inside = 9 
+---
+R = 5
+detected peak = [24 13] ; Q' = 1.0; Q = 5.479062191713408e-48; q-threshold = 1.9200653528746696e-48, inside = 3  **Intruder!**
+detected peak = [22  5] ; Q' = 1.0; Q = 1.7704009601871316e-124; q-threshold = 7.298080720201562e-51, inside = 8 
+detected peak = [19 20] ; Q' = 1.0; Q = 1.1731845704092045e-64; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17  7] ; Q' = 1.0; Q = 1.1799130116231982e-72; q-threshold = 9.100805744037924e-54, inside = 14 
+detected peak = [11 10] ; Q' = 1.0; Q = 9.176834231908981e-63; q-threshold = 2.224488332656701e-50, inside = 7 
+detected peak = [10 17] ; Q' = 1.0; Q = 1.1987618061528082e-46; q-threshold = 2.0666792144423556e-49, inside = 5  **Intruder!**
+detected peak = [2 7] ; Q' = 1.0; Q = 4.0528343804916645e-132; q-threshold = 2.0666792144423556e-49, inside = 5 
+---
+detected peak = [19 13] ; Q' = 0.896; Q = 2.5237571490164437e-86; q-threshold = 7.298080720201562e-51, inside = 8 
+detected peak = [17 20] ; Q' = 1.0; Q = 1.1400393244597356e-126; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17  7] ; Q' = 1.0; Q = 4.020004921149786e-72; q-threshold = 9.100805744037924e-54, inside = 14 
+detected peak = [11 10] ; Q' = 1.0; Q = 1.2894282696742936e-49; q-threshold = 2.224488332656701e-50, inside = 7  **Intruder!**
+detected peak = [ 7 14] ; Q' = 1.0; Q = 1.339559120379915e-87; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [2 7] ; Q' = 1.0; Q = 9.12935781561382e-144; q-threshold = 2.0666792144423556e-49, inside = 5 
+---
+detected peak = [19 12] ; Q' = 1.0; Q = 3.9669456120043336e-87; q-threshold = 7.298080720201562e-51, inside = 8 
+detected peak = [17 20] ; Q' = 1.0; Q = 4.090889990123392e-138; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17  7] ; Q' = 1.0; Q = 2.957300562002283e-48; q-threshold = 9.100805744037924e-54, inside = 14  **Intruder!**
+detected peak = [11 15] ; Q' = 1.0; Q = 1.0449387141521367e-112; q-threshold = 2.224488332656701e-50, inside = 7 
+detected peak = [11 10] ; Q' = 1.0; Q = 1.4878844859996484e-62; q-threshold = 6.780342026676188e-50, inside = 6 
+---
+detected peak = [17 20] ; Q' = 1.0; Q = 1.4460640275871875e-141; q-threshold = 1.9200653528746696e-48, inside = 3 
+detected peak = [17 15] ; Q' = 1.0; Q = 5.447873454161508e-295; q-threshold = 6.780342026676188e-50, inside = 6 
+detected peak = [10 12] ; Q' = 0.978; Q = 1.4567084179379927e-118; q-threshold = 6.29933262747492e-49, inside = 4 
+---
+R = 4
+detected peak = [20 13] ; Q' = 1.0; Q = 2.1283807004040735e-48; q-threshold = 3.000102113866671e-48, inside = 3 
+detected peak = [18 18] ; Q' = 1.0; Q = 1.3183299437638314e-187; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [11 16] ; Q' = 1.0; Q = 2.196259603343462e-74; q-threshold = 9.842707230429562e-49, inside = 4 
+detected peak = [10 10] ; Q' = 1.0; Q = 1.2299704024480308e-48; q-threshold = 3.000102113866671e-48, inside = 3 
+---
+time proc 1 = 3.2758710384368896
+Procedure 2
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+
+center = (19, 15) RSS = -52.08618131746433
+q-threshold = 1.2267287915134612e-14, inside = 8
+combination = [(14, 12), (14, 13)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.243
+q-threshold = 3.43942651826204e-16, inside = 8
+combination = [(14, 12), (14, 13), (14, 14)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 10.005 
+
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+
+center = (10, 8) RSS = -54.30982393277518
+q-threshold = 3.0391277846577627e-22, inside = 14
+combination = [(5, 5), (5, 6)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.291
+q-threshold = 8.519471363719518e-24, inside = 14
+combination = [(5, 5), (5, 6), (5, 7)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 11.067 
+
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+
+center = (12, 12) RSS = -58.70706311144182
+q-threshold = 9.829630849380178e-16, inside = 9
+combination = [(7, 9), (7, 14)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.218
+q-threshold = 2.1892199843122398e-17, inside = 9
+combination = [(7, 9), (7, 10), (7, 14)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 8.644 
+
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+(31, 18) is close to transmitter (30, 17)
+
+center = (20, 16) RSS = -59.38648579832056
+q-threshold = 4.247368039322489e-14, inside = 8
+combination = [(15, 13), (17, 21)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.122
+q-threshold = 8.559790486341172e-16, inside = 8
+combination = [(15, 13), (15, 14), (17, 21)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 4.124 
+
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+(31, 18) is close to transmitter (30, 17)
+
+center = (11, 19) RSS = -63.39227435328929
+q-threshold = 1.154817637595115e-19, inside = 12
+combination = [(6, 16), (6, 17)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.342
+q-threshold = 2.9991671067055345e-21, inside = 12
+combination = [(6, 16), (6, 17), (6, 18)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 10.643 
+
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+(31, 18) is close to transmitter (30, 17)
+
+center = (9, 14) RSS = -63.77465163596788
+q-threshold = 8.974650193761533e-12, inside = 6
+combination = [(4, 11), (4, 12)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.224
+q-threshold = 1.6987418584485598e-13, inside = 6
+combination = [(4, 11), (4, 12), (4, 13)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 6.81 
+
+(41, 23) is close to transmitter (41, 24)
+(40, 24) is close to transmitter (41, 24)
+(31, 18) is close to transmitter (30, 17)
+(3, 31) is close to transmitter (3, 29)
+
+Pred: (18, 28) 0.038 ; (30, 17) 1.509 ; (30, 37) -1.167; (10, 17) 1.348 ; (15, 41) -1.137; (3, 29)  -0.535; (11, 10) 2.0   ; (41, 24) 0.815 ; (17, 7)  -0.231; (24, 13) -2.0  ; 
+True: (18, 28) -1.093; (30, 17) 1.849 ; (30, 37) -1.495; (10, 17) 0.819 ; (15, 41) -1.659; (3, 29)  -1.01 ; (11, 10) 1.997 ; (41, 24) 0.567 ; (17, 7)  -0.163; (20, 13) -1.162; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.4/0.0/0.0/0.19906585887636638
+
+
+Test  9
+Procedure 1
+R = 8
+detected peak = [45 20] ; Q' = 1.0; Q = 5.014089977302912e-54; q-threshold = 4.4331360641937345e-57, inside = 20  **Intruder!**
+detected peak = [41  9] ; Q' = 1.0; Q = 3.564357290952294e-66; q-threshold = 1.1663218437521584e-54, inside = 15 
+detected peak = [37 46] ; Q' = 1.0; Q = 3.238629904979403e-47; q-threshold = 3.0684973876632796e-52, inside = 10  **Intruder!**
+detected peak = [27 34] ; Q' = 1.0; Q = 5.608843569729941e-63; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [27 18] ; Q' = 1.0; Q = 1.8059768048632408e-47; q-threshold = 3.0684973876632796e-52, inside = 10  **Intruder!**
+detected peak = [21 44] ; Q' = 1.0; Q = 7.942573280167487e-47; q-threshold = 3.5550022437648137e-54, inside = 14  **Intruder!**
+detected peak = [11 16] ; Q' = 1.0; Q = 1.031707691937632e-98; q-threshold = 3.302804126515744e-53, inside = 12 
+detected peak = [ 6 31] ; Q' = 1.0; Q = 3.0814136214328727e-46; q-threshold = 1.1663218437521584e-54, inside = 15  **Intruder!**
+---
+detected peak = [41  8] ; Q' = 0.835; Q = 4.315464255629677e-109; q-threshold = 1.0835809190124728e-53, inside = 13 
+detected peak = [27 34] ; Q' = 1.0; Q = 2.881720181198231e-63; q-threshold = 2.850812781328735e-51, inside = 8 
+detected peak = [11 16] ; Q' = 1.0; Q = 1.763733003716943e-98; q-threshold = 3.302804126515744e-53, inside = 12 
+---
+R = 6
+detected peak = [41  9] ; Q' = 1.0; Q = 3.4332861713980973e-46; q-threshold = 5.068111611251084e-51, inside = 8  **Intruder!**
+detected peak = [30 29] ; Q' = 0.981; Q = 3.3597463265333234e-46; q-threshold = 4.3745365468575826e-49, inside = 4  **Intruder!**
+detected peak = [27 36] ; Q' = 0.994; Q = 2.1873902466169993e-55; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [17 21] ; Q' = 1.0; Q = 5.227325198350636e-113; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [15 12] ; Q' = 1.0; Q = 6.833721261817636e-49; q-threshold = 5.871651780472434e-53, inside = 12  **Intruder!**
+---
+detected peak = [36 33] ; Q' = 1.0; Q = 4.024985216665768e-228; q-threshold = 4.3745365468575826e-49, inside = 4 
+detected peak = [27 35] ; Q' = 1.0; Q = 8.276627099667423e-47; q-threshold = 1.4351938989183028e-49, inside = 5  **Intruder!**
+detected peak = [17 22] ; Q' = 1.0; Q = 9.9950618660388e-158; q-threshold = 1.4351938989183028e-49, inside = 5 
+detected peak = [ 9 18] ; Q' = 1.0; Q = 4.965972563141127e-113; q-threshold = 4.708570851858464e-50, inside = 6 
+---
+detected peak = [ 9 18] ; Q' = 1.0; Q = 4.903278691793852e-113; q-threshold = 4.708570851858464e-50, inside = 6 
+---
+R = 5
+detected peak = [16 22] ; Q' = 1.0; Q = 4.5530607138367334e-89; q-threshold = 1.9200653528746696e-48, inside = 3 
+---
+R = 4
+detected peak = [11 17] ; Q' = 1.0; Q = 9.858685066106076e-46; q-threshold = 9.842707230429562e-49, inside = 4  **Intruder!**
+---
+H_0 is most likely
+time proc 1 = 3.107269048690796
+Procedure 2
+(7, 30) is close to transmitter (6, 31)
+(23, 44) is close to transmitter (21, 44)
+
+center = (44, 7) RSS = -62.9154167789783
+q-threshold = 2.2721000766189568e-13, inside = 7
+combination = [(39, 4), (39, 5)]; max Q = 0.0; posterior = nan
+proc-2-2 time = 0.241
+q-threshold = 6.370374046595205e-15, inside = 7
+combination = [(39, 4), (39, 5), (39, 6)]; max Q = 0.0; posterior = nan
+proc-2-3 time = 9.767 
+
+(7, 30) is close to transmitter (6, 31)
+(23, 44) is close to transmitter (21, 44)
+(11, 19) is close to transmitter (11, 17)
+
+Pred: (37, 46) -0.083; (30, 29) -0.089; (21, 44) -1.244; (11, 17) 0.813 ; (15, 12) -1.34 ; (27, 35) 0.759 ; (41, 9)  1.717 ; (6, 31)  -0.909; (27, 18) 1.116 ; (45, 20) 0.691 ; 
+True: (37, 46) -0.148; (30, 29) -0.507; (21, 44) -1.446; (11, 17) 1.466 ; (15, 12) -1.974; (27, 35) 0.011 ; (41, 9)  1.593 ; (6, 31)  -1.677; (27, 18) 0.217 ; (45, 20) 0.467 ; 
+Miss: 
+False Alarm: 
+error/miss/false/power = 0.0/0.0/0.0/0.3429287772195064
+(mean/max/min) error=(0.152/4.472/0.0), miss=(0.03/0.2/0.0), false_alarm=(0.03/0.1/0.0), power=(0.272/1.887/-2.067)
+Ours! time =  205.763 ; proc 1 ratio = 0.892
+Proc-1 time = 3.0991676568984987, Proc-2-2 time = 0.46117234230041504, Proc-2-3 time = 15.809281158447266
+true power continuous, during localization continuous power, have noise
+Wrote profile results to select_sensor.py.lprof
+Timer unit: 1e-06 s
+
+Total time: 205.654 s
+File: select_sensor.py
+Function: our_localization at line 1960
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+  1960                                               #@profile
+  1961                                               def our_localization(self, sensor_outputs, intruders, fig):
+  1962                                                   '''Our localization, reduce R procedure 1 + procedure 2
+  1963                                                   Args:
+  1964                                                       sensor_outputs (np.array): the RSS of the sensors, information used to do localization
+  1965                                                       intruders (list): location of intruders, used only for visualization
+  1966                                                       fig (int):        used for log's filenames
+  1967                                                   '''
+  1968        10         14.0      1.4      0.0          identified   = []
+  1969        10          7.0      0.7      0.0          pred_power   = []
+  1970        10          5.0      0.5      0.0          proc_1_count = 0
+  1971        10         20.0      2.0      0.0          print('Procedure 1')
+  1972        10         12.0      1.2      0.0          start = time.time()
+  1973        10        238.0     23.8      0.0          hypotheses = list(range(len(self.transmitters)))
+  1974        10          7.0      0.7      0.0          R_list = [8, 6, 5, 4]
+  1975        50         26.0      0.5      0.0          for R in R_list:
+  1976        40   30991103.0 774777.6     15.1              identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
+  1977        40         74.0      1.9      0.0              identified.extend(identified_R)
+  1978        40         25.0      0.6      0.0              pred_power.extend(pred_power_R)
+  1979        10         39.0      3.9      0.0          print('time proc 1 =', time.time() - start)
+  1980        10         13.0      1.3      0.0          self.time_1 += time.time() - start
+  1981        10          7.0      0.7      0.0          proc_1_count = len(identified)
+  1982                                           
+  1983        10          8.0      0.8      0.0          print('Procedure 2')
+  1984        10  174661982.0 17466198.2     84.9          identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+  1985        10         25.0      2.5      0.0          identified.extend(identified2)
+  1986        10          6.0      0.6      0.0          pred_power.extend(pred_power2)
+  1987                                           
+  1988                                                   #print('Procedure 3')
+  1989                                                   #identified3, pred_power3 = self.procedure3(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+  1990        10         22.0      2.2      0.0          return identified, pred_power, float(proc_1_count)/len(identified)
+
