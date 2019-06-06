@@ -25,7 +25,7 @@ from itertools import combinations
 import line_profiler
 from sklearn.cluster import KMeans
 from scipy.optimize import nnls
-from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot
+from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2
 from skimage.feature import peak_local_max
 import itertools
@@ -59,7 +59,7 @@ class SelectSensor:
         self.transmitters = []                 # transmitters are the hypothesises
         self.intruders = []
         self.sensors = []
-        self.sensors_uses = np.array(0)
+        self.sensors_used = np.array(0)
         self.sensors_collect = {}              # precomputed collected sensors
         self.key = '{}-{}'                     # key template for self.sensors_collect
         self.data = np.zeros(0)
@@ -1855,7 +1855,7 @@ class SelectSensor:
         return delta_p
 
 
-    @profile
+    #@profile
     def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
         '''
         Args:
@@ -2006,10 +2006,10 @@ class SelectSensor:
         identified1_1, pred_power1_1 = self.procedure1_1(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
         
 
-        print('Procedure 2')
-        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
-        identified.extend(identified2)
-        pred_power.extend(pred_power2)
+        # print('Procedure 2')
+        # identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+        # identified.extend(identified2)
+        # pred_power.extend(pred_power2)
 
         return identified, pred_power, float(proc_1_count)/len(identified)
 
@@ -2028,6 +2028,8 @@ class SelectSensor:
             (list, list)
         '''
         identified, pred_power = [], []
+        if self.debug:
+            visualize_unused_sensors(self.grid_len, intruders, sensor_outputs, self.sensors, self.sensors_used, previous_identified, -80, fig)
 
 
         return identified, pred_power
@@ -2241,8 +2243,10 @@ class SelectSensor:
                 if q > q_threshold:
                     print(' **Intruder!**')
                     detected = True
-                    p = power[index[0]][index[1]] - offset  # deduct a power offset, 0.74 value is from 100 exeriments
+                    p = power[index[0]][index[1]] - offset
                     self.delete_transmitter(index, p, sensor_subset, sensor_outputs)
+                    for sen in subset_sensors:
+                        self.sensors_used[sen] = True
                     identified.append(tuple(index))
                     pred_power.append(p)
                 else:
@@ -2602,7 +2606,7 @@ def main1():
 def main2():
     '''main 2: synthetic data + Our localization
     '''
-    selectsensor = SelectSensor(grid_len=50, debug=False)
+    selectsensor = SelectSensor(grid_len=50, debug=True)
     #selectsensor.init_data('data50/homogeneous-100/cov', 'data50/homogeneous-100/sensors', 'data50/homogeneous-100/hypothesis')
     #selectsensor.init_data('data50/homogeneous-150-2/cov', 'data50/homogeneous-150-2/sensors', 'data50/homogeneous-150-2/hypothesis')
     #selectsensor.init_data('data50/homogeneous-156/cov', 'data50/homogeneous-156/sensors', 'data50/homogeneous-156/hypothesis')
@@ -2624,7 +2628,7 @@ def main2():
     start = time.time()
     selectsensor.reset_time()
     # for i in [2, 6, 10, 12, 13, 19]:
-    for i in range(a, b):
+    for i in [2]:
         print('\n\nTest ', i)
         random.seed(i)
         true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]

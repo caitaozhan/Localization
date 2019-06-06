@@ -59,6 +59,41 @@ def visualize_selection(counter, grid_len, primary, secondary, results, sensors)
     plt.savefig('visualize/{}'.format(counter))
 
 
+def visualize_unused_sensors(grid_len, intruders, sensor_outputs, sensors, sensors_used, previous_identified, threshold, fig):
+    '''Visualize the intruders and UNUSED sensor_output
+    Args:
+        grid_len (int):                 length of grid
+        intruders (list<Transmitter>):  list of Transmitter objects
+        sensor_output (list):           list of float (RSSI)
+        sensors (lists):                list of Sensor objects
+        sensors_used (np.array<bool>):
+    '''
+    grid = np.zeros((grid_len, grid_len))
+    if np.max(sensor_outputs) > threshold:
+        maximum = np.max(sensor_outputs[sensor_outputs > threshold])
+        minimum = np.min(sensor_outputs[sensor_outputs > threshold])
+    for index, sensor in enumerate(sensors):
+        if sensors_used[index] or sensor_outputs[index] < -80:
+            color = -0.2
+        else:
+            color = (sensor_outputs[index] - minimum) / (maximum - minimum) + 0.2
+        grid[sensor.x][sensor.y] = color
+    intruders = set([(intru.x, intru.y) for intru in intruders])
+    intru_unidentified = intruders - set(previous_identified)
+    for intru in intruders:
+        grid[intru[0]][intru[1]] = -0.6
+    for intru in intru_unidentified:
+        grid[intru[0]][intru[1]] = -1.2
+
+    sns.set(style="white")
+    plt.subplots(figsize=(10, 10))
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.xlabel('Unused Sensors and Unidentified Intruders')
+    #plt.show()
+    plt.savefig('visualize/localization/{}-proc-1-1'.format(fig))
+
+
 def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, threshold, fig):
     '''Visualize the intruders and sensor_output to have a better sense on deciding the threshold
     Args:
