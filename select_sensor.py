@@ -15,6 +15,7 @@ from joblib import Parallel, delayed, dump, load
 from sensor import Sensor
 from transmitter import Transmitter
 from utility import read_config, ordered_insert, power_2_db, power_2_db_, db_2_power, db_2_power_, find_elbow#, print_results
+from counter import Counter
 try:
     from numba import cuda
     from cuda_kernals import o_t_approx_kernal, o_t_kernal, o_t_approx_dist_kernal, \
@@ -79,9 +80,7 @@ class SelectSensor:
         self.secondary_trans = []              # they include primary and secondary
         self.lookup_table_q = np.array([1. - 0.5*(1. + math.erf(i/1.4142135623730951)) for i in np.arange(0, 8.3, 0.0001)])
         self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
-        self.time_1   = 0                      # time counter for procedure 1
-        self.time_2_2 = 0                      # time counter for procedure 2 (t=2)
-        self.time_2_3 = 0                      # time counter for procedure 2 (t=3)
+        self.counter = Counter()               # timer
         self.debug  = debug                    # debug mode do visulization stuff, which is time expensive 
 
 
@@ -1555,8 +1554,8 @@ class SelectSensor:
             sensor_output_from_transmitter = db_2_power_(self.means[trans_index, sen_index] + power)
             sensor_output -= sensor_output_from_transmitter
             sensor_outputs[sen_index] = power_2_db_(sensor_output)
-            #if sen_index == 182:
-            #    print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
+            # if sen_index == 46 or sen_index == 102:
+            #     print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
         sensor_outputs[np.isnan(sensor_outputs)] = -120
 
 
@@ -1791,7 +1790,7 @@ class SelectSensor:
 
 
     #@profile
-    def prune_hypothesis(self, hypotheses, sensor_outputs, radius):
+    def prune_hypothesis(self, hypotheses, sensor_outputs, radius, least_num_sensor=3):
         '''Prune hypothesis who has less than 3 sensors with RSS > -80 in radius
         Args:
             transmitters (list): a list of candidate transmitter (hypothesis, location)
@@ -1807,13 +1806,41 @@ class SelectSensor:
             for sensor in subset_sensors:
                 if sensor_outputs[sensor] > -80:
                     counter += 1
-                if counter == 3:
+                if counter == least_num_sensor:
                     break
             else:
                 prunes.append(tran)
         for prune in prunes:
             hypotheses.remove(prune)
 
+
+    def prune_hypothesis1_1(self, hypotheses, edge, previous_identified, previous_identified_radius):
+        '''Pruning for procedure 1.1
+        Args:
+
+        '''
+        prunes = []
+        for hypo in hypotheses:
+            x = hypo//self.grid_len
+            y = hypo%self.grid_len
+            if x < edge or x > self.grid_len-edge or y < edge or y > self.grid_len-edge:
+                prunes.append(hypo)
+        for intru, R in zip(previous_identified, previous_identified_radius):
+            x = intru[0]
+            y = intru[1]
+            x_low  = max(0, x-R)
+            x_high = min(self.grid_len, x+R)
+            y_low  = max(0, y-R)
+            y_high = min(self.grid_len, y+R)
+            for i in range(x_low, x_high):
+                for j in range(y_low, y_high):
+                    temp_hypo = i*self.grid_len+j
+                    if temp_hypo in hypotheses and math.sqrt((x-i)**2 + (y-j)**2) < R:
+                        prunes.append(temp_hypo)
+        prunes = np.unique(prunes)
+        for prune in prunes:
+            hypotheses.remove(prune)
+            
 
     def ignore_screwed_sensor(self, subset_sensors, previous_identified, min_dist):
         '''When a sensor is close to a identified intruder, it is likely to get screwed due to deleting signals with a wrong power
@@ -1964,12 +1991,6 @@ class SelectSensor:
         return self.grid_posterior, H_0, q, power_grid
 
 
-    def reset_time(self):
-        '''Reset the time members for our localization
-        '''
-        self.time_1 = self.time_2_2 = self.time_2_3 = 0
-
-
     def reset(self):
         '''Reset some members for our localization
         '''
@@ -1987,51 +2008,108 @@ class SelectSensor:
         '''
         self.reset()
         identified   = []
+        identified_radius = []
         pred_power   = []
-        proc_1_count = 0
         print('Procedure 1')
-        start = time.time()
+        self.counter.time1_start()
         R_list = [8, 6, 5, 4]
         self.collect_sensors_in_radius_precompute(R_list)
         hypotheses = list(range(len(self.transmitters)))
         for R in R_list:
             identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
             identified.extend(identified_R)
+            identified_radius.extend([R]*len(identified_R))
             pred_power.extend(pred_power_R)
-        print('time proc 1 =', time.time() - start)
-        self.time_1 += time.time() - start
-        proc_1_count = len(identified)
+            self.counter.proc_1 += len(identified_R)
+        self.counter.time1_end()
 
-        print('Procedure 1.1')
-        identified1_1, pred_power1_1 = self.procedure1_1(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
-        
+        print('\nProcedure 1.1')
+        self.counter.time2_start()
+        hypotheses = list(range(len(self.transmitters)))
+        for R in R_list:
+            identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
+            identified.extend(identified_R)
+            pred_power.extend(pred_power_R)
+            self.counter.proc_1_1 += len(identified_R)
+        self.counter.time2_end()
 
-        # print('Procedure 2')
-        # identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
-        # identified.extend(identified2)
-        # pred_power.extend(pred_power2)
+        print('Procedure 2')
+        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+        identified.extend(identified2)
+        pred_power.extend(pred_power2)
 
-        return identified, pred_power, float(proc_1_count)/len(identified)
+        return identified, pred_power
 
 
-    def procedure1_1(self, sensor_outputs, intruders, fig, R, previous_identified):
+    def procedure1_1(self, hypotheses, sensor_outputs, intruders, fig, R, previous_identified, previous_identified_radius):
         '''Our hypothesis-based localization algorithm's procedure 1_1
            The key here is locate transmitters with unused sensors (sensors not being deleted)
            and neglect Q' (thus is MLE-based, not MAP-based)
         Args:
+            hypotheses (list): transmitters (1D index) that has 2 or more sensors in radius with RSS > -80 
             sensor_outputs (np.array)
             intruders (list): for plotting
             fig (int)       : for plotting
             R (int)
             previous_identified (list): list<(a, b)>
         Return:
-            (list, list)
+            (list<(int, int)>, list<float>): list of predicted locations and powers
         '''
+        print('R =', R)
         identified, pred_power = [], []
+        position_to_check = []
+        q_relative = np.zeros((self.grid_len, self.grid_len))
+        power_grid = np.zeros((self.grid_len, self.grid_len))
         if self.debug:
             visualize_unused_sensors(self.grid_len, intruders, sensor_outputs, self.sensors, self.sensors_used, previous_identified, -80, fig)
+        self.prune_hypothesis(hypotheses, sensor_outputs, R, least_num_sensor=3)
+        self.prune_hypothesis1_1(hypotheses, 2, previous_identified, previous_identified_radius)
+        for hypo in hypotheses:
+            trans = self.transmitters[hypo]
+            if (trans.x, trans.y) in position_to_check:
+                print(trans.x, trans.y)
+            subset_sensors = self.sensors_collect[self.key.format(hypo, R)]
+            unused_subset_sensors = []
+            for sen in subset_sensors:
+                if self.sensors_used[sen] == False:
+                    unused_subset_sensors.append(sen)     # collect sensors in radius that is UNUSED
+            if len(unused_subset_sensors) >= 3:
+                sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
+                sensor_outputs_copy = sensor_outputs_copy[unused_subset_sensors]
+                mean_vec = np.copy(trans.mean_vec)
+                mean_vec = mean_vec[unused_subset_sensors]
+                variance = np.diagonal(self.covariance)[unused_subset_sensors]
+                delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                mean_vec = mean_vec + delta_p  # add the delta of power
+                stds = np.sqrt(np.diagonal(self.covariance)[unused_subset_sensors])
+                array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+                likelihood = np.prod(array_of_pdfs)
+                high_likelihood = np.power(norm(0, 1).pdf(1.5), len(unused_subset_sensors))
+                q_relative[trans.x][trans.y] = likelihood/high_likelihood
+                power_grid[trans.x][trans.y] = delta_p
+        q_max = np.max(q_relative)
+        while q_max > 1:
+            hypo = np.argmax(q_relative)
+            x = hypo//self.grid_len
+            y = hypo%self.grid_len
+            print('**Intruder!**', (x, y), '; Q relative =', q_max)
+            identified.append((x, y))
+            pred_power.append(power_grid[x][y])
+            self.delete_transmitter((x, y), power_grid[x][y], range(len(self.sensors)), sensor_outputs)
+            subset_sensors = self.sensors_collect[self.key.format(hypo, R)]
+            for sen in subset_sensors:
+                self.sensors_used[sen] = True
+            x_low  = max(0, x-R)
+            x_high = min(self.grid_len, x+R)
+            y_low  = max(0, y-R)
+            y_high = min(self.grid_len, y+R)
+            for i in range(x_low, x_high):
+                for j in range(y_low, y_high):
+                    q_relative[i][j] = 0
+            q_max = np.max(q_relative)
 
-
+        for trans in identified:
+            pass
         return identified, pred_power
 
 
@@ -2062,7 +2140,8 @@ class SelectSensor:
             hypotheses = [h for h in range(len(self.transmitters)) \
                           if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             for t in range(2, 4):
-                start = time.time()
+                self.counter.time3_start()
+                self.counter.time4_start()
                 hypotheses_combination = list(combinations(hypotheses, t))
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked] # prevent checking the same combination again
                 if len(hypotheses_combination) == 0:
@@ -2082,17 +2161,17 @@ class SelectSensor:
                         detected.append((x, y))
                         power.append(0)
                         self.delete_transmitter((x, y), 0, range(len(self.sensors)), sensor_outputs)
+                    if t == 2:
+                        self.counter.proc_2_2 += 1
+                    elif t == 3:
+                        self.counter.proc_2_3 += 1
                     if self.debug:
                         visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
                     break
                 if t == 2:
-                    delta = time.time() - start
-                    print('proc-2-2 time =', round(delta, 3))
-                    self.time_2_2 += delta
+                    self.counter.time3_end()
                 elif t == 3:
-                    delta = time.time() - start
-                    print('proc-2-3 time =', round(delta, 3), '\n')
-                    self.time_2_3 += delta
+                    self.counter.time4_end()
             center = self.get_center_sensor(sensor_outputs, R, center_list, previous_identified)
             center_list.append(center)
         return detected, power
@@ -2179,7 +2258,7 @@ class SelectSensor:
                         counter += 1
                     if counter == 3:                 # need three "strong" sensor
                         flag = False
-                        print('\ncenter =', (self.sensors[center].x, self.sensors[center].y), 'RSS =', sensor_outputs[center])
+                        print('\nCenter =', (self.sensors[center].x, self.sensors[center].y), 'RSS =', sensor_outputs[center])
                         break
             else:
                 sensor_outputs[center] = -80         # bug here ... shouldn't change the origin sensor output, fixed in first line
@@ -2224,7 +2303,6 @@ class SelectSensor:
             if self.debug:
                 visualize_q_prime(posterior, fig)
             indices = peak_local_max(posterior, 2, threshold_abs=0.8, exclude_border = False)
-            sensor_subset = range(len(self.sensors))
 
             if len(indices) == 0:
                 print("No Q' peaks...")
@@ -2244,7 +2322,7 @@ class SelectSensor:
                     print(' **Intruder!**')
                     detected = True
                     p = power[index[0]][index[1]] - offset
-                    self.delete_transmitter(index, p, sensor_subset, sensor_outputs)
+                    self.delete_transmitter(index, p, range(len(self.sensors)), sensor_outputs)
                     for sen in subset_sensors:
                         self.sensors_used[sen] = True
                     identified.append(tuple(index))
@@ -2619,16 +2697,15 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    a, b = 0, 2
+    a, b = 0, 50
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
-    proc_1_ratio = 0
-    start = time.time()
-    selectsensor.reset_time()
-    # for i in [2, 6, 10, 12, 13, 19]:
-    for i in [2]:
+    selectsensor.counter.num_exper = b-a
+    selectsensor.counter.time_start()
+    #for i in [2, 6, 10, 12, 13, 19]:
+    for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)
         true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
@@ -2641,8 +2718,7 @@ def main2():
 
         intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
-        pred_locations, pred_power, ratio = selectsensor.our_localization(sensor_outputs, intruders, i)
-        proc_1_ratio += ratio
+        pred_locations, pred_power = selectsensor.our_localization(sensor_outputs, intruders, i)
         true_locations = selectsensor.convert_to_pos(true_indices)
 
         try:
@@ -2652,7 +2728,7 @@ def main2():
                 power_errors.extend(power_error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {}/{}/{}/{}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
+            print('error/miss/false/power = {:.3f}/{}/{}/{:.3f}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
             if selectsensor.debug:
                 visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
         except Exception as e:
@@ -2661,13 +2737,13 @@ def main2():
     try:
         errors = np.array(errors)
         power_errors = np.array(power_errors)
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(errors.mean(), 3), round(errors.max(), 3), round(errors.min(), 3), \
-              round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms), round(power_errors.mean(), 3), round(power_errors.max(), 3), round(power_errors.min(), 3) ) )
-        print('Ours! time = ', round(time.time()-start, 3), '; proc 1 ratio =', round(proc_1_ratio/(b-a), 3))
-        print('Proc-1 time = {}, Proc-2-2 time = {}, Proc-2-3 time = {}'.format(selectsensor.time_1/(b-a), selectsensor.time_2_2/(b-a), selectsensor.time_2_3/(b-a)))
+        print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
+              sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
+        selectsensor.counter.time_end()
+        selectsensor.counter.procedure_ratios()
+        print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(selectsensor.counter.time1_average(), selectsensor.counter.time2_average(), selectsensor.counter.time3_average(), selectsensor.counter.time4_average()))
     except Exception as e:
         print(e)
-    print('true power continuous, during localization continuous power, have noise')
 
 
 def main4():
