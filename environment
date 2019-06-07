@@ -1,2 +1,2 @@
 export PYTHONWARNINGS="ignore"
-alias pys='python select_sensor.py'
+alias pyl='python localize.py'
