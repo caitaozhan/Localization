@@ -2697,7 +2697,7 @@ def main2():
     #selectsensor.init_data('data50/homogeneous-625/cov', 'data50/homogeneous-625/sensors', 'data50/homogeneous-625/hypothesis')
     #selectsensor.init_data('data50/homogeneous-75-4/cov', 'data50/homogeneous-75-4/sensors', 'data50/homogeneous-75-4/hypothesis')
 
-    a, b = 0, 50
+    a, b = 0, 2
     errors = []
     misses = []
     false_alarms = []
@@ -2740,7 +2740,8 @@ def main2():
         print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
               sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
         selectsensor.counter.time_end()
-        selectsensor.counter.procedure_ratios()
+        ratios = selectsensor.counter.procedure_ratios()
+        print(ratios)
         print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(selectsensor.counter.time1_average(), selectsensor.counter.time2_average(), selectsensor.counter.time3_average(), selectsensor.counter.time4_average()))
     except Exception as e:
         print(e)

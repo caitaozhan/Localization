@@ -12,7 +12,7 @@ from utility import generate_intruders
 ss = SelectSensor(grid_len=50)
 ss.init_data('../../data50/homogeneous-200/cov', '../../data50/homogeneous-200/sensors', '../../data50/homogeneous-200/hypothesis')
 
-num_of_intruders = 1
+num_of_intruders = 3
 
 a, b = 0, 50
 errors = []
@@ -53,8 +53,8 @@ try:
     np.savetxt('{}-ours-false.txt'.format(num_of_intruders), false_alarms, delimiter=',')
     np.savetxt('{}-ours-power.txt'.format(num_of_intruders), power_errors, delimiter=',')
     np.savetxt('{}-ours-time.txt'.format(num_of_intruders), [ss.counter.time1_average(), ss.counter.time2_average(), ss.counter.time3_average(), ss.counter.time4_average()], delimiter=',')
+    np.savetxt('{}-ours-ratio.txt'.format(num_of_intruders), ss.counter.procedure_ratios(), delimiter=',')
     print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
               sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
-    ss.counter.procedure_ratios()
 except Exception as e:
     print(e)

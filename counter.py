@@ -7,12 +7,12 @@ import time
 class Counter:
 
     def __init__(self):
+        self.__num_exper = 1 # number of experiments
         self.__time  = 0     # total time
         self.__time1 = 0     # procedure 1        (total time of several experiments)
         self.__time2 = 0     # procedure 1.1      (total time of several experiments)
         self.__time3 = 0     # procedure 2, t=2   (total time of several experiments)
         self.__time4 = 0     # procedure 2, t=3   (total time of several experiments)
-        self.__num_exper = 1 # number of experiments
         self.__time1_start = 0
         self.__time2_start = 0
         self.__time3_start = 0
@@ -187,6 +187,7 @@ class Counter:
         total = self.__proc_1 + self.proc_1_1 + self.proc_2_2 + self.proc_2_3
         print('Proc-1 = {:.3f}; Proc-1.1 = {:.3f}; Proc-2-2 = {:.3f}; Proc-2-3 = {:.3f}'.format(\
             self.__proc_1/total, self.__proc_1_1/total, self.__proc_2_2/total, self.__proc_2_3/total))
+        return self.__proc_1/total, self.__proc_1_1/total, self.__proc_2_2/total, self.__proc_2_3/total
 
 
 if __name__ == '__main__':
