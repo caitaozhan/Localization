@@ -41,7 +41,7 @@ class Transmitter:
 
     def __str__(self):
         str1 = "(%d, %d) ".ljust(10) % (self.x, self.y)
-        return str1 + str(self.error)
+        return str1
 
 
 if __name__ == '__main__':
