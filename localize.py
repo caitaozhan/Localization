@@ -51,15 +51,12 @@ class Localization:
         self.grid_priori = np.zeros(0)
         self.grid_posterior = np.zeros(0)
         self.transmitters = []                 # transmitters are the hypothesises
-        self.intruders = []
         self.sensors = []
         self.sensors_used = np.array(0)
         self.sensors_collect = {}              # precomputed collected sensors
         self.key = '{}-{}'                     # key template for self.sensors_collect
-        self.data = np.zeros(0)
         self.covariance = np.zeros(0)
         self.init_transmitters()
-        self.set_priori()
         self.means = np.zeros(0)               # negative mean of intruder
         self.means_primary = np.zeros(0)       # negative mean of intruder plus primary
         self.means_all = np.zeros(0)           # negative mean of intruder plus primary plus secondary (all)
@@ -68,7 +65,6 @@ class Localization:
         self.subset = {}
         self.subset_index = []
         self.meanvec_array = np.zeros(0)
-        self.TPB = 32
         self.primary_trans = []                # introduce the legal transmitters as secondary user in the Mobicom version
         self.secondary_trans = []              # they include primary and secondary
         self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
@@ -83,6 +79,7 @@ class Localization:
            2. init sensors
            3. init mean and std between every pair of transmitters and sensors
         '''
+        self.set_priori()
         cov = pd.read_csv(cov_file, header=None, delimiter=' ')
         del cov[len(cov)]
         #self.covariance = cov.values
@@ -115,14 +112,9 @@ class Localization:
                 self.stds[tran_x*self.grid_len + tran_y, count] = 1      # std = 1 for every sensor
                 count = (count + 1) % len(self.sensors)
 
-        #temp_mean = np.zeros(self.grid_len * self.grid_len, )
         for transmitter in self.transmitters:
             tran_x, tran_y = transmitter.x, transmitter.y
-            mean_vec = [0] * len(self.sensors)
-            for sensor in self.sensors:
-                mean = self.means[self.grid_len*tran_x + tran_y, sensor.index]
-                mean_vec[sensor.index] = mean
-            transmitter.mean_vec = np.array(mean_vec)
+            transmitter.mean_vec = self.means[self.grid_len*tran_x + tran_y, :]
 
 
     def vary_power(self, powers):
@@ -172,12 +164,53 @@ class Localization:
         print('\ninit done!')
 
 
+    def init_utah(self, means, stds, locations, lt, percentage=1., interpolate=False):
+        '''Initialize from the Utah data
+        Args:
+            means (np.ndarray, n=2)
+            stdss (np.ndarray, n=1)
+            locations (np.ndarray, n=2)
+            lt (LocationTransform)
+            percentage (float): percentage of training examples used
+        '''
+        num = int(len(means) * percentage)
+        select = sorted(random.sample(range(len(means)), num))
+        means  = means[np.ix_(select, select)]
+        stds   = stds[select]
+        locations = locations[select, :]
+        grid_locs = lt.grid_location[select, :]
+        self.covariance = np.zeros((num, num))
+        for i in range(num):
+            self.covariance[i][i] = stds[i]**2    # init covariance
+        
+        self.sensors = []
+        for i in range(num):
+            self.sensors.append(Sensor(x=grid_locs[i][0], y=grid_locs[i][1], std=stds[i], index=i))
+
+        self.means = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
+        self.stds  = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
+
+        if interpolate == False:                  # 44 hypothesis version
+            self.grid_priori = np.zeros(self.grid_len * self.grid_len)
+            for cell in grid_locs:                # init prior grid
+                self.grid_priori[cell[0]*self.grid_len + cell[1]] = 1./num
+            for i in range(num):
+                x, y = grid_locs[i]               # init distributions: mean and std
+                self.means[x*self.grid_len + y, :] = means[i]
+                self.stds[x*self.grid_len + y, :]  = np.array(self.grid_len, stds[i])
+                self.transmitters[x*self.grid_len + y].mean_vec = means[i]
+        
+        if interpolate == True:                   # 14*14 = 196 hypothesis version
+            self.grid_priori = np.full(self.grid_len * self.grid_len, 1./(self.grid_len*self.grid_len))
+
+
+
     def set_priori(self):
         '''Set priori distribution - uniform distribution
         '''
         uniform = 1./(self.grid_len * self.grid_len)
-        self.grid_priori = np.full((self.grid_len, self.grid_len), uniform)
-        self.grid_posterior = np.full((self.grid_len, self.grid_len), uniform)
+        self.grid_priori    = np.full(self.grid_len * self.grid_len, uniform)
+        self.grid_posterior = np.full(self.grid_len * self.grid_len, uniform)
     
 
     def init_transmitters(self):
@@ -670,26 +703,14 @@ class Localization:
             self.grid_priori[np.ix_(range(self.grid_len - 1 - i, self.grid_len * self.grid_len, self.grid_len))] = 0
 
 
-    def get_q_threshold(self, radius):
-        '''Different number of sensors (expected) get a different thershold
-        '''
-        inside = self.sen_num * 3.14159 * radius**2 / len(self.transmitters)
-        outside = self.sen_num - inside
-        #q = np.power(norm(0, 1).pdf(3), inside) * np.power(0.2, outside) * np.power(3., self.sen_num)
-        q = np.power(norm(0, 1).pdf(2.77), inside)
-        q *= np.power(0.6, outside)  # 0.6 = 0.2 x 3
-        q *= np.power(3, inside)
-        return q
-
-
-    def get_q_threshold_custom(self, inside, radius):
+    def get_q_threshold_custom(self, location, inside):
         '''Different number of sensors (real) get a different thershold
         Args:
             inside (int): real number of sensors inside radius R
         Return:
             (float): the customized q threshold
         '''
-        prior = 1./(3.14 * radius**2)
+        prior = self.grid_priori[location]
         outside = self.sen_num - inside
         q = np.power(norm(0, 1).pdf(1.9), inside) * prior  # [1.5, 2] change smaller because of change of db - power ratio function
         q *= np.power(0.6, outside)
@@ -859,7 +880,7 @@ class Localization:
 
             likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant, len(subset_sensors))
 
-            self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]# don't care about
+            self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]
             power_grid[trans.x][trans.y] = delta_p
             #power_grid[trans.x][trans.y] = power_max
 
@@ -869,7 +890,7 @@ class Localization:
         sensor_outputs_copy[sensor_outputs_copy < -80] = -80
         array_of_pdfs = self.get_pdfs(mean_vec, np.sqrt(np.diagonal(self.covariance)), sensor_outputs_copy)
         likelihood = np.prod(array_of_pdfs) * np.power(2., len(self.sensors))
-        self.grid_posterior[self.grid_len * self.grid_len] = likelihood * self.grid_priori[-1]
+        self.grid_posterior[self.grid_len * self.grid_len] = likelihood * np.max(self.grid_priori)
         # check if H_0's likelihood*prior is one of the largest
         if self.grid_posterior[len(self.transmitters)] == self.grid_posterior[np.argmax(self.grid_posterior)]:
             H_0 = True
@@ -1186,10 +1207,6 @@ class Localization:
         Return:
             (list, list): list<(a, b)>, list<float>
         '''
-        num_cells = self.grid_len * self.grid_len + 1
-        self.grid_priori = np.full(num_cells, 1.0 / (3.14*radius**2))  # modify priori to whatever himanshu likes
-        #for intruder in previous_identified:
-        #    self.grid_priori[intruder[0]*self.grid_len + intruder[1]] = 0 # set prior of previous identified location to zero
         self.ignore_boarders(edge=2)
         identified = []
         pred_power = []
@@ -1223,7 +1240,7 @@ class Localization:
                 subset_sensors = self.sensors_collect[self.key.format(location, radius)]
                 self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
                 sen_inside = len(subset_sensors)
-                q_threshold = self.get_q_threshold_custom(sen_inside, radius)
+                q_threshold = self.get_q_threshold_custom(location, sen_inside)
                 print('Q =', q, end='; ')
                 print('q-threshold = {}, inside = {}'.format(q_threshold, sen_inside), end=' ')
                 if q > q_threshold:
@@ -1487,7 +1504,7 @@ def main1():
 def main2():
     '''main 2: synthetic data + Our localization
     '''
-    ll = Localization(grid_len=50, debug=True)
+    ll = Localization(grid_len=50, debug=False)
     ll.init_data('data50/homogeneous-200/cov', 'data50/homogeneous-200/sensors', 'data50/homogeneous-200/hypothesis')
     num_of_intruders = 10
 
@@ -1521,7 +1538,7 @@ def main2():
                 power_errors.extend(power_error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {:.3f}/{}/{}/{:.3f}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
+            print('\nerror/miss/false/power = {:.3f}/{}/{}/{:.3f}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
             if ll.debug:
                 visualize_localization(ll.grid_len, true_locations, pred_locations, i)
         except Exception as e:
@@ -1694,8 +1711,8 @@ def main6():
 
 
 if __name__ == '__main__':
-    main1()
-    #main2()
+    # main1()
+    main2()
     #main3()
     #main4()
     #main5()

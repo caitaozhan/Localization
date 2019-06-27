@@ -5,6 +5,8 @@ import json
 import numpy as np
 import random
 import scipy
+import math
+import matplotlib.pyplot as plt
 
 
 def read_config(filename):
@@ -166,6 +168,42 @@ def get_distance(grid_len, index1, index2):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 
+def generate_intruders_utah(grid_len, locations, lt, num, min_dist):
+    '''
+    Args:
+        locations (np.ndarray, n=2): the 44 real number locations
+        num       (int): number of intruders
+        min_dist  (int): minimum distance between intruders
+    Return:
+        list<(float, float)>: a list of real number locations
+        list<int>           : a list of 1D index of grid locations
+    '''
+    intruders_real = []
+    intruders_grid = []
+    counter   = 0
+    trials    = 0
+    num_loc   = len(locations)
+    while counter < num:
+        trials += 1
+        if trials < 50:
+            tmp = random.sample(range(num_loc), 1)[0]
+            x, y = locations[tmp]
+            flag = True
+            for intruder in intruders_real:
+                dist = math.sqrt((x - intruder[0])**2 + (y - intruder[1])**2)
+                if dist < min_dist:
+                    flag = False
+                    break
+            if flag:
+                intruders_real.append(locations[tmp])
+                cell = lt.real_2_gridcell(locations[tmp])
+                intruders_grid.append(cell[0]*grid_len + cell[1])
+                counter += 1
+        else:
+            intruders_real, intruders_grid = generate_intruders_utah(grid_len, locations, lt, num, min_dist)
+    return intruders_real, intruders_grid
+
+
 def generate_intruders(grid_len, edge, num, min_dist, powers):
     '''
     Args:
@@ -260,13 +298,18 @@ def generate_intruders_2(grid_len, edge, min_dist, max_dist, intruders, powers, 
     return intruders, powers
 
 
-def read_utah_data():
+def generate_intruders_real():
+    pass # TODO
+
+
+def read_utah_data(path='dataUtah'):
     '''Read utah data
     Return:
-        trace ()
-        location ()
+        mean (np.ndarray, n=2)
+        stds (np.ndarray, n=1)
+        locations (np.ndarray, n=2)
     '''
-    savedSig = scipy.io.loadmat('dataUtah/savedSig/savedSig.mat')
+    savedSig = scipy.io.loadmat(path + '/savedSig/savedSig.mat')
     trace = savedSig['savedSig']
     num = trace.shape[0]
     mean = np.zeros((num, num))
@@ -287,12 +330,20 @@ def read_utah_data():
             mean[tx][rx] = peaks.mean()
             stds[tx][rx] = peaks.std()
     
-    locations = scipy.io.loadmat('dataUtah/savedSig/deviceLocs.mat')
+    locations = scipy.io.loadmat(path + '/savedSig/deviceLocs.mat')
     locations = locations['deviceLocs']
     locations = np.array(locations)
     return mean, np.mean(stds, 0), locations
 
 
+def distance(a, b):
+    return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+
+def plot_cdf(x):
+    x, y = sorted(x), np.arange(len(x)) / len(x)
+    plt.plot(x, y)
+    plt.show()
 
 
 if __name__ == '__main__':
