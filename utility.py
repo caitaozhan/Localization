@@ -78,20 +78,24 @@ def db_2_power(db):
     return val
 
 
-def power_2_db_(abso):
-    '''Transform the decibal signal strength into absolute value of iq samples
+def power_2_db_(value, utah=False):
+    '''Transform the power of signals into decibal signal strength
        y = 20*log10(x)
-       where y is power in dB and x is the absolute value of iq samples
     '''
-    return 10*np.log10(abso)
+    if utah == False:
+        return 10*np.log10(value)  # here value is power
+    else:
+        return 20*np.log10(value)  # here value is amplitude (for utah data)
 
 
-def db_2_power_(db):
-    '''Transform the decibal signal strength into absolute value of iq samples
+def db_2_power_(db, utah=False):
+    '''Transform the decibal signal strength into power
        x = 10^(y/20)
-       where y is power in dB and x is the absolute value of iq samples
     '''
-    return np.power(10, np.array(db)/10)
+    if utah == False:
+        return np.power(10, np.array(db)/10)  # returning power
+    else:
+        return np.power(10, np.array(db)/20)  # returning amplitude (for utah data)
 
 
 def find_elbow(inertias, num_intruder):
@@ -185,7 +189,7 @@ def generate_intruders_utah(grid_len, locations, lt, num, min_dist):
     num_loc   = len(locations)
     while counter < num:
         trials += 1
-        if trials < 50:
+        if trials < 500:
             tmp = random.sample(range(num_loc), 1)[0]
             x, y = locations[tmp]
             flag = True
@@ -342,7 +346,7 @@ def distance(a, b):
 
 def plot_cdf(x):
     x, y = sorted(x), np.arange(len(x)) / len(x)
-    plt.plot(x, y)
+    plt.plot(x, y, linewidth=3)
     plt.show()
 
 

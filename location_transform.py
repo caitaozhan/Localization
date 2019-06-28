@@ -74,6 +74,23 @@ if __name__ == '__main__':
     lt = LocationTransform(locations, cell_len=1)
     # print(lt)
 
+    num = len(mean)
+    with open('dataUtah/means.txt', 'w') as f:
+        for i in range(num):
+            for j in range(num):
+                f.write('{:6.2f} '.format(mean[i][j]))
+            f.write('\n')
+    with open('dataUtah/stds.txt', 'w') as f:
+        for std in stds:
+            f.write('{:.3f}\n'.format(std))
+    with open('dataUtah/locations.txt', 'w') as f:
+        for i in range(num):
+            cell = lt.grid_location[i]
+            real_loc = lt.real_location[i]
+            f.write('{:3d} - '.format(cell[0]*lt.grid_len + cell[1]))
+            f.write('({:2d}, {:2d}) - '.format(cell[0], cell[1]))
+            f.write('({:5.2f}, {:5.2f})\n'.format(real_loc[0], real_loc[1]))
+
     errors = []
     for real_loc in lt.real_location:
         gridcell = lt.real_2_gridcell(real_loc)

@@ -12,11 +12,11 @@ if __name__ == '__main__':
     means, stds, locations = read_utah_data(path='dataUtah')
     lt = LocationTransform(locations, cell_len=1)
     
-    ll = Localization(grid_len=lt.grid_len, debug=True)
+    ll = Localization(grid_len=lt.grid_len, debug=False)
     ll.init_utah(means, stds, locations, lt, percentage=1.)
     
     num_of_intruders = 2
-    a, b = 0, 1
+    a, b = 0, 33
 
     errors = []
     misses = []
@@ -24,23 +24,21 @@ if __name__ == '__main__':
     power_errors = []
     ll.counter.num_exper = b-a
     ll.counter.time_start()
-    #for i in [2, 6, 10, 12, 13, 19]:
     for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)
-        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
-        random.seed(i)
         np.random.seed(i)
-        intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=1)
-
+        true_powers = [random.uniform(-0, 0) for i in range(num_of_intruders)]
+        intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=10)
         intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
-        break
         pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
+
         true_locations = ll.convert_to_pos(true_indices)
+        pred_locations_real = [lt.gridcell_2_real(cell) for cell in pred_locations]
 
         try:
-            error, miss, false_alarm, power_error = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
+            error, miss, false_alarm, power_error = ll.compute_error(intruders_real, true_powers, pred_locations_real, pred_power)
             if len(error) != 0:
                 errors.extend(error)
                 power_errors.extend(power_error)
@@ -53,6 +51,7 @@ if __name__ == '__main__':
             print(e)
 
     try:
+        plot_cdf(errors)
         errors = np.array(errors)
         power_errors = np.array(power_errors)
         print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \

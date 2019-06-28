@@ -47,7 +47,6 @@ class Localization:
     '''
     def __init__(self, grid_len, debug=False):
         self.grid_len = grid_len
-        self.sen_num  = 0
         self.grid_priori = np.zeros(0)
         self.grid_posterior = np.zeros(0)
         self.transmitters = []                 # transmitters are the hypothesises
@@ -69,7 +68,8 @@ class Localization:
         self.secondary_trans = []              # they include primary and secondary
         self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
         self.counter = Counter()               # timer
-        self.debug  = debug                    # debug mode do visulization stuff, which is time expensive 
+        self.debug  = debug                    # debug mode do visulization stuff, which is time expensive
+        self.utah   = False
 
 
     #@profile
@@ -96,7 +96,6 @@ class Localization:
                 x, y, std, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
                 self.sensors.append(Sensor(x, y, 1, cost, gain_up_bound=max_gain, index=index))  # uniform sensors
                 index += 1
-        self.sen_num = len(self.sensors)
 
         self.means = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
         self.stds = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
@@ -202,7 +201,9 @@ class Localization:
         
         if interpolate == True:                   # 14*14 = 196 hypothesis version
             self.grid_priori = np.full(self.grid_len * self.grid_len, 1./(self.grid_len*self.grid_len))
-
+        
+        self.utah = True
+        print('Init Utah success !')
 
 
     def set_priori(self):
@@ -454,16 +455,31 @@ class Localization:
 
 
 
-    def collect_sensors_in_radius_precompute(self, radius):
+    def collect_sensors_in_radius_precompute(self, radius, intruders):
         '''For every location, collect sensors within a radius, store them. Avoid computing over and over again
         Args:
             radius (list<int>)
+            intruders (list<Transmitter>): for Utah data only, to exclude the senser at the location of intruders
         '''
+        if self.utah:
+            intru_loc = []
+            for intru in intruders:
+                intru_loc.append((intru.x, intru.y))
+
         for r in radius:
             for l in range(len(self.transmitters)):
                 x = self.transmitters[l].x
                 y = self.transmitters[l].y
                 subset_sensors = self.collect_sensors_in_radius(r, Sensor(x, y))
+
+                if self.utah:          # for the utah data, a sensor cannot be at the location of an intruder
+                    sen_remove = []
+                    for sen in subset_sensors:
+                        if (self.sensors[sen].x, self.sensors[sen].y) in intru_loc:
+                            sen_remove.append(sen)
+                    for sen in sen_remove:
+                        subset_sensors.remove(sen)
+
                 self.sensors_collect[self.key.format(l, r)] = subset_sensors
 
 
@@ -489,13 +505,13 @@ class Localization:
             #sensor_output_from_transmitter = db_2_amplitude(self.means[trans_index, sen_index])
             #sensor_output -= sensor_output_from_transmitter
             #sensor_outputs[sen_index] = amplitude_2_db(sensor_output)
-            sensor_output = db_2_power_(sensor_outputs[sen_index])
-            #if sen_index == 6:
+            sensor_output = db_2_power_(sensor_outputs[sen_index], utah=self.utah)
+            # if sen_index == 35 or sen_index == 26:
             #    print(sensor_output)
-            sensor_output_from_transmitter = db_2_power_(self.means[trans_index, sen_index] + power)
+            sensor_output_from_transmitter = db_2_power_(self.means[trans_index, sen_index] + power, utah=self.utah)
             sensor_output -= sensor_output_from_transmitter
-            sensor_outputs[sen_index] = power_2_db_(sensor_output)
-            # if sen_index == 46 or sen_index == 102:
+            sensor_outputs[sen_index] = power_2_db_(sensor_output, utah=self.utah)
+            # if sen_index == 35 or sen_index == 26:
             #     print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
         sensor_outputs[np.isnan(sensor_outputs)] = -120
 
@@ -504,6 +520,9 @@ class Localization:
         '''Create intruders and return sensor outputs accordingly
         Args:
             true_indices (list): a list of integers (transmitter index)
+            powers       (list):
+            randomness   (bool):
+            utah         (bool): affect the formula used for decibel <--> power/amplitude
         Return:
             (list<Transmitters>, np.array<float>): a list of true transmitters and np.array of sensor outputs
         '''
@@ -518,13 +537,13 @@ class Localization:
             power = powers[i]                                # varies power
             for sen_index in range(len(self.sensors)):
                 if randomness:
-                    dBm = db_2_power_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, self.sensors[sen_index].std))
+                    dBm = db_2_power_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, self.sensors[sen_index].std), utah=self.utah)
                 else:
-                    dBm = db_2_power_(self.means[tran_x * self.grid_len + tran_y, sen_index] + power)
+                    dBm = db_2_power_(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, utah=self.utah)
                 sensor_outputs[sen_index] += dBm
                 #if sen_index == 182:
                 #    print('+', (tran_x, tran_y), power, dBm, sensor_outputs[sen_index])
-        sensor_outputs = power_2_db_(sensor_outputs)
+        sensor_outputs = power_2_db_(sensor_outputs, utah=self.utah)
         return (true_transmitters, sensor_outputs)
 
 
@@ -697,6 +716,8 @@ class Localization:
         Args:
             edge (int): this amount of edge is ignored at the boarders
         '''
+        if edge == 0:
+            return
         self.grid_priori[0:self.grid_len*edge] = self.grid_priori[-self.grid_len*edge:-1] = 0      # horizontal edge
         for i in range(edge):
             self.grid_priori[np.ix_(range(i, self.grid_len * self.grid_len, self.grid_len))] = 0  # vertical edge
@@ -710,9 +731,10 @@ class Localization:
         Return:
             (float): the customized q threshold
         '''
+        val = 1.9 if self.utah == False else 3.5
         prior = self.grid_priori[location]
-        outside = self.sen_num - inside
-        q = np.power(norm(0, 1).pdf(1.9), inside) * prior  # [1.5, 2] change smaller because of change of db - power ratio function
+        outside = len(self.sensors) - inside
+        q = np.power(norm(0, 1).pdf(val), inside) * prior  # [1.5, 2] change smaller because of change of db - power ratio function
         q *= np.power(0.6, outside)
         q *= np.power(3, inside)
         return q
@@ -728,12 +750,16 @@ class Localization:
         Return:
             (list): an element is a transmitter index (int)
         '''
+        threshold = -80
+        if self.utah:
+            threshold = -60
+
         prunes = []
         for tran in hypotheses:
             counter = 0
             subset_sensors = self.sensors_collect[self.key.format(tran, radius)]
             for sensor in subset_sensors:
-                if sensor_outputs[sensor] > -80:
+                if sensor_outputs[sensor] > threshold:
                     counter += 1
                 if counter == least_num_sensor:
                     break
@@ -844,24 +870,22 @@ class Localization:
             subset_sensors = np.array(subset_sensors)
             if len(subset_sensors) < 3:
                 likelihood = 0
-                #power_max = 0
+                power_max = 0
                 delta_p = 0
             else:
-                sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
-                sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
-                mean_vec = np.copy(trans.mean_vec)
-                mean_vec = mean_vec[subset_sensors]
-                variance = np.diagonal(self.covariance)[subset_sensors]
-                delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
-                mean_vec = mean_vec + delta_p  # add the delta of power
-                stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
-                array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
-                likelihood = np.prod(array_of_pdfs)
+                # sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
+                # sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+                # mean_vec = np.copy(trans.mean_vec)
+                # mean_vec = mean_vec[subset_sensors]
+                # variance = np.diagonal(self.covariance)[subset_sensors]
+                # delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                # mean_vec = mean_vec + delta_p  # add the delta of power
+                # stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+                # array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+                # likelihood = np.prod(array_of_pdfs)
 
-                '''
                 likelihood_max = 0
                 power_max = 0
-
                 for power in trans.powers:                       # varies power
                     sensor_outputs_copy = np.copy(sensor_outputs)
                     sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
@@ -876,13 +900,12 @@ class Localization:
                     if len(np.unique(trans.powers)) == 1:        # no varying power
                         break
                 likelihood = likelihood_max
-                '''
 
             likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant, len(subset_sensors))
 
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]
-            power_grid[trans.x][trans.y] = delta_p
-            #power_grid[trans.x][trans.y] = power_max
+            # power_grid[trans.x][trans.y] = delta_p
+            power_grid[trans.x][trans.y] = power_max
 
         # Also check the probability of no transmitter to avoid false alarms
         mean_vec = np.full(len(sensor_outputs), -80)
@@ -923,7 +946,7 @@ class Localization:
     def reset(self):
         '''Reset some members for our localization
         '''
-        self.sensors_used = np.zeros(self.sen_num, dtype=bool)
+        self.sensors_used = np.zeros(len(self.sensors), dtype=bool)
         self.sensors_collect = {}
 
 
@@ -941,8 +964,11 @@ class Localization:
         pred_power   = []
         print('Procedure 1')
         self.counter.time1_start()
-        R_list = [8, 6, 5, 4]
-        self.collect_sensors_in_radius_precompute(R_list)
+        if self.utah:
+            R_list = [5, 4, 3]
+        else:
+            R_list = [8, 6, 5, 4]
+        self.collect_sensors_in_radius_precompute(R_list, intruders)
         hypotheses = list(range(len(self.transmitters)))
         for R in R_list:
             identified_R, pred_power_R = self.procedure1(hypotheses, sensor_outputs, intruders, fig, R, identified)
@@ -952,20 +978,20 @@ class Localization:
             self.counter.proc_1 += len(identified_R)
         self.counter.time1_end()
 
-        print('\nProcedure 1.1')
-        self.counter.time2_start()
-        hypotheses = list(range(len(self.transmitters)))
-        for R in R_list:
-            identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
-            identified.extend(identified_R)
-            pred_power.extend(pred_power_R)
-            self.counter.proc_1_1 += len(identified_R)
-        self.counter.time2_end()
+        # print('\nProcedure 1.1')
+        # self.counter.time2_start()
+        # hypotheses = list(range(len(self.transmitters)))
+        # for R in R_list:
+        #     identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
+        #     identified.extend(identified_R)
+        #     pred_power.extend(pred_power_R)
+        #     self.counter.proc_1_1 += len(identified_R)
+        # self.counter.time2_end()
 
-        print('Procedure 2')
-        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
-        identified.extend(identified2)
-        pred_power.extend(pred_power2)
+        # print('Procedure 2')  # issue in test #6
+        # identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+        # identified.extend(identified2)
+        # pred_power.extend(pred_power2)
 
         return identified, pred_power
 
@@ -1157,6 +1183,8 @@ class Localization:
         Return:
             (int)
         '''
+        threshold_center   = -65 if self.utah == False else -60
+        threshold_surround = -75 if self.utah == False else -65
         sensor_outputs = np.copy(sensor_outputs)
         flag = True
         while flag:
@@ -1165,7 +1193,7 @@ class Localization:
                 if c not in center_list:
                     center = c                       # the first sensor that hasn't been a center before
                     break
-            if sensor_outputs[center] < -65:         # center's RSS has to > -65
+            if sensor_outputs[center] < threshold_center:         # center's RSS has to > -65
                 center = -1
                 flag = False
                 break
@@ -1181,7 +1209,7 @@ class Localization:
                 continue
             counter = 1
             for sen_index in range(len(self.sensors)):
-                if sensor_outputs[sen_index] > -75:  # inaccurate residual power during deleting intruders
+                if sensor_outputs[sen_index] > threshold_surround:  # inaccurate residual power during deleting intruders -75, for utah -65
                     dist = math.sqrt((self.sensors[sen_index].x - center_sensor.x)**2 + (self.sensors[sen_index].y - center_sensor.y)**2)
                     if dist >=1 and dist < R:
                         counter += 1
@@ -1207,7 +1235,10 @@ class Localization:
         Return:
             (list, list): list<(a, b)>, list<float>
         '''
-        self.ignore_boarders(edge=2)
+        if self.utah:
+            self.ignore_boarders(edge=0)
+        else:
+            self.ignore_boarders(edge=2)
         identified = []
         pred_power = []
         detected = True
