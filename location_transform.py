@@ -89,7 +89,7 @@ if __name__ == '__main__':
             real_loc = lt.real_location[i]
             f.write('{:3d} - '.format(cell[0]*lt.grid_len + cell[1]))
             f.write('({:2d}, {:2d}) - '.format(cell[0], cell[1]))
-            f.write('({:5.2f}, {:5.2f})\n'.format(real_loc[0], real_loc[1]))
+            f.write('({:7.4f}, {:7.4f})\n'.format(real_loc[0], real_loc[1]))
 
     errors = []
     for real_loc in lt.real_location:

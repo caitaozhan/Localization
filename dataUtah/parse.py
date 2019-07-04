@@ -45,7 +45,7 @@ class Point:
         self.y = y
     
     def __str__(self):
-        return '({}, {})'.format(self.x, self.y)
+        return '{},{}'.format(self.x, self.y)
 
 
 class Segment:
@@ -79,7 +79,7 @@ class Wall:
             p1, p2 = seg.p1, seg.p2
             if Wall.doIntersect(p1, p2, p3, p4):
                 counter += 1
-                print(seg)
+                # print(seg)
         return counter
 
     @staticmethod
@@ -142,8 +142,8 @@ class Wall:
         return False
 
 
-def read_utah_wall():
-    with open('dataUtah/wall_raw.txt', 'r') as f:
+def read_utah_wall(filename):
+    with open(filename, 'r') as f:
         wall = Wall()
         for line in f:
             line = line.replace('\n', '')
@@ -156,13 +156,49 @@ def read_utah_wall():
             wall.add(seg)
     return wall
 
+def preprocess_rawdata(input_filename, output_filename):
+    '''Convert the raw pixels into coordinates, write to a file
+    Args:
+        wall (Wall)
+    '''
+    anchor1_pix = (92, 69)              # point 1  in utah floor map, minimal x
+    anchor2_pix = (432, 490)            # point 30 in utah floor map, minimal y
+    anchor1     = (-4.1148, 12.1158)
+    anchor2     = ( 4.5720, -0.2286)
+    min_x_pix   = 92
+    min_y_pix   = 490
+    min_x       = -4.1148
+    min_y       = -0.2286
+    step_x      = (anchor2[0] - anchor1[0]) / (anchor2_pix[0] - anchor1_pix[0])
+    step_y      = (anchor2[1] - anchor1[1]) / (anchor2_pix[1] - anchor1_pix[1])
+    
+    outfile = open(output_filename, 'w')
+    with open(input_filename, 'r') as f:
+        for line in f:
+            line = line.replace('\n', '')
+            point1, point2 = line.split(' ')
+            
+            x_pix, y_pix = point1.split(',')
+            p1 = Point(float(x_pix), float(y_pix))
+            p1.x = min_x + (p1.x - min_x_pix)*step_x
+            p1.y = min_y + (p1.y - min_y_pix)*step_y
+
+            x_pix, y_pix = point2.split(',')
+            p2 = Point(float(x_pix), float(y_pix))
+            p2.x = min_x + (p2.x - min_x_pix)*step_x
+            p2.y = min_y + (p2.y - min_y_pix)*step_y
+
+            print('{:.2f},{:.2f} {:.2f},{:.2f}'.format(p1.x, p1.y, p2.x, p2.y), file=outfile)
+    outfile.close()
+
 
 if __name__ == '__main__':
-    wall = read_utah_wall()
-    p1 = Point(400, 125)
-    p2 = Point(596, 125)
-    num = wall.count_intersect(p1, p2)
-    print(num)
+    wall = read_utah_wall('dataUtah/wall_raw.txt')
+    preprocess_rawdata('dataUtah/wall_raw.txt', 'dataUtah/wall.txt')
+    # p1 = Point(100, 124)
+    # p2 = Point(596, 124)
+    # num = wall.count_intersect(p1, p2)
+    # print(num)
     # mean, stds, locations = read_utah_data()
     # print(mean)
     # print(stds)
