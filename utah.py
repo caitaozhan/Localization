@@ -9,11 +9,11 @@ from plots import visualize_localization
 
 
 if __name__ == '__main__':
-    means, stds, locations = read_utah_data(path='dataUtah')
+    means, stds, locations, wall = read_utah_data(path='dataUtah')
     lt = LocationTransform(locations, cell_len=1)
-    
+
     ll = Localization(grid_len=lt.grid_len, debug=False)
-    ll.init_utah(means, stds, locations, lt, percentage=1.)
+    ll.init_utah(means, stds, locations, lt, wall, percentage=1., interpolate=True)
     
     num_of_intruders = 2
     a, b = 0, 33
