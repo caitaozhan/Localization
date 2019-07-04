@@ -39,8 +39,131 @@ def read_utah_data():
     return mean, np.mean(stds, 0), locations
 
 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def __str__(self):
+        return '({}, {})'.format(self.x, self.y)
+
+
+class Segment:
+    def __init__(self, point1, point2):
+        self.p1 = point1
+        self.p2 = point2
+    
+    def __str__(self):
+        return '{} -- {}'.format(str(self.p1), str(self.p2))
+
+
+class Wall:
+    def __init__(self):
+        self.wall = []
+
+    def __str__(self):
+        return '\n'.join(map(str, self.wall))
+
+    def add(self, segment):
+        self.wall.append(segment)
+
+    def count_intersect(self, p3, p4):
+        '''Count the number of intersections between segment p3-p4 and all the walls
+        Args:
+            p3, p4 (Point)
+        Return:
+            (bool)
+        '''
+        counter = 0
+        for seg in self.wall:
+            p1, p2 = seg.p1, seg.p2
+            if Wall.doIntersect(p1, p2, p3, p4):
+                counter += 1
+                print(seg)
+        return counter
+
+    @staticmethod
+    def onSegment(p1, p2, p3):
+        '''Given 3 colinear points p1, p2, p3, checks if p2 lies on segment p1-p3
+        Args:
+            p1, p2, p3 (Point)
+        Return:
+            (bool)
+        '''
+        if (p2.x <= max(p1.x, p3.x) and p2.x >= min(p1.x, p3.x) and p2.y <= max(p1.y, p3.y) and p2.y >= min(p1.y, p3.y)):
+            return True
+        return False
+    
+    @staticmethod
+    def orientation(p1, p2, p3):
+        '''Find the orientation of ordered triplet (p1, p2, p3)
+        Args:
+            p1, p2, p3 (Point)
+        Return:
+            (int)
+            0 --> p1, p2, p3 are colinear
+            1 --> p1, p2, p3 clockwise
+            2 --> p1, p2, p3 counter clockwise
+        '''
+        val = (p2.y - p1.y)*(p3.x - p2.x) - (p3.y - p2.y)*(p2.x - p1.x)
+
+        if val == 0:
+            return 0
+        if val > 0:
+            return 1
+        if val < 0:
+            return 2
+    
+    @staticmethod
+    def doIntersect(p1, p2, p3, p4):
+        '''Check if segment p1-p2 and p3-p4 intersect
+        Args:
+            p1, p2, p3, p4 (Point)
+        Return:
+            (bool)
+        '''
+        o1 = Wall.orientation(p1, p2, p3)
+        o2 = Wall.orientation(p1, p2, p4)
+        o3 = Wall.orientation(p3, p4, p1)
+        o4 = Wall.orientation(p3, p4, p2)
+
+        if o1 != o2 and o3 != o4:
+            return True
+        
+        if o1 == 0 and Wall.onSegment(p1, p3, p2):
+            return True
+        if o2 == 0 and Wall.onSegment(p1, p4, p2):
+            return True
+        if o3 == 0 and Wall.onSegment(p3, p1, p4):
+            return True
+        if o4 == 0 and Wall.onSegment(p3, p2, p4):
+            return True
+
+        return False
+
+
+def read_utah_wall():
+    with open('dataUtah/wall_raw.txt', 'r') as f:
+        wall = Wall()
+        for line in f:
+            line = line.replace('\n', '')
+            point1, point2 = line.split(' ')
+            x, y = point1.split(',')
+            p1 = Point(float(x), float(y))
+            x, y = point2.split(',')
+            p2 = Point(float(x), float(y))
+            seg = Segment(p1, p2)
+            wall.add(seg)
+    return wall
+
+
 if __name__ == '__main__':
-    mean, stds, locations = read_utah_data()
-    print(mean)
-    print(stds)
-    print(locations)
+    wall = read_utah_wall()
+    p1 = Point(400, 125)
+    p2 = Point(596, 125)
+    num = wall.count_intersect(p1, p2)
+    print(num)
+    # mean, stds, locations = read_utah_data()
+    # print(mean)
+    # print(stds)
+    # print(locations)

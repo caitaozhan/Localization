@@ -189,7 +189,7 @@ def generate_intruders_utah(grid_len, locations, lt, num, min_dist):
     num_loc   = len(locations)
     while counter < num:
         trials += 1
-        if trials < 500:
+        if trials < 1000:
             tmp = random.sample(range(num_loc), 1)[0]
             x, y = locations[tmp]
             flag = True
