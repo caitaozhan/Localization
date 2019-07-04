@@ -193,13 +193,25 @@ def preprocess_rawdata(input_filename, output_filename):
 
 
 if __name__ == '__main__':
-    wall = read_utah_wall('dataUtah/wall_raw.txt')
-    preprocess_rawdata('dataUtah/wall_raw.txt', 'dataUtah/wall.txt')
+    wall = read_utah_wall('dataUtah/wall.txt')
+    # preprocess_rawdata('dataUtah/wall_raw.txt', 'dataUtah/wall.txt')
     # p1 = Point(100, 124)
     # p2 = Point(596, 124)
     # num = wall.count_intersect(p1, p2)
     # print(num)
-    # mean, stds, locations = read_utah_data()
+    mean, stds, locations = read_utah_data()
     # print(mean)
     # print(stds)
     # print(locations)
+    try:
+        while True:
+            p1 = input('Enter point 1: ')
+            p2 = input('Enter point 2: ')
+            p1, p2 = int(p1), int(p2)
+            x, y = locations[p1-1]
+            p1 = Point(x, y)
+            x, y = locations[p2-1]
+            p2 = Point(x, y)
+            print('Num of walls: ', wall.count_intersect(p1, p2), '\n')
+    except Exception as e:
+        print(e)

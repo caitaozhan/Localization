@@ -19,6 +19,7 @@ from sklearn.cluster import KMeans
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2
+from waf_model import WAF
 from skimage.feature import peak_local_max
 import itertools
 import line_profiler
@@ -163,7 +164,7 @@ class Localization:
         print('\ninit done!')
 
 
-    def init_utah(self, means, stds, locations, lt, percentage=1., interpolate=False):
+    def init_utah(self, means, stds, locations, lt, wall, percentage=1., interpolate=False):
         '''Initialize from the Utah data
         Args:
             means (np.ndarray, n=2)
@@ -201,7 +202,8 @@ class Localization:
         
         if interpolate == True:                   # 14*14 = 196 hypothesis version
             self.grid_priori = np.full(self.grid_len * self.grid_len, 1./(self.grid_len*self.grid_len))
-        
+            waf = WAF(means, locations, lt, wall)
+            print(waf.predict( (locations[0][0], locations[0][1]), (locations[43][0], locations[43][1]) ))
         self.utah = True
         print('Init Utah success !')
 
