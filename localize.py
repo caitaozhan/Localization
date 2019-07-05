@@ -16,6 +16,7 @@ from utility import read_config, ordered_insert, power_2_db, power_2_db_, db_2_p
 from counter import Counter
 from itertools import combinations
 from sklearn.cluster import KMeans
+from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2
@@ -203,7 +204,20 @@ class Localization:
         if interpolate == True:                   # 14*14 = 196 hypothesis version
             self.grid_priori = np.full(self.grid_len * self.grid_len, 1./(self.grid_len*self.grid_len))
             waf = WAF(means, locations, lt, wall)
-            print(waf.predict( (locations[0][0], locations[0][1]), (locations[43][0], locations[43][1]) ))
+            preds = []
+            trues  = []
+            for i in range(len(locations)):
+                for j in range(len(locations)):
+                    if i == j:
+                        continue
+                    tx = (locations[i][0], locations[i][1])
+                    rx = (locations[j][0], locations[j][1])
+                    pred = waf.predict(tx , rx)
+                    preds.append(pred)
+                    trues.append(means[i][j])
+                    error = pred - means[i][j]
+                    print('(Tx, RX) = ({:2d}, {:2d}), True = {:5.2f}, Pred = {:5.2f}, Error = {:5.2f}'.format(i+1, j+1, means[i][j], pred, error))
+            print('Root mean squared error = {:4.2f}\nMedian absolute error = {:4.2f}'.format(math.sqrt(mean_squared_error(trues, preds)), median_absolute_error(trues, preds)))
         self.utah = True
         print('Init Utah success !')
 

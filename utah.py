@@ -14,7 +14,8 @@ if __name__ == '__main__':
 
     ll = Localization(grid_len=lt.grid_len, debug=False)
     ll.init_utah(means, stds, locations, lt, wall, percentage=1., interpolate=True)
-    
+
+    '''
     num_of_intruders = 2
     a, b = 0, 33
 
@@ -62,7 +63,7 @@ if __name__ == '__main__':
         print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(ll.counter.time1_average(), ll.counter.time2_average(), ll.counter.time3_average(), ll.counter.time4_average()))
     except Exception as e:
         print(e)
-
+    '''
 
     # print(mean)
     # print(stds)

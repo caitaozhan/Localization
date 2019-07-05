@@ -1,2 +1,3 @@
 export PYTHONWARNINGS="ignore"
 alias pyl='python localize.py'
+alias pyu='python utah.py'
