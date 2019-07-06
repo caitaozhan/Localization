@@ -208,6 +208,34 @@ def generate_intruders_utah(grid_len, locations, lt, num, min_dist):
     return intruders_real, intruders_grid
 
 
+def set_intruders_utah(true_indices, powers, means, grid_loc, ll, randomness=False):
+    '''
+    '''
+    true_transmitters = []
+    for i in true_indices:
+        true_transmitters.append(ll.transmitters[i])
+    sensor_outputs = np.zeros(len(ll.sensors))
+    for i in range(len(true_transmitters)):
+        tran_x = true_transmitters[i].x
+        tran_y = true_transmitters[i].y
+        indx = 0
+        for j, loc in enumerate(grid_loc):
+            if (tran_x, tran_y) == tuple(loc):
+                indx = j
+                break
+        power = powers[i]                                # varies power
+        for sen_index in range(len(ll.sensors)):
+            if randomness:
+                dBm = db_2_power_(np.random.normal(means[indx, sen_index] + power, ll.sensors[sen_index].std), utah=ll.utah)
+            else:
+                dBm = db_2_power_(means[indx, sen_index] + power, utah=ll.utah)
+            sensor_outputs[sen_index] += dBm
+            #if sen_index == 182:
+            #    print('+', (tran_x, tran_y), power, dBm, sensor_outputs[sen_index])
+    sensor_outputs = power_2_db_(sensor_outputs, utah=ll.utah)
+    return (true_transmitters, sensor_outputs)
+
+
 def generate_intruders(grid_len, edge, num, min_dist, powers):
     '''
     Args:

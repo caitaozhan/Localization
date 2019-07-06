@@ -169,55 +169,83 @@ class Localization:
         '''Initialize from the Utah data
         Args:
             means (np.ndarray, n=2)
-            stdss (np.ndarray, n=1)
+            stds  (np.ndarray, n=1)
             locations (np.ndarray, n=2)
             lt (LocationTransform)
             percentage (float): percentage of training examples used
         '''
-        num = int(len(means) * percentage)
-        select = sorted(random.sample(range(len(means)), num))
-        means  = means[np.ix_(select, select)]
-        stds   = stds[select]
-        locations = locations[select, :]
-        grid_locs = lt.grid_location[select, :]
-        self.covariance = np.zeros((num, num))
-        for i in range(num):
-            self.covariance[i][i] = stds[i]**2    # init covariance
-        
+        num_loc = len(means)
+        self.means = np.zeros((self.grid_len * self.grid_len, num_loc))
+        self.stds  = np.zeros((self.grid_len * self.grid_len, num_loc))
+        grid_locs = lt.grid_location
         self.sensors = []
-        for i in range(num):
+        for i in range(num_loc):                   # sensor will always be 44
             self.sensors.append(Sensor(x=grid_locs[i][0], y=grid_locs[i][1], std=stds[i], index=i))
+        self.covariance = np.zeros((num_loc, num_loc))
 
-        self.means = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
-        self.stds  = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
-
-        if interpolate == False:                  # 44 hypothesis version
+        if interpolate == False:                   # 44 hypothesis, 44 sensor version
+            for i in range(num_loc):
+                self.covariance[i][i] = stds[i]**2 # init covariance
             self.grid_priori = np.zeros(self.grid_len * self.grid_len)
-            for cell in grid_locs:                # init prior grid
-                self.grid_priori[cell[0]*self.grid_len + cell[1]] = 1./num
-            for i in range(num):
-                x, y = grid_locs[i]               # init distributions: mean and std
+            for cell in grid_locs:                 # init prior grid
+                self.grid_priori[cell[0]*self.grid_len + cell[1]] = 1./num_loc
+            for i in range(num_loc):
+                x, y = grid_locs[i]                # init distributions: mean and std
                 self.means[x*self.grid_len + y, :] = means[i]
-                self.stds[x*self.grid_len + y, :]  = np.array(self.grid_len, stds[i])
+                self.stds[x*self.grid_len + y, :]  = np.full(num_loc, stds[i])
                 self.transmitters[x*self.grid_len + y].mean_vec = means[i]
-        
-        if interpolate == True:                   # 14*14 = 196 hypothesis version
+
+        if interpolate == True:                    # 14*14 = 196 hypothesis, 44 sensor version
+            num_loc_small = int(len(means) * percentage)  # a smaller number of locations
+            select = sorted(random.sample(range(len(means)), num_loc_small))  # select a smaller number of locations
+            means  = means[np.ix_(select, select)]
+            stds   = stds[select]
+            locations = locations[select, :]
+            grid_locs = lt.grid_location[select, :]
             self.grid_priori = np.full(self.grid_len * self.grid_len, 1./(self.grid_len*self.grid_len))
+            for i in range(num_loc_small):
+                loc = select[i]
+                self.covariance[loc][loc] = stds[i]**2 # init covariance
+            for i in range(num_loc):
+                if self.covariance[i][i] == 0:
+                    self.covariance[i][i] = random.choice(stds) ** 2  # randomly interpolate the sensors not in select
+            stds = np.zeros(num_loc)
+            for i in range(num_loc):
+                stds[i] = math.sqrt(self.covariance[i][i])
+
             waf = WAF(means, locations, lt, wall)
-            preds = []
-            trues  = []
-            for i in range(len(locations)):
-                for j in range(len(locations)):
-                    if i == j:
-                        continue
-                    tx = (locations[i][0], locations[i][1])
-                    rx = (locations[j][0], locations[j][1])
-                    pred = waf.predict(tx , rx)
-                    preds.append(pred)
-                    trues.append(means[i][j])
-                    error = pred - means[i][j]
-                    print('(Tx, RX) = ({:2d}, {:2d}), True = {:5.2f}, Pred = {:5.2f}, Error = {:5.2f}'.format(i+1, j+1, means[i][j], pred, error))
-            print('Root mean squared error = {:4.2f}\nMedian absolute error = {:4.2f}'.format(math.sqrt(mean_squared_error(trues, preds)), median_absolute_error(trues, preds)))
+            
+            for i in range(num_loc_small):
+                x, y = grid_locs[i]
+                self.means[x*self.grid_len + y, select] = means[i]
+            
+            for i in range(self.grid_len):
+                for j in range(self.grid_len):
+                    for s in range(num_loc):
+                        if self.means[i*self.grid_len + j, s] == 0:
+                            tx = (i, j)
+                            rx = (self.sensors[s].x, self.sensors[s].y)
+                            if tx == rx:
+                                continue
+                            rss_pred = waf.predict(tx, rx)
+                            self.means[i*self.grid_len + j, s] = rss_pred
+                    self.stds[x*self.grid_len + y, :]  = np.full(num_loc, stds[i])
+                    self.transmitters[i*self.grid_len + j].mean_vec = self.means[i*self.grid_len + j]
+                    
+            # preds = []
+            # trues  = []
+            # for i in range(len(locations)):
+            #     for j in range(len(locations)):
+            #         if i == j:
+            #             continue
+            #         tx = (locations[i][0], locations[i][1])
+            #         rx = (locations[j][0], locations[j][1])
+            #         pred = waf.predict(tx , rx)
+            #         preds.append(pred)
+            #         trues.append(means[i][j])
+            #         error = pred - means[i][j]
+            #         print('(Tx, Rx) = ({:2d}, {:2d}), True = {:5.2f}, Pred = {:5.2f}, Error = {:5.2f}'.format(i+1, j+1, means[i][j], pred, error))
+            # print('Root mean squared error = {:4.2f}\nMedian absolute error = {:4.2f}'.format(math.sqrt(mean_squared_error(trues, preds)), median_absolute_error(trues, preds)))
         self.utah = True
         print('Init Utah success !')
 
