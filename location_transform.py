@@ -63,7 +63,7 @@ class LocationTransform:
         '''
         x = self.x_min + (gridcell[0] + 0.5)*self.cell_len  # 0.5 represents the center of grid cell
         y = self.y_min + (gridcell[1] + 0.5)*self.cell_len
-        return [x, y]
+        return [round(x, 4), round(y, 4)]
 
 
 if __name__ == '__main__':

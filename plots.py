@@ -118,8 +118,6 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
 
     for index, sensor in enumerate(sensors):
         color = sensor_outputs[index]
-        if index == 36:
-            print(color)
         grid[sensor.x][sensor.y] = color
     for intr in intruders:
         grid[intr.x][intr.y] = 1

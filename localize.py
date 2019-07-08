@@ -19,11 +19,12 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
-from utility import generate_intruders, generate_intruders_2
+from utility import generate_intruders, generate_intruders_2, distance, Point
 from waf_model import WAF
 from skimage.feature import peak_local_max
 import itertools
 import line_profiler
+import matplotlib.pyplot as plt
 
 
 class Localization:
@@ -198,6 +199,8 @@ class Localization:
         if interpolate == True:                    # 14*14 = 196 hypothesis, 44 sensor version
             num_loc_small = int(len(means) * percentage)  # a smaller number of locations
             select = sorted(random.sample(range(len(means)), num_loc_small))  # select a smaller number of locations
+            if self.debug:
+                print(select)
             means  = means[np.ix_(select, select)]
             stds   = stds[select]
             locations = locations[select, :]
@@ -208,7 +211,8 @@ class Localization:
                 self.covariance[loc][loc] = stds[i]**2 # init covariance
             for i in range(num_loc):
                 if self.covariance[i][i] == 0:
-                    self.covariance[i][i] = random.choice(stds) ** 2  # randomly interpolate the sensors not in select
+                    # self.covariance[i][i] = random.choice(stds) ** 2  # randomly interpolate the sensors not in select
+                    self.covariance[i][i] = 5 ** 2  # a large std
             stds = np.zeros(num_loc)
             for i in range(num_loc):
                 stds[i] = math.sqrt(self.covariance[i][i])
@@ -231,21 +235,40 @@ class Localization:
                             self.means[i*self.grid_len + j, s] = rss_pred
                     self.stds[x*self.grid_len + y, :]  = np.full(num_loc, stds[i])
                     self.transmitters[i*self.grid_len + j].mean_vec = self.means[i*self.grid_len + j]
-                    
+            
+            
+            # X = []
             # preds = []
             # trues  = []
+            # less2 = []
             # for i in range(len(locations)):
             #     for j in range(len(locations)):
             #         if i == j:
             #             continue
             #         tx = (locations[i][0], locations[i][1])
             #         rx = (locations[j][0], locations[j][1])
+            #         dist = distance(tx, rx)
+            #         X.append(dist)
             #         pred = waf.predict(tx , rx)
             #         preds.append(pred)
             #         trues.append(means[i][j])
             #         error = pred - means[i][j]
-            #         print('(Tx, Rx) = ({:2d}, {:2d}), True = {:5.2f}, Pred = {:5.2f}, Error = {:5.2f}'.format(i+1, j+1, means[i][j], pred, error))
+            #         tx = Point(tx[0], tx[1])
+            #         rx = Point(rx[0], rx[1])
+            #         nW = waf.wall.count_intersect(tx, rx)
+            #         if dist < 2 and nW == 0:
+            #             less2.append(error)
+            #             print('(Tx, Rx) = ({:2d}, {:2d}), True = {:5.2f}, Pred = {:5.2f}, Error = {:5.2f}'.format(select[i]+1, select[j]+1, means[i][j], pred, error))
             # print('Root mean squared error = {:4.2f}\nMedian absolute error = {:4.2f}'.format(math.sqrt(mean_squared_error(trues, preds)), median_absolute_error(trues, preds)))
+            # print(np.array(less2).mean())
+            # plt.rcParams['font.size'] = 20
+            # plt.figure(figsize=(10, 10))
+            # plt.scatter(X, preds)
+            # plt.title('Wall Attenuation Factor Model')
+            # plt.xlabel('Distance (m)')
+            # plt.ylim([-85, -30])
+            # plt.ylabel('RSS (dBm)')
+            # plt.savefig('visualize/RSS-dist-wallmodel.png')
         self.utah = True
         print('Init Utah success !')
 
@@ -558,6 +581,7 @@ class Localization:
             # if sen_index == 35 or sen_index == 26:
             #     print('-', trans_pos, power, sensor_output_from_transmitter, sensor_output, sensor_outputs[sen_index])
         sensor_outputs[np.isnan(sensor_outputs)] = -120
+        sensor_outputs[np.isinf(sensor_outputs)] = -120
 
 
     def set_intruders(self, true_indices, powers, randomness = False):
@@ -726,7 +750,7 @@ class Localization:
         errors = []              # distance error
         power_errors = []         # power error
         detected = 0
-        threshold = self.grid_len / 5
+        threshold = self.grid_len
         for match in matches:
             error = match[2]
             if error <= threshold:
@@ -796,7 +820,7 @@ class Localization:
         '''
         threshold = -80
         if self.utah:
-            threshold = -60
+            threshold = -65
 
         prunes = []
         for tran in hypotheses:
@@ -902,7 +926,7 @@ class Localization:
         power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
         constant = 3
-        self.prune_hypothesis(hypotheses, sensor_outputs, radius)
+        self.prune_hypothesis(hypotheses, sensor_outputs, radius, least_num_sensor=1)  # the Utah dataset is small, don't need to prune
         for trans in self.transmitters: #For each location, first collect sensors in vicinity
             if self.grid_priori[trans.x * self.grid_len + trans.y] == 0 or trans.hypothesis not in hypotheses:
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
@@ -1316,8 +1340,8 @@ class Localization:
                 self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
                 sen_inside = len(subset_sensors)
                 q_threshold = self.get_q_threshold_custom(location, sen_inside)
-                print('Q =', q, end='; ')
-                print('q-threshold = {}, inside = {}'.format(q_threshold, sen_inside), end=' ')
+                print('Q = {:.2e}'.format(q), end='; ')
+                print('q-threshold = {:.2e}, inside = {}'.format(q_threshold, sen_inside), end=' ')
                 if q > q_threshold:
                     print(' **Intruder!**')
                     detected = True

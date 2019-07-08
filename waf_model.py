@@ -111,4 +111,33 @@ class WAF:
         rx = Point(rx[0], rx[1])
         nW = self.wall.count_intersect(tx, rx)
         nW = nW if nW <= self.C else self.C
+        # offset = 0
+        # if dist < 2 and nW == 0:
+        #     offset = 6.37
         return self.p_d0 - 10*self.n*math.log10(dist/self.d0) - nW*self.waf + self.intercept
+    
+
+    def correct(self):
+        X, Y = [], []
+        for i in range(len(self.locations)):
+            for j in range(len(self.locations)):
+                if i == j:
+                    continue
+                dist = distance(self.locations[i], self.locations[j])
+                tx = Point(self.locations[i][0], self.locations[i][1])
+                rx = Point(self.locations[j][0], self.locations[j][1])
+                nW = self.wall.count_intersect(tx, rx)
+                nW = nW if nW <= self.C else self.C
+                X.append(dist)
+                Y.append(self.means[i][j] + nW*self.waf)
+                # Y.append(self.means[i][j])
+        
+        plt.rcParams['font.size'] = 20
+        plt.figure(figsize=(10, 10))
+        plt.scatter(np.log10(X), Y)
+        # plt.scatter(X, Y)
+        plt.title('Wall Correction')
+        plt.xlabel('Log Distance (m)')
+        plt.ylabel('RSS (dBm)')
+        plt.ylim([-85, -30])
+        plt.savefig('visualize/RSS-logdist-wallcorrect.png')

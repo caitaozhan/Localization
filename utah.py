@@ -8,7 +8,7 @@ from localize import Localization
 from plots import visualize_localization
 
 
-if __name__ == '__main__':
+def main1():
     random.seed(0)
     np.random.seed(0)
     means, stds, locations, wall = read_utah_data(path='dataUtah')
@@ -27,6 +27,7 @@ if __name__ == '__main__':
     ll.counter.num_exper = b-a-2
     ll.counter.time_start()
     for i in range(a, b):
+    # for i in [97]:
         if i == 34 or i == 65:
             continue
         print('\n\nTest ', i)
@@ -35,9 +36,12 @@ if __name__ == '__main__':
         true_powers = [random.uniform(-0, 0) for i in range(num_of_intruders)]
         intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=10)
         # intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
-        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=True)
+        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=False)
         pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
 
+        print('True', end=' ')
+        for intru in intruders:
+            print(intru)
         true_locations = ll.convert_to_pos(true_indices)
         pred_locations_real = [lt.gridcell_2_real(cell) for cell in pred_locations]
 
@@ -55,7 +59,8 @@ if __name__ == '__main__':
             print(e)
 
     try:
-        plot_cdf(errors)
+        # plot_cdf(errors)
+        np.savetxt('visualize/utah/0.7.txt', errors, delimiter=',')
         errors = np.array(errors)
         power_errors = np.array(power_errors)
         print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
@@ -80,3 +85,6 @@ if __name__ == '__main__':
     #     errors.append(error)
     #     print('({:5.2f}, {:5.2f}) -> ({:2d}, {:2d}) -> ({:5.2f}, {:5.2f}); error = {:3.2f}'.format(real_loc[0], real_loc[1], gridcell[0], gridcell[1], real_loc2[0], real_loc2[1], error))
     # plot_cdf(errors)
+
+if __name__ == '__main__':
+    main1()
