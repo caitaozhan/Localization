@@ -20,6 +20,7 @@ from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2, distance, Point
+from config import Config
 from waf_model import WAF
 from skimage.feature import peak_local_max
 import itertools
@@ -47,8 +48,9 @@ class Localization:
         TPB (int):                   thread per block
         legal_transmitter (list):    a list of legal transmitters
         lookup_table (np.array):     trade space for time on the q function
+        config (Config):             'lognormal', 'splat', 'utah'
     '''
-    def __init__(self, grid_len, debug=False):
+    def __init__(self, grid_len, case='lognormal', debug=False):
         self.grid_len = grid_len
         self.grid_priori = np.zeros(0)
         self.grid_posterior = np.zeros(0)
@@ -73,6 +75,8 @@ class Localization:
         self.counter = Counter()               # timer
         self.debug  = debug                    # debug mode do visulization stuff, which is time expensive
         self.utah   = False
+        self.config = Config.naive_factory(case)
+        print(self.config)
 
 
     #@profile
@@ -687,7 +691,7 @@ class Localization:
 
         errors = []              # distance error
         detected = 0
-        threshold = self.grid_len
+        threshold = self.grid_len * self.config.error_threshold
         for match in matches:
             error = match[2]
             if error <= threshold:
@@ -750,7 +754,7 @@ class Localization:
         errors = []              # distance error
         power_errors = []         # power error
         detected = 0
-        threshold = self.grid_len
+        threshold = self.grid_len * self.config.error_threshold
         for match in matches:
             error = match[2]
             if error <= threshold:
@@ -799,7 +803,7 @@ class Localization:
         Return:
             (float): the customized q threshold
         '''
-        val = 1.9 if self.utah == False else 3.5
+        val = self.config.Q
         prior = self.grid_priori[location]
         outside = len(self.sensors) - inside
         q = np.power(norm(0, 1).pdf(val), inside) * prior  # [1.5, 2] change smaller because of change of db - power ratio function
@@ -818,9 +822,7 @@ class Localization:
         Return:
             (list): an element is a transmitter index (int)
         '''
-        threshold = -80
-        if self.utah:
-            threshold = -65
+        threshold = self.config.noise_floor_prune
 
         prunes = []
         for tran in hypotheses:
@@ -921,7 +923,6 @@ class Localization:
             q (np.array): 2D array of Q
             power_grid (np.array): 2D array of power
         '''
-        position_to_check = []
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
         power_grid = np.zeros((self.grid_len, self.grid_len))
         out_prob = 0.2 # probability of sensor outside the radius
@@ -931,8 +932,6 @@ class Localization:
             if self.grid_priori[trans.x * self.grid_len + trans.y] == 0 or trans.hypothesis not in hypotheses:
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
                 continue
-            if (trans.x, trans.y) in position_to_check:
-                print(trans.x, trans.y)
             subset_sensors = self.sensors_collect[self.key.format(trans.hypothesis, radius)]
             self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
             subset_sensors = np.array(subset_sensors)
@@ -996,8 +995,6 @@ class Localization:
         for trans in self.transmitters:
             if self.grid_posterior[trans.x * self.grid_len + trans.y] == 0:
                 continue
-            if (trans.x, trans.y) in position_to_check:
-                pass #print(self.grid_posterior[trans.x * self.grid_len + trans.y])
             min_x = int(max(0, trans.x - radius))
             max_x = int(min(trans.x + radius, self.grid_len - 1))
             min_y = int(max(0, trans.y - radius))
@@ -1032,10 +1029,7 @@ class Localization:
         pred_power   = []
         print('Procedure 1')
         self.counter.time1_start()
-        if self.utah:
-            R_list = [5, 4, 3]
-        else:
-            R_list = [8, 6, 5, 4]
+        R_list = self.config.R_list
         self.collect_sensors_in_radius_precompute(R_list, intruders)
         hypotheses = list(range(len(self.transmitters)))
         for R in R_list:
@@ -1046,20 +1040,20 @@ class Localization:
             self.counter.proc_1 += len(identified_R)
         self.counter.time1_end()
 
-        # print('\nProcedure 1.1')
-        # self.counter.time2_start()
-        # hypotheses = list(range(len(self.transmitters)))
-        # for R in R_list:
-        #     identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
-        #     identified.extend(identified_R)
-        #     pred_power.extend(pred_power_R)
-        #     self.counter.proc_1_1 += len(identified_R)
-        # self.counter.time2_end()
+        print('\nProcedure 1.1')
+        self.counter.time2_start()
+        hypotheses = list(range(len(self.transmitters)))
+        for R in R_list:
+            identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
+            identified.extend(identified_R)
+            pred_power.extend(pred_power_R)
+            self.counter.proc_1_1 += len(identified_R)
+        self.counter.time2_end()
 
-        # print('Procedure 2')  # issue in test #6
-        # identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
-        # identified.extend(identified2)
-        # pred_power.extend(pred_power2)
+        print('Procedure 2')  # issue in test #6
+        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+        identified.extend(identified2)
+        pred_power.extend(pred_power2)
 
         return identified, pred_power
 
@@ -1251,8 +1245,8 @@ class Localization:
         Return:
             (int)
         '''
-        threshold_center   = -65 if self.utah == False else -60
-        threshold_surround = -75 if self.utah == False else -65
+        threshold_center   = self.config.center_threshold
+        threshold_surround = self.config.surround_threshold
         sensor_outputs = np.copy(sensor_outputs)
         flag = True
         while flag:
@@ -1303,10 +1297,7 @@ class Localization:
         Return:
             (list, list): list<(a, b)>, list<float>
         '''
-        if self.utah:
-            self.ignore_boarders(edge=0)
-        else:
-            self.ignore_boarders(edge=2)
+        self.ignore_boarders(edge=self.config.edge)
         identified = []
         pred_power = []
         detected = True

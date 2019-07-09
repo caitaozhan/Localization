@@ -172,7 +172,7 @@ def get_distance(grid_len, index1, index2):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 
-def generate_intruders_utah(grid_len, locations, lt, num, min_dist):
+def generate_intruders_utah(grid_len, locations, lt, num, min_dist=0, max_dist=20):
     '''
     Args:
         locations (np.ndarray, n=2): the 44 real number locations
@@ -192,13 +192,11 @@ def generate_intruders_utah(grid_len, locations, lt, num, min_dist):
         if trials < 1000:
             tmp = random.sample(range(num_loc), 1)[0]
             x, y = locations[tmp]
-            flag = True
             for intruder in intruders_real:
                 dist = math.sqrt((x - intruder[0])**2 + (y - intruder[1])**2)
-                if dist < min_dist:
-                    flag = False
+                if dist < min_dist or dist > max_dist:
                     break
-            if flag:
+            else:
                 intruders_real.append(locations[tmp])
                 cell = lt.real_2_gridcell(locations[tmp])
                 intruders_grid.append(cell[0]*grid_len + cell[1])

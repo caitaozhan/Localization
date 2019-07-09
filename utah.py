@@ -38,33 +38,34 @@ def main1():
     means, stds, locations, wall = read_utah_data(path='dataUtah')
     lt = LocationTransform(locations, cell_len=1)
 
-    ll = Localization(grid_len=lt.grid_len, debug=False)
-    ll.init_utah(means, stds, locations, lt, wall, interpolate=True, percentage=0.4)
+    ll = Localization(grid_len=lt.grid_len, case='utah', debug=False)
+    ll.init_utah(means, stds, locations, lt, wall, interpolate=True, percentage=1.)
 
     num_of_intruders = 1
-    a, b = 0, 102
+    a, b = 0, 100
 
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
-    ll.counter.num_exper = b-a-2
+    ll.counter.num_exper = b-a
     ll.counter.time_start()
     for i in range(a, b):
-    # for i in [97]:
+    # for i in [27, 50]:
         if i == 34 or i == 65:
-            continue
+            i += 100
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
         true_powers = [random.uniform(-0, 0) for i in range(num_of_intruders)]
-        intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=10)
-        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=False)
-        pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
-
+        intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=1, max_dist=3)
+        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=True)
         print('True', end=' ')
         for intru in intruders:
             print(intru)
+
+        pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
+
         true_locations = ll.convert_to_pos(true_indices)
         pred_locations_real = [lt.gridcell_2_real(cell) for cell in pred_locations]
 
@@ -87,7 +88,7 @@ def main1():
         errors = np.array(errors)
         power_errors = np.array(power_errors)
         print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
-              sum(misses)/(b-a-2), max(misses), min(misses), sum(false_alarms)/(b-a-2), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
+              sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
         ll.counter.time_end()
         ratios = ll.counter.procedure_ratios()
         print(ratios)
