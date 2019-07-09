@@ -30,8 +30,8 @@ for i in range(a, b):
     intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
 
     r1 = 8
-    r2 = 5
-    threshold = -65
+    r2 = 8
+    threshold = -70
     pred_locations = ll.splot_localization(sensor_outputs, intruders, fig=i, R1=r1, R2=r2, threshold=threshold)
 
     true_locations = ll.convert_to_pos(true_indices)
@@ -42,17 +42,17 @@ for i in range(a, b):
             errors.extend(error)
         misses.append(miss)
         false_alarms.append(false_alarm)
-        print('error/miss/false/power = {}/{}/{}'.format(np.array(error).mean(), miss, false_alarm) )
+        print('error/miss/false = {}/{}/{}'.format(np.array(error).mean(), miss, false_alarm) )
     except Exception as e:
         print(e)
 
 try:
     errors = np.array(errors)
     power_errors = np.array(power_errors)
-    np.savetxt('{}-splot-error.txt'.format(num_of_intruders), errors, delimiter=',')
-    np.savetxt('{}-splot-miss.txt'.format(num_of_intruders), misses, delimiter=',')
-    np.savetxt('{}-splot-false.txt'.format(num_of_intruders), false_alarms, delimiter=',')
-    np.savetxt('{}-splot-time.txt'.format(num_of_intruders), [(time.time()-start)/(b-a)], delimiter=',')
+    # np.savetxt('{}-splot-error.txt'.format(num_of_intruders), errors, delimiter=',')
+    # np.savetxt('{}-splot-miss.txt'.format(num_of_intruders), misses, delimiter=',')
+    # np.savetxt('{}-splot-false.txt'.format(num_of_intruders), false_alarms, delimiter=',')
+    # np.savetxt('{}-splot-time.txt'.format(num_of_intruders), [(time.time()-start)/(b-a)], delimiter=',')
     print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{})'.format(round(errors.mean(), 3), round(errors.max(), 3), round(errors.min(), 3), \
           round(sum(misses)/(b-a), 3), max(misses), min(misses), round(sum(false_alarms)/(b-a), 3), max(false_alarms), min(false_alarms) ) )
     print('Ours! time = ', round(time.time()-start, 3))

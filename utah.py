@@ -7,15 +7,39 @@ from location_transform import LocationTransform
 from localize import Localization
 from plots import visualize_localization
 
+def main0():
+    '''Read the Utah data, location transform
+    '''
+    means, stds, locations, wall = read_utah_data(path='dataUtah')
+
+    lt = LocationTransform(locations, cell_len=1)
+
+    print(means)
+    print(stds)
+    print(locations)
+    print(wall)
+    print(lt)
+
+    errors = []
+    for real_loc in lt.real_location:
+        gridcell = lt.real_2_gridcell(real_loc)
+        real_loc2 = lt.gridcell_2_real(gridcell)
+        error = distance(real_loc, real_loc2)
+        errors.append(error)
+        print('({:5.2f}, {:5.2f}) -> ({:2d}, {:2d}) -> ({:5.2f}, {:5.2f}); error = {:3.2f}'.format(real_loc[0], real_loc[1], gridcell[0], gridcell[1], real_loc2[0], real_loc2[1], error))
+    plot_cdf(errors)
+
 
 def main1():
+    '''Our localization
+    '''
     random.seed(0)
     np.random.seed(0)
     means, stds, locations, wall = read_utah_data(path='dataUtah')
     lt = LocationTransform(locations, cell_len=1)
 
     ll = Localization(grid_len=lt.grid_len, debug=False)
-    ll.init_utah(means, stds, locations, lt, wall, percentage=0.7, interpolate=True)
+    ll.init_utah(means, stds, locations, lt, wall, interpolate=True, percentage=0.4)
 
     num_of_intruders = 1
     a, b = 0, 102
@@ -35,7 +59,6 @@ def main1():
         np.random.seed(i)
         true_powers = [random.uniform(-0, 0) for i in range(num_of_intruders)]
         intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=10)
-        # intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
         intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=False)
         pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
 
@@ -60,7 +83,7 @@ def main1():
 
     try:
         # plot_cdf(errors)
-        np.savetxt('visualize/utah/0.7.txt', errors, delimiter=',')
+        # np.savetxt('visualize/utah/0.7.txt', errors, delimiter=',')
         errors = np.array(errors)
         power_errors = np.array(power_errors)
         print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
@@ -72,19 +95,68 @@ def main1():
     except Exception as e:
         print(e)
 
-    # print(mean)
-    # print(stds)
-    # print(locations)
-    # print(lt)
 
-    # errors = []
-    # for real_loc in lt.real_location:
-    #     gridcell = lt.real_2_gridcell(real_loc)
-    #     real_loc2 = lt.gridcell_2_real(gridcell)
-    #     error = distance(real_loc, real_loc2)
-    #     errors.append(error)
-    #     print('({:5.2f}, {:5.2f}) -> ({:2d}, {:2d}) -> ({:5.2f}, {:5.2f}); error = {:3.2f}'.format(real_loc[0], real_loc[1], gridcell[0], gridcell[1], real_loc2[0], real_loc2[1], error))
-    # plot_cdf(errors)
+def main2():
+    '''SPLOT
+    '''
+    random.seed(0)
+    np.random.seed(0)
+    means, stds, locations, wall = read_utah_data(path='dataUtah')
+    lt = LocationTransform(locations, cell_len=1)
+
+    ll = Localization(grid_len=lt.grid_len, debug=False)
+    ll.init_utah(means, stds, locations, lt, wall, interpolate=False)
+
+    a, b = 0, 100
+    num_of_intruders = 2
+    errors = []
+    misses = []
+    false_alarms = []
+    for i in range(a, b):
+    # for i in [89]:
+        if i == 34 or i == 65:
+            i += 100
+        print('\n\nTest ', i)
+        random.seed(i)
+        np.random.seed(i)
+        true_powers = [random.uniform(-0, 0) for i in range(num_of_intruders)]
+        intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=1)
+
+        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=False)
+        
+        r1 = 7.5
+        r2 = 6
+        threshold = -51
+        pred_locations = ll.splot_localization(sensor_outputs, intruders, fig=i, R1=r1, R2=r2, threshold=threshold)
+
+        print('True', end=' ')
+        for intru in intruders:
+            print(intru)
+        true_locations = ll.convert_to_pos(true_indices)
+        pred_locations_real = [lt.gridcell_2_real(cell) for cell in pred_locations]
+
+        try:
+            error, miss, false_alarm = ll.compute_error2(intruders_real, pred_locations_real)
+            if len(error) != 0:
+                errors.extend(error)
+            misses.append(miss)
+            false_alarms.append(false_alarm)
+            print('\nerror/miss/false = {:.3f}/{}/{}'.format(np.array(error).mean(), miss, false_alarm) )
+            if ll.debug:
+                visualize_localization(ll.grid_len, true_locations, pred_locations, i)
+        except Exception as e:
+            print(e)
+
+    try:
+        # plot_cdf(errors)
+        # np.savetxt('visualize/utah/ridge.txt', errors, delimiter=',')
+        errors = np.array(errors)
+        print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{})'.format(errors.mean(), errors.max(), errors.min(), \
+              sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms) ) )
+    except Exception as e:
+        print(e)
 
 if __name__ == '__main__':
-    main1()
+    # main0()
+    main1()   # Ours
+    # main2()   # SPLOT

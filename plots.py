@@ -233,8 +233,15 @@ def visualize_splot(weight_global, folder, fig):
         weight_global (np.array)
     '''
     weight_global[weight_global==0] = np.min(weight_global)
+    
+    grid_len = len(weight_global)
+    grid2 = np.copy(weight_global)
+    for i in range(grid_len):
+        for j in range(grid_len):
+            grid2[i, j] = weight_global[j, grid_len-1-i]
+
     plt.subplots(figsize=(10, 10))
-    sns.heatmap(weight_global, vmin=np.min(weight_global), vmax=np.max(weight_global), square=True, linewidth=0.5)
+    sns.heatmap(grid2, vmin=np.min(grid2), vmax=np.max(grid2), square=True, linewidth=0.5)
     plt.title('The estimated power (the weights of ridge regression)')
     plt.savefig('visualize/{}/{}'.format(folder, fig))
 

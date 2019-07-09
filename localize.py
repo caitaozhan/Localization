@@ -166,7 +166,7 @@ class Localization:
         print('\ninit done!')
 
 
-    def init_utah(self, means, stds, locations, lt, wall, percentage=1., interpolate=False):
+    def init_utah(self, means, stds, locations, lt, wall, interpolate=False, percentage=1.):
         '''Initialize from the Utah data
         Args:
             means (np.ndarray, n=2)
@@ -687,7 +687,7 @@ class Localization:
 
         errors = []              # distance error
         detected = 0
-        threshold = self.grid_len / 5
+        threshold = self.grid_len
         for match in matches:
             error = match[2]
             if error <= threshold:
@@ -1429,7 +1429,7 @@ class Localization:
         return (W, n)
 
 
-    def splot_localization(self, sensor_outputs, intruders, fig):
+    def splot_localization(self, sensor_outputs, intruders, fig, R1=None, R2=None, threshold=None):
         '''The precise implemenation of SPLOT from MobiCom'17
         Args:
             sensor_outputs (np.array<float>): the RSS of sensors
@@ -1438,17 +1438,25 @@ class Localization:
         Return:
             list<(int, int)>: a list of localized locations, each location is (a, b)
         '''
+        self.reset()
         sigma_x_square = 0.5
         delta_c        = 1
         n_p            = 2     # 2.46
         minPL          = 0.5   # For SPLOT 1.5, for Ridge and LASSO 1.0
         delta_N_square = 1     # no specification in MobiCom'17 ?
-        R1             = 8
-        R2             = 8     # larger R might help for ridge regression
-        threshold      = -70
-
+        if R1 is None:
+            R1             = 8
+        if R2 is None:
+            R2             = 8     # larger R might help for ridge regression
+        if threshold is None:
+            threshold      = -70
         if self.debug:
             visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+
+        R_list = [R1, R2]
+        # R_list = np.unique(R_list)
+        self.collect_sensors_in_radius_precompute(R_list, intruders)
+
 
         weight_global  = np.zeros((self.grid_len, self.grid_len))
         sensor_sorted_index = np.flip(np.argsort(sensor_outputs))
@@ -1466,9 +1474,10 @@ class Localization:
         for i in range(len(sensor_outputs_copy)): # Obtain local maximum within radius size_R
             current_sensor = self.sensors[sensor_sorted_index[i]]
             current_sensor_output = sensor_outputs_copy[current_sensor.index]
-            if current_sensor_output < threshold:
+            if current_sensor_output < threshold or current_sensor_output >= 0:  # >= 0 means the sensor is at the same locations at the transmitter (for the Utah case)
                 continue
-            sensor_subset = self.collect_sensors_in_radius(R1, current_sensor)
+            location      = current_sensor.x*self.grid_len + current_sensor.y
+            sensor_subset = self.sensors_collect[self.key.format(location, R1)]
             local_maximum_list.append(current_sensor.index)
             for sen_num in sensor_subset:
                 sensor_outputs_copy[sen_num] = -85
@@ -1476,7 +1485,9 @@ class Localization:
         #Obtained local maximum list; now compute intruder location
         detected_intruders = []
         for sen_local_max in local_maximum_list:
-            sensor_subset = self.collect_sensors_in_radius(R2, self.sensors[sen_local_max])
+            location      = self.sensors[sen_local_max].x*self.grid_len + self.sensors[sen_local_max].y
+            sensor_subset = self.sensors_collect[self.key.format(location, R2)]
+            # sensor_subset = self.collect_sensors_in_radius(R2, self.sensors[sen_local_max])
             confined_area = self.get_confined_area(self.sensors[sen_local_max], R2)
             total_voxel = len(confined_area)   # the Q in the paper
             W_matrix = np.zeros((len(sensor_subset), total_voxel))
@@ -1491,7 +1502,7 @@ class Localization:
             y = np.zeros(len(sensor_subset))
             for i in range(len(sensor_subset)):
                 y[i] = db_2_power(sensor_outputs[sensor_subset[i]])
-            #'''
+            # '''
             Cx = np.zeros((total_voxel, total_voxel))
             for j in range(total_voxel):
                 voxel_j = confined_area[j]
@@ -1516,11 +1527,11 @@ class Localization:
                 weight_global[voxel[0]][voxel[1]] = x
             
             if self.debug:
-                visualize_splot(weight_local, 'splot', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+                visualize_splot(weight_local, 'localization', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
-            #'''
+            # '''
 
             '''
             from sklearn.linear_model import Lasso, Ridge
@@ -1539,7 +1550,7 @@ class Localization:
             detected_intruders.append(confined_area[index])
             '''
         if self.debug:
-            visualize_splot(weight_global, 'splot-ridge', fig)
+            visualize_splot(weight_global, 'localization', fig)
 
         return detected_intruders
 
