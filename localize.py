@@ -1466,7 +1466,7 @@ class Localization:
         for i in range(len(sensor_outputs_copy)): # Obtain local maximum within radius size_R
             current_sensor = self.sensors[sensor_sorted_index[i]]
             current_sensor_output = sensor_outputs_copy[current_sensor.index]
-            if current_sensor_output < threshold or current_sensor_output >= 0:  # >= 0 means the sensor is at the same locations at the transmitter (for the Utah case)
+            if current_sensor_output < threshold or (current_sensor.x, current_sensor.y) in [(intru.x, intru.y) for intru in intruders]:  # >= 0 means the sensor is at the same locations at the transmitter (for the Utah case)
                 continue
             location      = current_sensor.x*self.grid_len + current_sensor.y
             sensor_subset = self.sensors_collect[self.key.format(location, R1)]
