@@ -41,7 +41,7 @@ def main1():
     ll = Localization(grid_len=lt.grid_len, case='utah', debug=False)
     ll.init_utah(means, stds, locations, lt, wall, interpolate=True, percentage=1.)
 
-    num_of_intruders = 1
+    num_of_intruders = 2
     a, b = 0, 100
 
     errors = []
@@ -59,10 +59,8 @@ def main1():
         np.random.seed(i)
         true_powers = [random.uniform(-0, 0) for i in range(num_of_intruders)]
         intruders_real, true_indices = generate_intruders_utah(grid_len=ll.grid_len, locations=locations, lt=lt, num=num_of_intruders, min_dist=1, max_dist=3)
-        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=True)
-        print('True', end=' ')
-        for intru in intruders:
-            print(intru)
+        intruders, sensor_outputs = set_intruders_utah(true_indices=true_indices, powers=true_powers, means=means, grid_loc=lt.grid_location, ll=ll, randomness=False)
+        print('True: ' + ''.join(map(lambda x:str(x), intruders)))
 
         pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
 

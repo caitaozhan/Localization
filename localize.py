@@ -1040,18 +1040,18 @@ class Localization:
             self.counter.proc_1 += len(identified_R)
         self.counter.time1_end()
 
-        print('\nProcedure 1.1')
-        self.counter.time2_start()
-        hypotheses = list(range(len(self.transmitters)))
-        for R in R_list:
-            identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
-            identified.extend(identified_R)
-            pred_power.extend(pred_power_R)
-            self.counter.proc_1_1 += len(identified_R)
-        self.counter.time2_end()
+        # print('\nProcedure 1.1')
+        # self.counter.time2_start()
+        # hypotheses = list(range(len(self.transmitters)))
+        # for R in R_list:
+        #     identified_R, pred_power_R = self.procedure1_1(hypotheses, sensor_outputs, intruders, fig, R, identified, identified_radius)
+        #     identified.extend(identified_R)
+        #     pred_power.extend(pred_power_R)
+        #     self.counter.proc_1_1 += len(identified_R)
+        # self.counter.time2_end()
 
         print('Procedure 2')  # issue in test #6
-        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=6, previous_identified=identified)
+        identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=self.config.R2, previous_identified=identified)
         identified.extend(identified2)
         pred_power.extend(pred_power2)
 
@@ -1154,8 +1154,8 @@ class Localization:
             location = self.sensors[center].x*self.grid_len + self.sensors[center].y
             sensor_subset = self.sensors_collect[self.key.format(location, R)]
             self.ignore_screwed_sensor(sensor_subset, previous_identified, min_dist=2)
-            hypotheses = [h for h in range(len(self.transmitters)) \
-                          if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
+            hypotheses = [h for h in range(len(self.transmitters)) if h != location and \
+                          math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             for t in range(2, 4):
                 self.counter.time3_start()
                 self.counter.time4_start()
@@ -1163,13 +1163,15 @@ class Localization:
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked] # prevent checking the same combination again
                 if len(hypotheses_combination) == 0:
                     break
-                q_threshold = np.power(norm(0, 1).pdf(2), len(sensor_subset)) * (1./len(hypotheses_combination))
+                q_threshold = np.power(norm(0, 1).pdf(self.config.Q2), len(sensor_subset)) * (1./len(hypotheses_combination))
                 combination_checked = combination_checked.union(set(hypotheses_combination))     # union of all combinations checked
                 print('q-threshold = {}, inside = {}'.format(q_threshold, len(sensor_subset)))
+
                 posterior, Q = self.procedure2_iteration(hypotheses_combination, sensor_outputs, sensor_subset)
-                print('combination = {}; max Q = {}; posterior = {}'.format([ (hypo//self.grid_len, hypo%self.grid_len) for hypo in \
-                       hypotheses_combination[np.argmax(Q)] ], np.max(Q), np.max(posterior)))
-                if np.max(Q) > q_threshold and np.max(posterior) > 0.1:  # 
+
+                print('combination = {}; max Q = {}; posterior = {}'.format([ (hypo//self.grid_len, hypo%self.grid_len) \
+                      for hypo in hypotheses_combination[np.argmax(Q)] ], np.max(Q), np.max(posterior)))
+                if np.max(Q) > q_threshold and np.max(posterior) > self.config.Q_prime2:
                     print('** Intruder! **')
                     hypo_comb = hypotheses_combination[np.argmax(Q)]
                     for hypo in hypo_comb:
@@ -1206,17 +1208,16 @@ class Localization:
             q (np.array): 2D array of Q
             power_grid (np.array): 2D array of power
         '''
-        # Note try single power first
         posterior = np.zeros(len(hypotheses_combination))
         prior = 1./len(hypotheses_combination)
         for i in range(len(hypotheses_combination)):
             combination = hypotheses_combination[i]
-            #if combination == (7*50+34, 9*50+32):
-            #    print(combination)
+            if combination == (73, 74):
+               print(combination)
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
-                mean_vec += db_2_power_(self.means[hypo][sensor_subset])
-            mean_vec = power_2_db_(mean_vec)
+                mean_vec += db_2_power_(self.means[hypo][sensor_subset], utah=self.utah)
+            mean_vec = power_2_db_(mean_vec, utah=self.utah)
             stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
             array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs[sensor_subset])
             likelihood = np.prod(array_of_pdfs)
@@ -1252,10 +1253,10 @@ class Localization:
         while flag:
             sen_descent = np.flip(np.argsort(sensor_outputs))
             for c in sen_descent:
-                if c not in center_list:
+                if c not in center_list and sensor_outputs[c] < 0: # the < 0 condition is for utah data, where some outputs are larger than 0
                     center = c                       # the first sensor that hasn't been a center before
                     break
-            if sensor_outputs[center] < threshold_center:         # center's RSS has to > -65
+            if sensor_outputs[center] < threshold_center:
                 center = -1
                 flag = False
                 break
@@ -1280,7 +1281,7 @@ class Localization:
                         print('\nCenter =', (self.sensors[center].x, self.sensors[center].y), 'RSS =', sensor_outputs[center])
                         break
             else:
-                sensor_outputs[center] = -80         # bug here ... shouldn't change the origin sensor output, fixed in first line
+                sensor_outputs[center] = -80
         return center
 
 
@@ -1317,7 +1318,7 @@ class Localization:
             posterior = np.reshape(posterior[:-1], (self.grid_len, self.grid_len))
             if self.debug:
                 visualize_q_prime(posterior, fig)
-            indices = peak_local_max(posterior, 2, threshold_abs=0.8, exclude_border = False)
+            indices = peak_local_max(posterior, 2, threshold_abs=self.config.Q_prime1, exclude_border = False)
 
             if len(indices) == 0:
                 print("No Q' peaks...")
