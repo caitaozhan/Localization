@@ -103,24 +103,24 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         sensors (lists):      list of Sensor objects
     '''
     grid = np.zeros((grid_len, grid_len))
-    # if np.max(sensor_outputs) > threshold:
-    #     maximum = np.max(sensor_outputs[sensor_outputs < 0])
-    #     minimum = np.min(sensor_outputs[sensor_outputs > threshold])
-    # for index, sensor in enumerate(sensors):
-    #     if sensor_outputs[index] > threshold:
-    #         color = (sensor_outputs[index] - minimum) / (maximum - minimum)
-    #     else:
-    #         color = -0.2
-    #     grid[sensor.x][sensor.y] = color
-    #     #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
-    # for intr in intruders:
-    #     grid[intr.x][intr.y] = -1
-
+    if np.max(sensor_outputs) > threshold:
+        maximum = np.max(sensor_outputs[sensor_outputs < 0])
+        minimum = np.min(sensor_outputs[sensor_outputs > threshold])
     for index, sensor in enumerate(sensors):
-        color = sensor_outputs[index]
+        if sensor_outputs[index] > threshold:
+            color = (sensor_outputs[index] - minimum) / (maximum - minimum)
+        else:
+            color = -0.2
         grid[sensor.x][sensor.y] = color
+        #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
     for intr in intruders:
-        grid[intr.x][intr.y] = 1
+        grid[intr.x][intr.y] = -1
+
+    # for index, sensor in enumerate(sensors):
+    #     color = sensor_outputs[index]
+    #     grid[sensor.x][sensor.y] = color
+    # for intr in intruders:
+    #     grid[intr.x][intr.y] = 1
 
     grid2 = np.copy(grid)
     for i in range(grid_len):
@@ -129,7 +129,7 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     sns.set(style="white")
     plt.subplots(figsize=(10, 10))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=True)
+    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=False)
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
     #plt.show()
     plt.title('Intruders: ' + ' '.join(map(lambda intru: '({:2d}, {:2d})'.format(intru.x, intru.y), intruders)), fontsize=20)

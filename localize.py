@@ -100,7 +100,7 @@ class Localization:
             lines = f.readlines()
             for line in lines:
                 line = line.split(' ')
-                x, y, std, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
+                x, y, _, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
                 self.sensors.append(Sensor(x, y, 1, cost, gain_up_bound=max_gain, index=index))  # uniform sensors
                 index += 1
 
@@ -117,6 +117,46 @@ class Localization:
                 self.means[tran_x*self.grid_len + tran_y, count] = mean  # count equals to the index of the sensors
                 self.stds[tran_x*self.grid_len + tran_y, count] = 1      # std = 1 for every sensor
                 count = (count + 1) % len(self.sensors)
+
+        for transmitter in self.transmitters:
+            tran_x, tran_y = transmitter.x, transmitter.y
+            transmitter.mean_vec = self.means[self.grid_len*tran_x + tran_y, :]
+
+
+    def init_truehypo(self, truehypo_file):
+        '''
+        Args:
+            truehypo_file -- str -- filename
+        '''
+        self.truemeans = np.zeros((self.grid_len*self.grid_len, len(self.sensors)))
+        with open(truehypo_file, 'r') as f:
+            lines = f.readlines()
+            count = 0
+            for line in lines:
+                line = line.split(' ')
+                tran_x, tran_y = int(line[0]), int(line[1])
+                #sen_x, sen_y = int(line[2]), int(line[3])
+                mean, _ = float(line[4]), float(line[5])
+                self.truemeans[tran_x*self.grid_len + tran_y, count] = mean  # count equals to the index of the sensors
+                count = (count + 1) % len(self.sensors)
+
+
+    def init_data_direct(self, cov, sensors, means, stds):
+        '''No need to read from files here, directly assign
+        Args:
+            cov (np.ndarray, n=2)
+            sensor (np.ndarray, n=2)
+            hypothesis (np.ndarray, n=2)
+        '''
+        self.set_priori()
+        self.covariance = cov
+        self.sensors = []
+        self.means = np.zeros(0)
+        self.stds = np.zeros(0)
+
+        self.sensors = sensors
+        self.means = means
+        self.stds  = stds
 
         for transmitter in self.transmitters:
             tran_x, tran_y = transmitter.x, transmitter.y
@@ -588,7 +628,7 @@ class Localization:
         sensor_outputs[np.isinf(sensor_outputs)] = -120
 
 
-    def set_intruders(self, true_indices, powers, randomness = False):
+    def set_intruders(self, true_indices, powers, randomness = False, truemeans=False):
         '''Create intruders and return sensor outputs accordingly
         Args:
             true_indices (list): a list of integers (transmitter index)
@@ -598,6 +638,11 @@ class Localization:
         Return:
             (list<Transmitters>, np.array<float>): a list of true transmitters and np.array of sensor outputs
         '''
+        if truemeans:
+            means = self.truemeans
+        else:
+            means = self.means
+
         true_transmitters = []
         for i in true_indices:
             true_transmitters.append(self.transmitters[i])
@@ -609,9 +654,9 @@ class Localization:
             power = powers[i]                                # varies power
             for sen_index in range(len(self.sensors)):
                 if randomness:
-                    dBm = db_2_power_(np.random.normal(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, self.sensors[sen_index].std), utah=self.utah)
+                    dBm = db_2_power_(np.random.normal(means[tran_x * self.grid_len + tran_y, sen_index] + power, self.sensors[sen_index].std), utah=self.utah)
                 else:
-                    dBm = db_2_power_(self.means[tran_x * self.grid_len + tran_y, sen_index] + power, utah=self.utah)
+                    dBm = db_2_power_(means[tran_x * self.grid_len + tran_y, sen_index] + power, utah=self.utah)
                 sensor_outputs[sen_index] += dBm
                 #if sen_index == 182:
                 #    print('+', (tran_x, tran_y), power, dBm, sensor_outputs[sen_index])
@@ -937,42 +982,42 @@ class Localization:
             subset_sensors = np.array(subset_sensors)
             if len(subset_sensors) < 3:
                 likelihood = 0
-                power_max = 0
+                # power_max = 0
                 delta_p = 0
             else:
-                # sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
-                # sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
-                # mean_vec = np.copy(trans.mean_vec)
-                # mean_vec = mean_vec[subset_sensors]
-                # variance = np.diagonal(self.covariance)[subset_sensors]
-                # delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
-                # mean_vec = mean_vec + delta_p  # add the delta of power
-                # stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
-                # array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
-                # likelihood = np.prod(array_of_pdfs)
+                sensor_outputs_copy = np.copy(sensor_outputs)  # change copy to np.array
+                sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+                mean_vec = np.copy(trans.mean_vec)
+                mean_vec = mean_vec[subset_sensors]
+                variance = np.diagonal(self.covariance)[subset_sensors]
+                delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                mean_vec = mean_vec + delta_p  # add the delta of power
+                stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+                array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+                likelihood = np.prod(array_of_pdfs)
 
-                likelihood_max = 0
-                power_max = 0
-                for power in trans.powers:                       # varies power
-                    sensor_outputs_copy = np.copy(sensor_outputs)
-                    sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
-                    mean_vec = np.copy(trans.mean_vec)
-                    mean_vec = mean_vec[subset_sensors] + power  # add the delta of power
-                    stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
-                    array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
-                    likelihood = np.prod(array_of_pdfs)
-                    if likelihood > likelihood_max:
-                        likelihood_max = likelihood
-                        power_max = power
-                    if len(np.unique(trans.powers)) == 1:        # no varying power
-                        break
-                likelihood = likelihood_max
+                # likelihood_max = 0
+                # power_max = 0
+                # for power in trans.powers:                       # varies power
+                #     sensor_outputs_copy = np.copy(sensor_outputs)
+                #     sensor_outputs_copy = sensor_outputs_copy[subset_sensors]
+                #     mean_vec = np.copy(trans.mean_vec)
+                #     mean_vec = mean_vec[subset_sensors] + power  # add the delta of power
+                #     stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
+                #     array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
+                #     likelihood = np.prod(array_of_pdfs)
+                #     if likelihood > likelihood_max:
+                #         likelihood_max = likelihood
+                #         power_max = power
+                #     if len(np.unique(trans.powers)) == 1:        # no varying power
+                #         break
+                # likelihood = likelihood_max
 
             likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant, len(subset_sensors))
 
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]
-            # power_grid[trans.x][trans.y] = delta_p
-            power_grid[trans.x][trans.y] = power_max
+            # power_grid[trans.x][trans.y] = power_max
+            power_grid[trans.x][trans.y] = delta_p
 
         # Also check the probability of no transmitter to avoid false alarms
         mean_vec = np.full(len(sensor_outputs), -80)
@@ -1306,7 +1351,7 @@ class Localization:
         offset = 0 #0.74 for synthetic, 0.5 for splat
         while detected:
             if self.debug:
-                visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+                visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
             detected = False
             previous_identified = list(set(previous_identified).union(set(identified)))
             posterior, H_0, Q, power = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig, previous_identified)
@@ -1339,6 +1384,7 @@ class Localization:
                     detected = True
                     p = power[index[0]][index[1]] - offset
                     self.delete_transmitter(index, p, range(len(self.sensors)), sensor_outputs)
+                    self.grid_priori[index[0]*self.grid_len + index[1]] = 0
                     for sen in subset_sensors:
                         self.sensors_used[sen] = True
                     identified.append(tuple(index))
@@ -1662,51 +1708,61 @@ def main2():
 def main4():
     '''main 4: SPLAT data + Our localization
     '''
-    selectsensor = Localization(grid_len=40)
-    #selectsensor.init_data('dataSplat/homogeneous-100/cov', 'dataSplat/homogeneous-100/sensors', 'dataSplat/homogeneous-100/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
-    selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-250/cov', 'dataSplat/homogeneous-250/sensors', 'dataSplat/homogeneous-250/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-300/cov', 'dataSplat/homogeneous-300/sensors', 'dataSplat/homogeneous-300/hypothesis')
+    ll = Localization(grid_len=40, case='splat', debug=True)
+    ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_inter')  # the interpolated data
+    ll.init_truehypo('dataSplat/interpolate/1600/hypothesis_true')
+    # selectsensor.init_data('dataSplat/homogeneous-100/cov', 'dataSplat/homogeneous-100/sensors', 'dataSplat/homogeneous-100/hypothesis')
+    # selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
+    # selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
+    # selectsensor.init_data('dataSplat/homogeneous-250/cov', 'dataSplat/homogeneous-250/sensors', 'dataSplat/homogeneous-250/hypothesis')
+    # selectsensor.init_data('dataSplat/homogeneous-300/cov', 'dataSplat/homogeneous-300/sensors', 'dataSplat/homogeneous-300/hypothesis')
+
 
     num_of_intruders = 1
-    repeat = 1
+    a, b = 0, 50
     errors = []
     misses = []
     false_alarms = []
     power_errors = []
-    start = time.time()
-    for i in range(0, repeat):
+    ll.counter.num_exper = b-a
+    ll.counter.time_start()
+    for i in [13, 38]:
+    # for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)
-        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
-        random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
+        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
+        true_indices, true_powers = generate_intruders(grid_len=ll.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
+        # true_indices = [int(true//40 /4)*4*40 + int(true%40 /4)*4 for true in true_indices]
+        intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False, truemeans=True)
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True)
-
-        pred_locations, pred_power = selectsensor.our_localization(sensor_outputs, intruders, i)
-        true_locations = selectsensor.convert_to_pos(true_indices)
+        pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
+        true_locations = ll.convert_to_pos(true_indices)
 
         try:
-            error, miss, false_alarm, power_error = selectsensor.compute_error(true_locations, true_powers, pred_locations, pred_power)
+            error, miss, false_alarm, power_error = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
             if len(error) != 0:
                 errors.extend(error)
                 power_errors.extend(power_error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {}/{}/{}/{}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
-            visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
+            print('\nerror/miss/false/power = {:.3f}/{}/{}/{:.3f}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
+            if ll.debug:
+                visualize_localization(ll.grid_len, true_locations, pred_locations, i)
         except Exception as e:
             print(e)
 
     try:
-        print('(mean/max/min) error=({}/{}/{}), miss=({}/{}/{}), false_alarm=({}/{}/{}), power=({}/{}/{})'.format(round(sum(errors)/len(errors), 3), round(max(errors), 3), round(min(errors), 3), \
-              round(sum(misses)/repeat, 3), max(misses), min(misses), round(sum(false_alarms)/repeat, 3), max(false_alarms), min(false_alarms), round(sum(power_errors)/len(power_errors), 3), round(max(power_errors), 3), round(min(power_errors), 3) ) )
-        print('Ours! time = ', round(time.time()-start, 3))
+        errors = np.array(errors)
+        power_errors = np.array(power_errors)
+        print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
+              sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
+        ll.counter.time_end()
+        ratios = ll.counter.procedure_ratios()
+        print(ratios)
+        print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(ll.counter.time1_average(), ll.counter.time2_average(), ll.counter.time3_average(), ll.counter.time4_average()))
     except Exception as e:
         print(e)
 
@@ -1814,8 +1870,7 @@ def main6():
 
 if __name__ == '__main__':
     # main1()
-    main2()
-    #main3()
-    #main4()
-    #main5()
-    #main6()
+    # main2()
+    main4()
+    # main5()
+    # main6()

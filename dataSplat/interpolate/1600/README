@@ -1,0 +1,8 @@
+grid len  = 40
+sen num   = 200
+model     = itwom
+ref point = (40.762368, -73.12086)
+cell len  = 100
+tx height = 30
+rx height = 15
+seed      = 0

@@ -23,7 +23,7 @@ class LocationTransform:
         self.grid_x_len, self.grid_y_len = np.max(self.grid_location, 0) + 1
         self.grid_len = max(self.grid_x_len, self.grid_y_len)
         self.check()
-            
+
 
     def __str__(self):
         return '\n'.join(map(lambda x: '({:5.2f}, {:5.2f}) --> ({:2d}, {:2d})'.format(x[0][0], x[0][1], x[1][0], x[1][1]), zip(self.real_location, self.grid_location))) + \
@@ -66,8 +66,15 @@ class LocationTransform:
         return [round(x, 4), round(y, 4)]
 
 
-if __name__ == '__main__':
-    mean, stds, locations = read_utah_data()
+class GPSLocationTransform:
+    def __init__(self, gps_locations, cell_len):
+        self.gps_locations = gps_locations
+        self.cell_len = cell_len
+
+
+
+def main1():
+    mean, stds, locations, wall = read_utah_data()
     # print(mean)
     # print(stds)
     # print(locations)
@@ -99,5 +106,40 @@ if __name__ == '__main__':
         errors.append(error)
         print('({:5.2f}, {:5.2f}) -> ({:2d}, {:2d}) -> ({:5.2f}, {:5.2f}); error = {:3.2f}'.format(real_loc[0], real_loc[1], gridcell[0], gridcell[1], real_loc2[0], real_loc2[1], error))
     plot_cdf(errors)
+
+
+def main2():
+    '''Output files in forms class Localize can init
+    '''
+    means, stds, locations, wall = read_utah_data()
+    lt = LocationTransform(locations, cell_len=1)
+    num = len(means)
+    with open('dataUtah/hypothesis', 'w') as f:
+        for t in range(num):
+            t_x, t_y = lt.grid_location[t]     # transmitter
+            for s in range(num):
+                s_x, s_y = lt.grid_location[s] # sensor
+                mean = means[t][s] if t!=s else -100
+                std  = stds[s]
+                f.write('{} {} {} {} {} {}\n'.format(t_x, t_y, s_x, s_y, mean, std))
+    with open('dataUtah/sensors', 'w') as f:
+        for s in range(num):
+            s_x, s_y = lt.grid_location[s]
+            std  = stds[s]
+            cost = 1
+            f.write('{} {} {} {}\n'.format(s_x, s_y, std, cost))
+    with open('dataUtah/cov', 'w') as f:
+        for i in range(num):
+            for j in range(num):
+                if i == j:
+                    f.write('{} '.format(stds[i]**2))
+                else:
+                    f.write('{} '.format(0.0))
+            f.write('\n')
+
+
+if __name__ == '__main__':
+    # main1()
+    main2()    
 
 

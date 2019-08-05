@@ -46,7 +46,7 @@ class Config:
 
     @classmethod
     def naive_factory(cls, case):
-        if case == 'lognormal' or case == 'splat':
+        if case == 'lognormal':
             q        = 1.9
             q2       = 2.
             q_prime1 = 0.8
@@ -55,6 +55,22 @@ class Config:
             r2       = 6
             e        = 2
             nf_p     = -80
+            c_thre   = -65
+            s_thre   = -75
+            e_thre   = 0.2
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+
+        if case == 'splat':
+            q        = 2.3
+            q2       = 2.
+            q_prime1 = 0.5
+            q_prime2 = 0.1
+            r        = [8, 6, 5, 4]
+            r2       = 6
+            e        = 2
+            nf_p     = -75
             c_thre   = -65
             s_thre   = -75
             e_thre   = 0.2
@@ -77,4 +93,7 @@ class Config:
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+        
+        else:
+            print('unknown case', case)
         
