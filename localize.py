@@ -1056,6 +1056,7 @@ class Localization:
     def reset(self):
         '''Reset some members for our localization
         '''
+        self.set_priori()
         self.sensors_used = np.zeros(len(self.sensors), dtype=bool)
         self.sensors_collect = {}
 
@@ -1708,7 +1709,7 @@ def main2():
 def main4():
     '''main 4: SPLAT data + Our localization
     '''
-    ll = Localization(grid_len=40, case='splat', debug=True)
+    ll = Localization(grid_len=40, case='splat', debug=False)
     ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_inter')  # the interpolated data
     ll.init_truehypo('dataSplat/interpolate/1600/hypothesis_true')
     # selectsensor.init_data('dataSplat/homogeneous-100/cov', 'dataSplat/homogeneous-100/sensors', 'dataSplat/homogeneous-100/hypothesis')
