@@ -1710,7 +1710,8 @@ def main4():
     '''main 4: SPLAT data + Our localization
     '''
     ll = Localization(grid_len=40, case='splat', debug=False)
-    ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_inter')  # the interpolated data
+    # ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_inter')  # the interpolated data
+    ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_5')  # the interpolated data
     ll.init_truehypo('dataSplat/interpolate/1600/hypothesis_true')
     # selectsensor.init_data('dataSplat/homogeneous-100/cov', 'dataSplat/homogeneous-100/sensors', 'dataSplat/homogeneous-100/hypothesis')
     # selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
@@ -1727,8 +1728,7 @@ def main4():
     power_errors = []
     ll.counter.num_exper = b-a
     ll.counter.time_start()
-    for i in [13, 38]:
-    # for i in range(a, b):
+    for i in range(a, b):
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
@@ -1737,7 +1737,7 @@ def main4():
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
         # true_indices = [int(true//40 /4)*4*40 + int(true%40 /4)*4 for true in true_indices]
-        intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False, truemeans=True)
+        intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True, truemeans=True)
 
         pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
         true_locations = ll.convert_to_pos(true_indices)
@@ -1766,6 +1766,63 @@ def main4():
         print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(ll.counter.time1_average(), ll.counter.time2_average(), ll.counter.time3_average(), ll.counter.time4_average()))
     except Exception as e:
         print(e)
+
+
+
+def main4_arg(train_percent, num_intru):
+    '''main 4: SPLAT data + Our localization
+    '''
+    ll = Localization(grid_len=40, case='splat', debug=False)
+    ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_{}'.format(train_percent))  # the interpolated data
+    ll.init_truehypo('dataSplat/interpolate/1600/hypothesis_true')
+
+    num_of_intruders = num_intru
+    b_dic = {1:100, 5:40, 10:25}
+    a, b = 0, b_dic[num_of_intruders]
+
+    errors = []
+    misses = []
+    false_alarms = []
+    power_errors = []
+    ll.counter.num_exper = b-a
+    ll.counter.time_start()
+    for i in range(a, b):
+        print('\n\nTest ', i)
+        random.seed(i)
+        np.random.seed(i)
+        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
+        true_indices, true_powers = generate_intruders(grid_len=ll.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
+        intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True, truemeans=True)
+
+        pred_locations, pred_power = ll.our_localization(sensor_outputs, intruders, i)
+        true_locations = ll.convert_to_pos(true_indices)
+
+        try:
+            error, miss, false_alarm, power_error = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
+            if len(error) != 0:
+                errors.extend(error)
+                power_errors.extend(power_error)
+            misses.append(miss)
+            false_alarms.append(false_alarm)
+            print('\nerror/miss/false/power = {:.3f}/{}/{}/{:.3f}'.format(np.array(error).mean(), miss, false_alarm, np.array(power_error).mean()) )
+            if ll.debug:
+                visualize_localization(ll.grid_len, true_locations, pred_locations, i)
+        except Exception as e:
+            print(e)
+
+    try:
+        errors = np.array(errors)
+        power_errors = np.array(power_errors)
+        print('(mean/max/min) error=({:.3f}/{:.3f}/{:.3f}), miss=({:.3f}/{}/{}), false_alarm=({:.3f}/{}/{}), power=({:.3f}/{:.3f}/{:.3f})'.format(errors.mean(), errors.max(), errors.min(), \
+              sum(misses)/(b-a), max(misses), min(misses), sum(false_alarms)/(b-a), max(false_alarms), min(false_alarms), power_errors.mean(), power_errors.max(), power_errors.min() ) )
+        ll.counter.time_end()
+        ratios = ll.counter.procedure_ratios()
+        print(ratios)
+        print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(ll.counter.time1_average(), ll.counter.time2_average(), ll.counter.time3_average(), ll.counter.time4_average()))
+    except Exception as e:
+        print(e)
+    
+    print('training percentage = {}, num of intruder = {}'.format(train_percent, num_intru))
 
 
 def main5():
@@ -1872,6 +1929,10 @@ def main6():
 if __name__ == '__main__':
     # main1()
     # main2()
-    main4()
+    # main4()
     # main5()
     # main6()
+
+    train_percent = [5, 10, 20, 50]
+    num_intru = [1, 5, 10]
+    main4_arg(train_percent[3], num_intru[2])
