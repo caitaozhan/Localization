@@ -1488,7 +1488,7 @@ class Localization:
         if R2 is None:
             R2             = 8     # larger R might help for ridge regression
         if threshold is None:
-            threshold      = -70
+            threshold      = -60
         if self.debug:
             visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
 
@@ -1513,7 +1513,7 @@ class Localization:
         for i in range(len(sensor_outputs_copy)): # Obtain local maximum within radius size_R
             current_sensor = self.sensors[sensor_sorted_index[i]]
             current_sensor_output = sensor_outputs_copy[current_sensor.index]
-            if current_sensor_output < threshold or (current_sensor.x, current_sensor.y) in [(intru.x, intru.y) for intru in intruders]:  # >= 0 means the sensor is at the same locations at the transmitter (for the Utah case)
+            if current_sensor_output < threshold: # or (current_sensor.x, current_sensor.y) in [(intru.x, intru.y) for intru in intruders]:  # >= 0 means the sensor is at the same locations at the transmitter (for the Utah case)
                 continue
             location      = current_sensor.x*self.grid_len + current_sensor.y
             sensor_subset = self.sensors_collect[self.key.format(location, R1)]
@@ -1828,16 +1828,12 @@ def main4_arg(train_percent, num_intru):
 def main5():
     '''main 5: SPLAT data + SPLOT localization
     '''
-    selectsensor = Localization(grid_len=40)
-    #selectsensor.init_data('dataSplat/homogeneous-100/cov', 'dataSplat/homogeneous-100/sensors', 'dataSplat/homogeneous-100/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-150/cov', 'dataSplat/homogeneous-150/sensors', 'dataSplat/homogeneous-150/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-200/cov', 'dataSplat/homogeneous-200/sensors', 'dataSplat/homogeneous-200/hypothesis')
-    #selectsensor.init_data('dataSplat/homogeneous-250/cov', 'dataSplat/homogeneous-250/sensors', 'dataSplat/homogeneous-250/hypothesis')
-    selectsensor.init_data('dataSplat/homogeneous-300/cov', 'dataSplat/homogeneous-300/sensors', 'dataSplat/homogeneous-300/hypothesis')
-    true_powers = [-2, -1, 0, 1, 2]                                                    # 5 intruders
-    selectsensor.vary_power(true_powers)
+    ll = Localization(grid_len=40, debug=True)
+    ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_true')
+    ll.init_truehypo('dataSplat/interpolate/1600/hypothesis_true')
 
-    repeat = 30
+    num_of_intruders = 10
+    repeat = 50
     errors = []
     misses = []
     false_alarms = []
@@ -1846,23 +1842,24 @@ def main5():
         print('\n\nTest ', i)
         random.seed(i)
         np.random.seed(i)
-        true_indices, true_powers = generate_intruders(grid_len=selectsensor.grid_len, edge=2, num=5, min_dist=1, powers=true_powers)
+        true_powers = [random.uniform(-2, 2) for i in range(num_of_intruders)]
+        true_indices, true_powers = generate_intruders(grid_len=ll.grid_len, edge=2, num=num_of_intruders, min_dist=1, powers=true_powers)
         #true_indices, true_powers = generate_intruders_2(grid_len=selectsensor.grid_len, edge=2, min_dist=16, max_dist=5, intruders=true_indices, powers=true_powers, cluster_size=3)
         #true_indices = [x * selectsensor.grid_len + y for (x, y) in true_indices]
 
-        intruders, sensor_outputs = selectsensor.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
+        intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=False)
 
-        pred_locations = selectsensor.splot_localization(sensor_outputs, intruders, fig=i)
-        true_locations = selectsensor.convert_to_pos(true_indices)
+        pred_locations = ll.splot_localization(sensor_outputs, intruders, fig=i)
+        true_locations = ll.convert_to_pos(true_indices)
 
         try:
-            error, miss, false_alarm = selectsensor.compute_error2(true_locations, pred_locations)
-            if error >= 0:
-                errors.append(error)
+            error, miss, false_alarm = ll.compute_error2(true_locations, pred_locations)
+            if len(error) != 0:
+                errors.extend(error)
             misses.append(miss)
             false_alarms.append(false_alarm)
-            print('error/miss/false/power = {}/{}/{}'.format(error, miss, false_alarm) )
-            visualize_localization(selectsensor.grid_len, true_locations, pred_locations, i)
+            print('error/miss/false = {}/{}/{}'.format(np.array(error).mean(), miss, false_alarm) )
+            visualize_localization(ll.grid_len, true_locations, pred_locations, i)
         except Exception as e:
             print(e)
 
@@ -1930,9 +1927,9 @@ if __name__ == '__main__':
     # main1()
     # main2()
     # main4()
-    # main5()
+    main5()
     # main6()
 
-    train_percent = [5, 10, 20, 50]
-    num_intru = [1, 5, 10]
-    main4_arg(train_percent[3], num_intru[2])
+    # train_percent = [5, 10, 20, 50]
+    # num_intru = [1, 5, 10]
+    # main4_arg(train_percent[3], num_intru[2])
