@@ -44,3 +44,5 @@ data50/homogeneous-75-3/
 data50/homogeneous-75-4/
 visualize/utah
 visualize/rss-dist
+rtl-testbed
+*.pyc

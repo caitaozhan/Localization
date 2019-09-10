@@ -27,6 +27,8 @@ import itertools
 import line_profiler
 import matplotlib.pyplot as plt
 
+import mkl
+mkl.set_num_threads(1)
 
 class Localization:
     '''Multiple transmitter localization
@@ -563,7 +565,6 @@ class Localization:
                 return sensor
             else:
                 i += 1
-
 
 
     def collect_sensors_in_radius_precompute(self, radius, intruders):
@@ -1828,7 +1829,7 @@ def main4_arg(train_percent, num_intru):
 def main5():
     '''main 5: SPLAT data + SPLOT localization
     '''
-    ll = Localization(grid_len=40, debug=True)
+    ll = Localization(grid_len=40, debug=False)
     ll.init_data('dataSplat/interpolate/1600/cov', 'dataSplat/interpolate/1600/sensors', 'dataSplat/interpolate/1600/hypothesis_true')
     ll.init_truehypo('dataSplat/interpolate/1600/hypothesis_true')
 
