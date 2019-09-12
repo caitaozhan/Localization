@@ -1,4 +1,4 @@
-'''Naive Factory for thresholds
+'''Naive Factory for thresholds and filepath
 '''
 
 class Config:
@@ -30,7 +30,7 @@ class Config:
         self.surround_threshold = surround_threshold
         self.error_threshold    = error_threshold
 
-    
+
     def __str__(self):
         return 'Q      = {}\n'.format(self.Q) + \
                'Q2     = {}\n'.format(self.Q2) + \
@@ -62,7 +62,7 @@ class Config:
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
-        if case == 'splat':
+        elif case == 'splat':
             q        = 2.3
             q2       = 2.
             q_prime1 = 0.5
@@ -77,8 +77,8 @@ class Config:
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
-        
-        if case == 'utah':
+
+        elif case == 'utah':
             q        = 3.
             q2       = 2.
             q_prime1 = 0.8
@@ -93,7 +93,45 @@ class Config:
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
-        
+
+        elif case == 'testbed-indoor':
+            q        = 3.
+            q2       = 2.
+            q_prime1 = 0.5
+            q_prime2 = 0.1
+            r        = [3.1, 2.1]
+            r2       = 3
+            e        = 0
+            nf_p     = -44
+            c_thre   = -20
+            s_thre   = -25
+            e_thre   = 0.3
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+
         else:
             print('unknown case', case)
-        
+
+
+class TrainingPath:
+    '''the path of training data
+    '''
+    def __init__(self, cov, sensors, hypothesis):
+        self.cov = cov
+        self.sensors = sensors
+        self.hypothesis = hypothesis
+
+    @classmethod
+    def naive_factory(cls, data_source):
+        '''a naive factory function for training data path
+        '''
+        if data_source == 'testbed-indoor':
+            cov = 'rtl-testbed/training/9.8/cov'
+            sensors = 'rtl-testbed/training/9.8/sensors'
+            hypothesis = 'rtl-testbed/training/9.8/hypothesis'
+            return cls(cov, sensors, hypothesis)
+        elif data_source == 'testbed-outdoor':
+            pass
+        else:
+            raise Exception('data source {} invalid'.format(data_source))

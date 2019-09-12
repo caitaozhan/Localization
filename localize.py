@@ -20,7 +20,7 @@ from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2, distance, Point
-from config import Config
+from loc_default_config import Config
 from waf_model import WAF
 from skimage.feature import peak_local_max
 import itertools
@@ -82,13 +82,13 @@ class Localization:
 
 
     #@profile
-    def init_data(self, cov_file, sensor_file, hypothesis_file):
+    def init_data(self, cov_file, sensor_file, hypothesis_file, MAP=None):
         '''Init everything from collected real data
            1. init covariance matrix
            2. init sensors
            3. init mean and std between every pair of transmitters and sensors
         '''
-        self.set_priori()
+        self.set_priori(MAP)
         cov = pd.read_csv(cov_file, header=None, delimiter=' ')
         del cov[len(cov)]
         #self.covariance = cov.values
@@ -319,13 +319,28 @@ class Localization:
         print('Init Utah success !')
 
 
-    def set_priori(self):
+    def set_priori(self, MAP=None):
         '''Set priori distribution - uniform distribution
         '''
-        uniform = 1./(self.grid_len * self.grid_len)
-        self.grid_priori    = np.full(self.grid_len * self.grid_len, uniform)
-        self.grid_posterior = np.full(self.grid_len * self.grid_len, uniform)
-    
+        if MAP is None:
+            uniform = 1./(self.grid_len * self.grid_len)
+            self.grid_priori    = np.full(self.grid_len * self.grid_len, uniform)
+            self.grid_posterior = np.full(self.grid_len * self.grid_len, uniform)
+        else:
+            num_valid_loc = int(MAP.x_axis_len * MAP.y_axis_len) - len(MAP.invalid_loc)
+            self.grid_priori    = np.full((self.grid_len, self.grid_len), 1./num_valid_loc)
+            self.grid_posterior = np.full((self.grid_len, self.grid_len), 1./num_valid_loc)
+            for x in range(self.grid_len):
+                for y in range(self.grid_len):
+                    if y >= MAP.y_axis_len or x >= MAP.x_axis_len:
+                        self.grid_priori[x][y] = 0
+                        self.grid_posterior[x][y] = 0
+            for x, y in MAP.invalid_loc:
+                self.grid_priori[x][y] = 0
+                self.grid_posterior[x][y] = 0
+            self.grid_priori = self.grid_priori.flatten()
+            self.grid_posterior = self.grid_posterior.flatten()
+
 
     def init_transmitters(self):
         '''Initiate a transmitter at all locations
@@ -1927,8 +1942,8 @@ def main6():
 if __name__ == '__main__':
     # main1()
     # main2()
-    # main4()
-    main5()
+    main4()
+    # main5()
     # main6()
 
     # train_percent = [5, 10, 20, 50]
