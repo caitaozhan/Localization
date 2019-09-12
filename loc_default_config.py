@@ -105,7 +105,7 @@ class Config:
             nf_p     = -44
             c_thre   = -20
             s_thre   = -25
-            e_thre   = 0.3
+            e_thre   = 1
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
@@ -117,10 +117,11 @@ class Config:
 class TrainingPath:
     '''the path of training data
     '''
-    def __init__(self, cov, sensors, hypothesis):
+    def __init__(self, cov, sensors, hypothesis, sensors_hostname):
         self.cov = cov
         self.sensors = sensors
         self.hypothesis = hypothesis
+        self.sensors_hostname = sensors_hostname
 
     @classmethod
     def naive_factory(cls, data_source):
@@ -130,7 +131,8 @@ class TrainingPath:
             cov = 'rtl-testbed/training/9.8/cov'
             sensors = 'rtl-testbed/training/9.8/sensors'
             hypothesis = 'rtl-testbed/training/9.8/hypothesis'
-            return cls(cov, sensors, hypothesis)
+            sensors_hostname = 'rtl-testbed/rx_data/9.8/sensors'
+            return cls(cov, sensors, hypothesis, sensors_hostname)
         elif data_source == 'testbed-outdoor':
             pass
         else:

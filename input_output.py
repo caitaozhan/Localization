@@ -38,10 +38,15 @@ class Input:
 
 class Output:
     def __init__(self, error = None,         # float
-                       false_alarm = None,   # 
-                       miss = None, 
+                       false_alarm = None,   # float
+                       miss = None,          # float
+                       power = None,         # float
                        time = None):
         self.error = error
         self.false_alarm = false_alarm
         self.miss = miss
+        self.power = power
         self.time = time
+    
+    def __str__(self):
+        return "errors = {}, false_alarm = {:.3f}, miss = {:.3f}, power errors = {}, time = {:.3f}".format(self.error, self.false_alarm, self.miss, self.power, self.time)

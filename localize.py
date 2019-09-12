@@ -78,7 +78,7 @@ class Localization:
         self.debug  = debug                    # debug mode do visulization stuff, which is time expensive
         self.utah   = False
         self.config = Config.naive_factory(case)
-        print(self.config)
+        print('{}\n{}'.format(case, self.config))
 
 
     #@profile
@@ -88,12 +88,13 @@ class Localization:
            2. init sensors
            3. init mean and std between every pair of transmitters and sensors
         '''
-        self.set_priori(MAP)
+        self.MAP = MAP
+        self.set_priori()
         cov = pd.read_csv(cov_file, header=None, delimiter=' ')
         del cov[len(cov)]
-        #self.covariance = cov.values
-        self.covariance = np.zeros(cov.values.shape)
-        np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor NOTE: need to modify three places
+        self.covariance = cov.values
+        # self.covariance = np.zeros(cov.values.shape)
+        # np.fill_diagonal(self.covariance, 1.)  # std=1 for every sensor NOTE: need to modify three places (1)
 
         self.sensors = []
         with open(sensor_file, 'r') as f:
@@ -102,8 +103,8 @@ class Localization:
             lines = f.readlines()
             for line in lines:
                 line = line.split(' ')
-                x, y, _, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
-                self.sensors.append(Sensor(x, y, 1, cost, gain_up_bound=max_gain, index=index))  # uniform sensors
+                x, y, std, cost = int(line[0]), int(line[1]), float(line[2]), float(line[3])
+                self.sensors.append(Sensor(x, y, std, cost, gain_up_bound=max_gain, index=index))  # uniform sensors (2)
                 index += 1
 
         self.means = np.zeros((self.grid_len * self.grid_len, len(self.sensors)))
@@ -117,7 +118,7 @@ class Localization:
                 #sen_x, sen_y = int(line[2]), int(line[3])
                 mean, std = float(line[4]), float(line[5])
                 self.means[tran_x*self.grid_len + tran_y, count] = mean  # count equals to the index of the sensors
-                self.stds[tran_x*self.grid_len + tran_y, count] = 1      # std = 1 for every sensor
+                self.stds[tran_x*self.grid_len + tran_y, count] = std     # std = 1 for every sensor (3)
                 count = (count + 1) % len(self.sensors)
 
         for transmitter in self.transmitters:
@@ -319,23 +320,23 @@ class Localization:
         print('Init Utah success !')
 
 
-    def set_priori(self, MAP=None):
+    def set_priori(self):
         '''Set priori distribution - uniform distribution
         '''
-        if MAP is None:
+        if self.MAP is None:
             uniform = 1./(self.grid_len * self.grid_len)
             self.grid_priori    = np.full(self.grid_len * self.grid_len, uniform)
             self.grid_posterior = np.full(self.grid_len * self.grid_len, uniform)
         else:
-            num_valid_loc = int(MAP.x_axis_len * MAP.y_axis_len) - len(MAP.invalid_loc)
+            num_valid_loc = int(self.MAP.x_axis_len * self.MAP.y_axis_len) - len(self.MAP.invalid_loc)
             self.grid_priori    = np.full((self.grid_len, self.grid_len), 1./num_valid_loc)
             self.grid_posterior = np.full((self.grid_len, self.grid_len), 1./num_valid_loc)
             for x in range(self.grid_len):
                 for y in range(self.grid_len):
-                    if y >= MAP.y_axis_len or x >= MAP.x_axis_len:
+                    if y >= self.MAP.y_axis_len or x >= self.MAP.x_axis_len:
                         self.grid_priori[x][y] = 0
                         self.grid_posterior[x][y] = 0
-            for x, y in MAP.invalid_loc:
+            for x, y in self.MAP.invalid_loc:
                 self.grid_priori[x][y] = 0
                 self.grid_posterior[x][y] = 0
             self.grid_priori = self.grid_priori.flatten()
@@ -1082,8 +1083,10 @@ class Localization:
         '''Our localization, reduce R procedure 1 + procedure 2
         Args:
             sensor_outputs (np.array): the RSS of the sensors, information used to do localization
-            intruders (list): location of intruders, used only for visualization
-            fig (int):        used for log's filenames
+            intruders (list<Transmitter>): location of intruders, used only for visualization
+            fig (int): used for log's filenames
+        Return:
+            list<int>, list<float> -- a list of 1D index indicating the location, and a list of power
         '''
         self.reset()
         identified   = []
@@ -1275,7 +1278,7 @@ class Localization:
         for i in range(len(hypotheses_combination)):
             combination = hypotheses_combination[i]
             if combination == (73, 74):
-               print(combination)
+                print(combination)
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
                 mean_vec += db_2_power_(self.means[hypo][sensor_subset], utah=self.utah)
@@ -1837,7 +1840,7 @@ def main4_arg(train_percent, num_intru):
         print('Proc-1 time = {:.3f}, Proc-1.1 = {:.3f}， Proc-2-2 time = {:.3f}, Proc-2-3 time = {:.3f}'.format(ll.counter.time1_average(), ll.counter.time2_average(), ll.counter.time3_average(), ll.counter.time4_average()))
     except Exception as e:
         print(e)
-    
+
     print('training percentage = {}, num of intruder = {}'.format(train_percent, num_intru))
 
 

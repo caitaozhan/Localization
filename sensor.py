@@ -36,7 +36,7 @@ class Sensor:
     def __lt__(self, other):
         '''Override the less than method and turn it into 'more than'
         '''
-        return self.gain_up_bound > other.gain_up_bound
+        return self.gain_up_bound > other.gain_up_bound   # for sensor selection
 
 
     def update_battery(self, energy=1):
