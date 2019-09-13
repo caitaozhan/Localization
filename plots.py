@@ -113,8 +113,9 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
             color = -0.2
         grid[sensor.x][sensor.y] = color
         #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
-    for intr in intruders:
-        grid[intr.x][intr.y] = -1
+
+    # for intr in intruders:
+    #     grid[intr.x][intr.y] = -1
 
     # for index, sensor in enumerate(sensors):
     #     color = sensor_outputs[index]
@@ -136,6 +137,36 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     plt.savefig('visualize/localization/{}-sensor-output'.format(fig))
 
 
+def visualize_sensor_output2(grid_len, intruders, sensor_outputs, sensors, threshold, fig):
+    '''Visualize the intruders and sensor_output to have a better sense on deciding the threshold
+    Args:
+        grid_len (int):       length of grid
+        intruders (list):     list of Transmitter objects
+        sensor_output (list): list of float (RSSI)
+        sensors (lists):      list of Sensor objects
+    '''
+    grid = np.zeros((grid_len, grid_len))
+    for index, sensor in enumerate(sensors):
+        if sensor_outputs[index] > threshold:
+            color = sensor_outputs[index]
+        else:
+            color = threshold
+        grid[sensor.x][sensor.y] = color
+
+    grid2 = np.copy(grid)
+    for i in range(grid_len):
+        for j in range(grid_len):
+            grid2[i, j] = grid[j, grid_len-1-i]
+    sns.set(style="white")
+    plt.subplots(figsize=(10, 10))
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=True)
+    plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
+    #plt.show()
+    plt.title('Intruders: ' + ' '.join(map(lambda intru: '({:2d}, {:2d})'.format(intru.x, intru.y), intruders)), fontsize=20)
+    plt.savefig('visualize/localization/{}-sensor-output'.format(fig))
+
+
 def visualize_q(grid_len, posterior, fig):
     '''Args: grid_len (int) posterior (np.array), 1D array
     '''
@@ -143,7 +174,7 @@ def visualize_q(grid_len, posterior, fig):
     for x in range(grid_len):
         for y in range(grid_len):
             grid[x][y] = np.log10(posterior[x*grid_len + y])
-    grid[grid == -np.inf] = -330
+    grid[grid == -np.inf] = -15
 
     grid2 = np.copy(grid)
     for i in range(grid_len):

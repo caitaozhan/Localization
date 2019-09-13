@@ -18,7 +18,7 @@ from itertools import combinations
 from sklearn.cluster import KMeans
 from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
-from plots import visualize_sensor_output, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
+from plots import visualize_sensor_output, visualize_sensor_output2, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2, distance, Point
 from loc_default_config import Config
 from waf_model import WAF
@@ -1371,7 +1371,7 @@ class Localization:
         offset = 0 #0.74 for synthetic, 0.5 for splat
         while detected:
             if self.debug:
-                visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
+                visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
             detected = False
             previous_identified = list(set(previous_identified).union(set(identified)))
             posterior, H_0, Q, power = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig, previous_identified)

@@ -95,9 +95,9 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 3.
+            q        = 1.2
             q2       = 2.
-            q_prime1 = 0.5
+            q_prime1 = 0.4
             q_prime2 = 0.1
             r        = [3.1, 2.1]
             r2       = 3
