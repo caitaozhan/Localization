@@ -138,7 +138,7 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
 
 
 def visualize_sensor_output2(grid_len, intruders, sensor_outputs, sensors, threshold, fig):
-    '''Visualize the intruders and sensor_output to have a better sense on deciding the threshold
+    '''(For testbed) Visualize the intruders and sensor_output to have a better sense on deciding the threshold
     Args:
         grid_len (int):       length of grid
         intruders (list):     list of Transmitter objects
@@ -182,7 +182,7 @@ def visualize_q(grid_len, posterior, fig):
             grid2[i, j] = grid[j, grid_len-1-i]
 
     plt.subplots(figsize=(8, 8))
-    sns.heatmap(grid2, vmin=np.min(grid2), vmax=np.max(grid2), square=True, linewidth=0.5)
+    sns.heatmap(grid2, vmin=np.min(grid2), vmax=np.max(grid2), square=True, linewidth=0.5, annot=True)
     plt.title('Q: ploting the exponent of Q, \n min exponent = -infinity (modify to -330 for plotting), max = {}'.format(round(np.max(grid), 3)))
     plt.savefig('visualize/localization/{}-q'.format(fig))
 

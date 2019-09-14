@@ -97,7 +97,7 @@ class Config:
         elif case == 'testbed-indoor':
             q        = 1.2
             q2       = 2.
-            q_prime1 = 0.4
+            q_prime1 = 0.3
             q_prime2 = 0.1
             r        = [3.1, 2.1]
             r2       = 3
@@ -114,25 +114,31 @@ class Config:
             print('unknown case', case)
 
 
-class TrainingPath:
-    '''the path of training data
+class TrainingInfo:
+    '''the information of training data
     '''
-    def __init__(self, cov, sensors, hypothesis, sensors_hostname):
+    def __init__(self, cov, sensors, hypothesis, sensors_hostname, train_percent):
         self.cov = cov
         self.sensors = sensors
         self.hypothesis = hypothesis
         self.sensors_hostname = sensors_hostname
+        self.train_percent = train_percent
 
     @classmethod
-    def naive_factory(cls, data_source):
+    def naive_factory(cls, data_source, train_percent):
         '''a naive factory function for training data path
+        Args:
+            data_source   -- str
+            train_percent -- int
+        Return:
+
         '''
         if data_source == 'testbed-indoor':
             cov = 'rtl-testbed/training/9.8/cov'
             sensors = 'rtl-testbed/training/9.8/sensors'
             hypothesis = 'rtl-testbed/training/9.8/hypothesis'
             sensors_hostname = 'rtl-testbed/rx_data/9.8/sensors'
-            return cls(cov, sensors, hypothesis, sensors_hostname)
+            return cls(cov, sensors, hypothesis, sensors_hostname, train_percent)
         elif data_source == 'testbed-outdoor':
             pass
         else:

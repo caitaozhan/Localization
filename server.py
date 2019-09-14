@@ -1,16 +1,17 @@
 '''Localization server
 '''
+import os
 import time
 import argparse
+import sys
 import numpy as np
 from flask import Flask, request
-from loc_default_config import TrainingPath
+from loc_default_config import TrainingInfo
 from localize import Localization
 from input_output import Input, Output
 
-import sys
-sys.path.append('rtl-testbed/')
 try:
+    sys.path.append('rtl-testbed/')
     from default_config import OutdoorMap, IndoorMap
 except:
     print('Import error')
@@ -19,38 +20,60 @@ app = Flask(__name__)
 
 @app.route('/localize', methods=['POST'])
 def localize():
-    '''process the POST request'''
-    data = request.get_json()   # type(data) = dict
-    for key, value in data.items():
-        print('key   :', key)
-        print('value :', value)
+    '''process the POST request
+    '''
+    # step 0: parse the request data
+    myinput = Input.from_json_dict(request.get_json())  # get_json() return a dict
+    myinput.train_percent = train.train_percent
 
-    sensor_data = data["sensor_data"]
-    sensor_output = np.zeros(len(sensor_data))
-    for hostname, rss in sensor_data.items():
-        index = server_support.get_index(hostname)
-        sensor_output[index] = rss
+    # step 1: set up sensor data
+    try:
+        sensor_data = myinput.sensor_data
+        sensor_output = np.zeros(len(sensor_data))
+        for hostname, rss in sensor_data.items():
+            index = server_support.get_index(hostname)
+            sensor_output[index] = rss
+    except Exception as e:
+        print(e)
+        print('most probability a few sensors did not send its data')
+        print(sensor_data)
+        print(hostname, index)
+        return 'Bad Request'
 
-    ground_truth = data['ground_truth']
+    # step 2: set up ground truth
+    ground_truth = myinput.ground_truth
     true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll)
 
-    i = data['experiment_num']
+    # step 3: do the localization
+    outputs = []
+    if 'our' in myinput.methods:
+        start = time.time()
+        pred_locations, pred_power = ll.our_localization(sensor_output, intruders, myinput.experiment_num)
+        end = time.time()
+        pred_locations = server_support.pred_loc_to_center(pred_locations)
+        errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
+        outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start))
+    if 'splot' in myinput.methods:
+        pass
 
-    start = time.time()
-    pred_locations, pred_power = ll.our_localization(sensor_output, intruders, i)
-    end = time.time()
-    errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
-    output = Output(errors, false_alarm, miss, power_errors, end-start)
-    print(output)
-    return str(data) + '\n'
+    # step 4: log the input and output
+    server_support.log(myinput, outputs)
+
+    return 'Hello world'
 
 
 class ServerSupport:
     '''Misc things to support the server running
     '''
-    def __init__(self, sensors_hostname):
+    def __init__(self, sensors_hostname, output_dir, output_file):
+        '''
+        Args:
+            sensors_hostname -- str -- a file name
+            output_file      -- str -- a file name
+        '''
         self.hostname_2_index = {}
         self.init_hostname_2_index(sensors_hostname)
+        self.output = self.init_output(output_dir, output_file)
 
     def init_hostname_2_index(self, sensors_hostname):
         '''init a dictionary'''
@@ -61,6 +84,18 @@ class ServerSupport:
                 self.hostname_2_index[line[0]] = counter
                 counter += 1
 
+    def init_output(self, output_dir, output_file):
+        '''set up output file
+        Args:
+            output_dir  -- str
+            output_file -- str
+        Return:
+            io.TextIOWrapper
+        '''
+        if os.path.exists(output_dir) is False:
+            os.mkdir(output_dir)
+        return open(output_dir + '/' + output_file, 'a')
+
     def get_index(self, hostname):
         index = self.hostname_2_index.get(hostname)
         if index is not None:
@@ -68,14 +103,13 @@ class ServerSupport:
         else:
             raise Exception('hostname {} do not exist'.format(hostname))
 
-
     def parse_ground_truth(self, ground_truth, ll, train_power=50):
         '''parse the ground truth from the client
         Args:
             ground_truth -- {...} eg. {'T1': {'location': [9.5, 5.5], 'gain': '50'}}
             ll           -- Localization
         Return:
-            true_locations -- list<(int, int)>
+            true_locations -- list<(float, float)>
             true_powers    -- list<float>
             intruders      -- list<Transmitter>
         '''
@@ -86,7 +120,7 @@ class ServerSupport:
             for key, value in truth.items():
                 if key == 'location':
                     one_d_index = (int(value[0])*grid_len + int(value[1]))
-                    two_d_index = (int(value[0]), int(value[1]))
+                    two_d_index = (value[0], value[1])
                     true_locations.append(two_d_index)
                     intruders.append(ll.transmitters[one_d_index])
                 elif key == 'gain':
@@ -95,11 +129,37 @@ class ServerSupport:
                     raise Exception('key = {} invalid!'.format(key))
         return true_locations, true_powers, intruders
 
+    def pred_loc_to_center(self, pred_locations):
+        '''Make the predicted locations be the center of the predicted grid
+        Args:
+            pred_locations -- list<tuple<int, int>>
+        Return:
+            list<tuple<int, int>>
+        '''
+        pred_center = []
+        for pred in pred_locations:
+            center = (pred[0] + 0.5, pred[1] + 0.5)
+            pred_center.append(center)
+        return pred_center
+
+    def log(self, myinput, outputs):
+        '''log the results
+        Args:
+            myinput -- Input
+            outputs -- {str:Output}
+        '''
+        self.output.write(myinput.log())
+        for output in outputs:
+            self.output.write(output.log())
+        self.output.write('\n')
+
 
 data_source = 'testbed-indoor'
-output_file = 'output/results'
-train = TrainingPath.naive_factory(data_source)
-server_support = ServerSupport(train.sensors_hostname)
+train_percent = 100
+output_dir  = 'results/9.14'
+output_file = 'log'
+train = TrainingInfo.naive_factory(data_source, train_percent)
+server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
 ll = Localization(grid_len=10, case=data_source, debug=True)
 ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 
@@ -108,12 +168,13 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='localization server')
     parser.add_argument('-src', '--data_source', type=str, nargs=1, default=['testbed-indoor'], help='data source: testbed-indoor, testbed-outdoor')
-    parser.add_argument('-of', '--output_file', type=str, nargs=1, default=['output/results'], help='the localization results')
+    parser.add_argument('-od', '--output_dir', type=str, nargs=1, default=['results/9.14'], help='the localization results')
+    parser.add_argument('-of', '--output_file', type=str, nargs=1, default=['log'], help='the localization results')
     args = parser.parse_args()
     data_source = args.data_source[0]
     output_file = args.output_file[0]
-    train = TrainingPath.naive_factory(data_source)
-    server_support = ServerSupport(train.sensors_hostname)
+    train = TrainingInfo.naive_factory(data_source, 100)
+    server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
     ll = Localization(grid_len=10, case=data_source, debug=True)
     ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 
