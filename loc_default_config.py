@@ -95,14 +95,14 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 1.2
+            q        = 1.7
             q2       = 2.
             q_prime1 = 0.3
             q_prime2 = 0.1
-            r        = [3.1, 2.1]
+            r        = [3.1, 2.3]
             r2       = 3
             e        = 0
-            nf_p     = -44
+            nf_p     = -47
             c_thre   = -20
             s_thre   = -25
             e_thre   = 1
@@ -125,19 +125,20 @@ class TrainingInfo:
         self.train_percent = train_percent
 
     @classmethod
-    def naive_factory(cls, data_source, train_percent):
+    def naive_factory(cls, data_source, date, train_percent):
         '''a naive factory function for training data path
         Args:
-            data_source   -- str
+            data_source   -- str,
+            date          -- str, eg. "9.15"
             train_percent -- int
         Return:
 
         '''
         if data_source == 'testbed-indoor':
-            cov = 'rtl-testbed/training/9.8/cov'
-            sensors = 'rtl-testbed/training/9.8/sensors'
-            hypothesis = 'rtl-testbed/training/9.8/hypothesis'
-            sensors_hostname = 'rtl-testbed/rx_data/9.8/sensors'
+            cov = 'rtl-testbed/training/{}/cov'.format(date)
+            sensors = 'rtl-testbed/training/{}/sensors'.format(date)
+            hypothesis = 'rtl-testbed/training/{}/hypothesis'.format(date)
+            sensors_hostname = 'rtl-testbed/rx_data/sensors'  # TODO: might need to alter, more generalized
             return cls(cov, sensors, hypothesis, sensors_hostname, train_percent)
         elif data_source == 'testbed-outdoor':
             pass

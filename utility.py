@@ -492,6 +492,32 @@ class Wall:
         return False
 
 
+def my_local_max(posterior, radius, threshold_abs):
+    '''skimage.feature.peak_local_max()'s behavior is strange, not what I expected.
+    Args:
+        posterior -- np.ndrray, n=2
+        radius    -- float
+        threshold_abs -- float
+    Return:
+        list<tuple<int, int>> -- a list of 2D index of the local maximum
+    '''
+    local_max = []
+    size = len(posterior)
+    for i in range(size):
+        for j in range(size):
+            if posterior[i, j] < threshold_abs:
+                continue
+            is_local_max = True
+            for x in range(i-int(radius), i+int(radius)+1):
+                for y in range(j-int(radius), j+int(radius)+1):
+                    if x >= 0 and y >= 0 and x < size and y < size and distance((x, y), (i, j)) < radius:
+                        if posterior[x][y] > posterior[i][j]:
+                            is_local_max = False
+            if is_local_max:
+                local_max.append((i, j))
+    return local_max
+
+
 if __name__ == '__main__':
     for _ in range(20):
         print('intruders = ', generate_intruders(grid_len=50, edge=2, num=6, min_dist=20, powers=[-4, -2, 0, 2, 4]))

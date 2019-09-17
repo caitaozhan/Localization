@@ -19,7 +19,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_sensor_output2, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
-from utility import generate_intruders, generate_intruders_2, distance, Point
+from utility import generate_intruders, generate_intruders_2, distance, Point, my_local_max
 from loc_default_config import Config
 from waf_model import WAF
 from skimage.feature import peak_local_max
@@ -27,8 +27,8 @@ import itertools
 import line_profiler
 import matplotlib.pyplot as plt
 
-import mkl
-mkl.set_num_threads(1)
+# import mkl
+# mkl.set_num_threads(1)
 
 class Localization:
     '''Multiple transmitter localization
@@ -950,22 +950,23 @@ class Localization:
             subset_sensors.remove(screw)
 
 
-    def mle_closedform(self, sensor_outputs, mean_vec, variance):
+    def mle_closedform(self, sensor_outputs, mean_vec, variance, threshold=1):
         '''Solve the vaires power issue: from discrete values to continueous values
         Args:
             sensor_outputs (np.array): sensor outputs, the data D={x1, x2, ... , xn} of MLE
             mean_vec (np.array):       the mean of the guassian distributions
             variance (np.array):       the variance of sensors (inside a circle)
+            threshold (float):         constraint the power upper bound and lower bound
         Return:
             delta_p (float):  the power
         '''
         prod = np.prod(variance)
         tmp = prod/variance
         delta_p = np.sum(tmp*(sensor_outputs - mean_vec))/(np.sum(tmp))   # closed form solution by doing derivatation on the MLE expresstion
-        if delta_p > 2:
-            delta_p = 2
-        elif delta_p < -2:
-            delta_p = -2
+        if delta_p > threshold:
+            delta_p = threshold
+        elif delta_p < -threshold:
+            delta_p = -threshold
         return delta_p
 
 
@@ -1073,6 +1074,7 @@ class Localization:
     def reset(self):
         '''Reset some members for our localization
         '''
+        self.debug = True
         self.set_priori()
         self.sensors_used = np.zeros(len(self.sensors), dtype=bool)
         self.sensors_collect = {}
@@ -1383,8 +1385,9 @@ class Localization:
             posterior = np.reshape(posterior[:-1], (self.grid_len, self.grid_len))
             if self.debug:
                 visualize_q_prime(posterior, fig)
-            indices = peak_local_max(posterior, 2, threshold_abs=self.config.Q_prime1, exclude_border = False)
-
+            indices = peak_local_max(posterior, radius, threshold_abs=self.config.Q_prime1, exclude_border = False)
+            indices = my_local_max(posterior, radius, threshold_abs=self.config.Q_prime1)
+            # FUCK !!!
             if len(indices) == 0:
                 print("No Q' peaks...")
                 continue
@@ -1412,6 +1415,7 @@ class Localization:
                 else:
                     print()
             print('---')
+            self.debug = False
         return identified, pred_power
 
 

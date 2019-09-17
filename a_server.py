@@ -42,7 +42,7 @@ def localize():
 
     # step 2: set up ground truth
     ground_truth = myinput.ground_truth
-    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll)
+    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll, train_power=55)
 
     # step 3: do the localization
     outputs = []
@@ -52,7 +52,7 @@ def localize():
         end = time.time()
         pred_locations = server_support.pred_loc_to_center(pred_locations)
         errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
-        outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start))
+        outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start, pred_locations))
     if 'splot' in myinput.methods:
         pass
 
@@ -152,13 +152,15 @@ class ServerSupport:
         for output in outputs:
             self.output.write(output.log())
         self.output.write('\n')
+        self.output.flush()
 
 
 data_source = 'testbed-indoor'
+training_date = '9.15'
 train_percent = 100
-output_dir  = 'results/9.14'
+output_dir  = 'results/9.15'
 output_file = 'log'
-train = TrainingInfo.naive_factory(data_source, train_percent)
+train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
 server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
 ll = Localization(grid_len=10, case=data_source, debug=True)
 ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
@@ -170,10 +172,14 @@ if __name__ == '__main__':
     parser.add_argument('-src', '--data_source', type=str, nargs=1, default=['testbed-indoor'], help='data source: testbed-indoor, testbed-outdoor')
     parser.add_argument('-od', '--output_dir', type=str, nargs=1, default=['results/9.14'], help='the localization results')
     parser.add_argument('-of', '--output_file', type=str, nargs=1, default=['log'], help='the localization results')
+    parser.add_argument('-da', '--date', type=str, nargs=1, default=[None], help='the date when trainig data is trained')
     args = parser.parse_args()
+
     data_source = args.data_source[0]
     output_file = args.output_file[0]
-    train = TrainingInfo.naive_factory(data_source, 100)
+    training_date = args.training_date[0]
+
+    train = TrainingInfo.naive_factory(data_source, training_date, 100)
     server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
     ll = Localization(grid_len=10, case=data_source, debug=True)
     ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map

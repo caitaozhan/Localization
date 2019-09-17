@@ -174,7 +174,7 @@ def visualize_q(grid_len, posterior, fig):
     for x in range(grid_len):
         for y in range(grid_len):
             grid[x][y] = np.log10(posterior[x*grid_len + y])
-    grid[grid == -np.inf] = -15
+    grid[grid == -np.inf] = -30
 
     grid2 = np.copy(grid)
     for i in range(grid_len):
@@ -264,7 +264,7 @@ def visualize_splot(weight_global, folder, fig):
         weight_global (np.array)
     '''
     weight_global[weight_global==0] = np.min(weight_global)
-    
+
     grid_len = len(weight_global)
     grid2 = np.copy(weight_global)
     for i in range(grid_len):

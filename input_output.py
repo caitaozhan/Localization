@@ -80,17 +80,19 @@ class Output:
     '''Encapsulate the the output of the algorithms
     '''
     def __init__(self, method = None,        # str
-                       error = None,         # []
+                       error  = [],          #
                        false_alarm = None,   # float
-                       miss = None,          # float
-                       power = None,         # []
-                       time = None):         # float
+                       miss   = None,        # float
+                       power  = None,        # []
+                       time   = None,         # float
+                       preds  = []):
         self.method = method
-        self.error = error
+        self.error = [round(e, 3) for e in error]
         self.false_alarm = false_alarm
         self.miss = miss
-        self.power = power
-        self.time = time
+        self.power = [round(p, 3) for p in power]
+        self.time = round(time, 3)
+        self.preds  = preds
 
     def to_json_str(self):
         '''return json formated string
@@ -103,7 +105,8 @@ class Output:
             "false_alarm":self.false_alarm,
             "miss":self.miss,
             "power":self.power,
-            "time":self.time
+            "time":self.time,
+            "preds":self.preds
         }
         return json.dumps(outputdict)
 
@@ -137,7 +140,8 @@ class Output:
         miss = json_dict['miss']
         power = json_dict['power']
         time = json_dict['time']
-        return cls(method, error, false_alarm, miss, power, time)
+        preds = json_dict['preds']
+        return cls(method, error, false_alarm, miss, power, time, preds)
 
 
 
