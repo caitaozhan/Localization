@@ -42,7 +42,7 @@ def localize():
 
     # step 2: set up ground truth
     ground_truth = myinput.ground_truth
-    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll, train_power=55)
+    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll, train_power=53)
 
     # step 3: do the localization
     outputs = []
@@ -162,8 +162,9 @@ class ServerSupport:
 
 data_source = 'testbed-indoor'
 training_date = '9.19'
+result_date = '9.20'
 train_percent = 100
-output_dir  = 'results/{}'.format(training_date)
+output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
 server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)

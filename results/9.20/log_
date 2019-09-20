@@ -1,0 +1,22 @@
+Merge the testing data and training to new training data
+
+{"num_intruder": 1, "data_source": "testbed-indoor", "train_percent": 100, "methods": ["our", "splot"], "experiment_num": 18, "sensor_data": {"host-170": -41.845726, "host-190": -42.798785, "host-210": -44.945692, "host-120": -37.741307, "host-130": -43.77988, "host-104": -45.038044, "host-105": -45.930343, "host-158": -40.022185, "host-188": -42.766254, "host-101": -46.016446, "host-102": -45.052917, "host-110": -40.227418, "host-166": -38.03261, "host-150": -33.160447, "host-180": -38.611835, "host-140": -40.575596, "host-160": -38.838657, "host-200": -43.998059}, "ground_truth": {"T1": {"location": [0.5, 5.4], "gain": "53"}}}
+{"method": "our", "error": [0.9], "false_alarm": 1.0, "miss": 0.0, "power": [-0.223], "time": 0.475, "preds": [[0.5, 4.5], [3.5, 3.5]]}
+{"method": "splot", "error": [0.9], "false_alarm": 0.0, "miss": 0.0, "power": [0], "time": 0.389, "preds": [[0.5, 4.5]]}
+
+{"num_intruder": 1, "data_source": "testbed-indoor", "train_percent": 100, "methods": ["our", "splot"], "experiment_num": 19, "sensor_data": {"host-170": -41.226696, "host-190": -42.700607, "host-210": -45.349491, "host-120": -35.622048, "host-130": -42.254895, "host-104": -44.421545, "host-105": -45.011125, "host-158": -40.441947, "host-188": -41.221254, "host-101": -43.126839, "host-102": -44.539556, "host-110": -38.274751, "host-166": -37.254266, "host-150": -33.853289, "host-180": -37.236793, "host-140": -41.780294, "host-160": -39.825205, "host-200": -44.216749}, "ground_truth": {"T1": {"location": [0.5, 5.4], "gain": "53"}}}
+{"method": "our", "error": [0.9], "false_alarm": 1.0, "miss": 0.0, "power": [0.148], "time": 0.488, "preds": [[0.5, 4.5], [3.5, 3.5]]}
+{"method": "splot", "error": [0.9], "false_alarm": 0.0, "miss": 0.0, "power": [0], "time": 0.39, "preds": [[0.5, 4.5]]}
+
+{"num_intruder": 1, "data_source": "testbed-indoor", "train_percent": 100, "methods": ["our", "splot"], "experiment_num": 23, "sensor_data": {"host-170": -43.283227, "host-190": -38.229128, "host-210": -40.082083, "host-120": -21.339931, "host-130": -36.994734, "host-104": -39.701831, "host-105": -40.064067, "host-158": -40.882528, "host-188": -45.281092, "host-101": -38.154174, "host-102": -40.035222, "host-110": -40.417872, "host-166": -42.187551, "host-150": -41.557665, "host-180": -39.14573, "host-140": -43.829691, "host-160": -46.991263, "host-200": -43.974309}, "ground_truth": {"T1": {"location": [3.5, 5.4], "gain": "53"}}}
+{"method": "our", "error": [0.1], "false_alarm": 1.0, "miss": 0.0, "power": [-0.829], "time": 0.516, "preds": [[3.5, 5.5], [7.5, 3.5]]}
+{"method": "splot", "error": [0.1], "false_alarm": 0.0, "miss": 0.0, "power": [0], "time": 0.39, "preds": [[3.5, 5.5]]}
+
+{"num_intruder": 1, "data_source": "testbed-indoor", "train_percent": 100, "methods": ["our", "splot"], "experiment_num": 24, "sensor_data": {"host-170": -40.939578, "host-190": -38.860097, "host-210": -46.848477, "host-120": -38.166107, "host-130": -47.237698, "host-104": -45.022435, "host-105": -46.213328, "host-158": -41.756615, "host-188": -42.492828, "host-101": -45.600872, "host-102": -47.863124, "host-110": -41.658539, "host-166": -44.486709, "host-150": -33.55248, "host-180": -31.706963, "host-140": -41.198249, "host-160": -37.548197, "host-200": -40.305535}, "ground_truth": {"T1": {"location": [0.5, 4.5], "gain": "53"}}}
+{"method": "our", "error": [0.0], "false_alarm": 1.0, "miss": 0.0, "power": [-0.304], "time": 0.493, "preds": [[0.5, 4.5], [3.5, 3.5]]}
+{"method": "splot", "error": [2.236], "false_alarm": 0.0, "miss": 0.0, "power": [0], "time": 0.443, "preds": [[2.5, 3.5]]}
+
+{"num_intruder": 1, "data_source": "testbed-indoor", "train_percent": 100, "methods": ["our", "splot"], "experiment_num": 25, "sensor_data": {"host-170": -40.751342, "host-190": -37.975576, "host-210": -46.953771, "host-120": -36.719218, "host-130": -47.653244, "host-104": -45.294277, "host-105": -45.694925, "host-158": -44.278221, "host-188": -43.166751, "host-101": -46.270325, "host-102": -47.54468, "host-110": -39.06938, "host-166": -43.876418, "host-150": -32.220349, "host-180": -32.772362, "host-140": -39.902757, "host-160": -37.0336, "host-200": -40.709095}, "ground_truth": {"T1": {"location": [0.5, 4.5], "gain": "53"}}}
+{"method": "our", "error": [0.0], "false_alarm": 1.0, "miss": 0.0, "power": [0.384], "time": 0.481, "preds": [[0.5, 4.5], [3.5, 3.5]]}
+{"method": "splot", "error": [0.0], "false_alarm": 0.0, "miss": 0.0, "power": [0], "time": 0.392, "preds": [[0.5, 4.5]]}
+

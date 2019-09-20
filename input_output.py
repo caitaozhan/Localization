@@ -2,6 +2,7 @@
 Encapsulate the Input and Output of the localization system
 '''
 
+import numpy as np
 import json   # json.dumps(): dict --> str;  json.loads(): str --> dict
 
 class Default:
@@ -94,6 +95,28 @@ class Output:
         self.time = round(time, 3)
         self.preds  = preds
 
+
+    def get_avg_error(self):
+        '''The average error
+        '''
+        return np.mean(self.error)
+
+
+    def get_metric(self, metric):
+        '''
+        Args:
+            metric -- str
+        Return:
+            float
+        '''
+        if metric == 'error':
+            return self.get_avg_error()
+        if metric == 'miss':
+            return self.miss
+        if metric == 'false_alarm':
+            return self.false_alarm
+
+
     def to_json_str(self):
         '''return json formated string
         Return:
@@ -143,6 +166,33 @@ class Output:
         preds = json_dict['preds']
         return cls(method, error, false_alarm, miss, power, time, preds)
 
+
+class IOUtility:
+
+    @staticmethod
+    def read_logs(logs):
+        '''Read logs
+        Args:
+            logs -- [str, ...] -- a list of filenames
+        Return:
+            data -- [ (Input, {str: Output}), ... ] -- data to plot
+        '''
+        data = []
+        for log in logs:
+            f = open(log, 'r')
+            while True:
+                inputline = f.readline()
+                if inputline == '':
+                    break
+                myinput = Input.from_json_str(inputline)
+                output_by_method = {}
+                outputline = f.readline()
+                while outputline != '' and outputline != '\n':
+                    output = Output.from_json_str(outputline)
+                    output_by_method[output.method] = output
+                    outputline = f.readline()
+                data.append((myinput, output_by_method))
+        return data
 
 
 if __name__ == '__main__':

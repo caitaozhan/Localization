@@ -1443,7 +1443,11 @@ class Localization:
                 print('q-threshold = {:.2e}, inside = {}'.format(q_threshold, sen_inside), end=' ')
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
-                if q > q_threshold and not all([far[0] < -2, far[1] >= 0.75, far[2] < -1]): # TODO: add them to the Config class
+                if q > q_threshold:
+                    if all([far[0] < -2, far[1] >= 0.5, far[2] < -1]): # TODO: add them to the Config class
+                        continue
+                    if all([far[0] < -1, far[1] >= 0.66, far[2] < -1]): # TODO: add them to the Config class
+                        continue
                     print(' **Intruder!**')
                     detected = True
                     p = power[index[0]][index[1]] - offset
