@@ -5,6 +5,7 @@ class Config:
     def __init__(self, q_threshold_1, q_threshold_2, q_prime_threshold_1, q_prime_threshold_2,\
                        r_list, r_2, edge, noise_floor_prune, center_threshold, surround_threshold, error_threshold):
         '''
+        Configurations for our algorithm
         Args:
             q_threshold_1 (float): the q threshold in procedure 1. how far away from the mean?
             q_threshold_2 (float): the q threshold in procedure 2. how far away from the mean?
@@ -95,7 +96,7 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 1.7
+            q        = 1.6
             q2       = 2.
             q_prime1 = 0.3
             q_prime2 = 0.1
@@ -112,6 +113,48 @@ class Config:
 
         else:
             print('unknown case', case)
+
+
+
+class ConfigSplot:
+    '''Configurations for SPLOT
+    '''
+    def __init__(self, R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square):
+        self.R1 = R1                                    # radius for local maximal
+        self.R2 = R2                                    # radius for localizing Tx
+        self.localmax_threshold = localmax_threshold    # threshold for local maximal
+        self.sigma_x_square = sigma_x_square
+        self.delta_c = delta_c
+        self.n_p = n_p
+        self.minPL = minPL
+        self.delta_N_square = delta_N_square
+
+
+    @classmethod
+    def naive_factory(cls, case):
+        if case == 'testbed-indoor':
+            R1 = 3
+            R2 = 3
+            localmax_threshold = -35
+            sigma_x_square = 0.5
+            delta_c = 1
+            n_p = 2
+            minPL = 1
+            delta_N_square = 1
+
+            return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
+
+        else:
+            R1 = 8
+            R2 = 8
+            localmax_threshold = -60
+            sigma_x_square = 0.5
+            delta_c = 1
+            n_p = 2
+            minPL = 1.5
+            delta_N_square = 1
+
+            return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
 
 
 class TrainingInfo:

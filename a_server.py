@@ -29,10 +29,10 @@ def localize():
     # step 1: set up sensor data
     try:
         sensor_data = myinput.sensor_data
-        sensor_output = np.zeros(len(sensor_data))
+        sensor_outputs = np.zeros(len(sensor_data))
         for hostname, rss in sensor_data.items():
             index = server_support.get_index(hostname)
-            sensor_output[index] = rss
+            sensor_outputs[index] = rss
     except Exception as e:
         print(e)
         print('most probability a few sensors did not send its data')
@@ -48,13 +48,18 @@ def localize():
     outputs = []
     if 'our' in myinput.methods:
         start = time.time()
-        pred_locations, pred_power = ll.our_localization(sensor_output, intruders, myinput.experiment_num)
+        pred_locations, pred_power = ll.our_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
         end = time.time()
         pred_locations = server_support.pred_loc_to_center(pred_locations)
         errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
         outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start, pred_locations))
     if 'splot' in myinput.methods:
-        pass
+        start = time.time()
+        pred_locations = ll.splot_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
+        end = time.time()
+        pred_locations = server_support.pred_loc_to_center(pred_locations)
+        errors, miss, false_alarm = ll.compute_error2(true_locations, pred_locations)
+        outputs.append(Output('splot', errors, false_alarm, miss, [0], end-start, pred_locations))
 
     # step 4: log the input and output
     server_support.log(myinput, outputs)
@@ -156,9 +161,9 @@ class ServerSupport:
 
 
 data_source = 'testbed-indoor'
-training_date = '9.15'
+training_date = '9.19'
 train_percent = 100
-output_dir  = 'results/9.15'
+output_dir  = 'results/{}'.format(training_date)
 output_file = 'log'
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
 server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
@@ -184,4 +189,4 @@ if __name__ == '__main__':
     ll = Localization(grid_len=10, case=data_source, debug=True)
     ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)

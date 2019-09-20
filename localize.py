@@ -20,7 +20,7 @@ from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_sensor_output2, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
 from utility import generate_intruders, generate_intruders_2, distance, Point, my_local_max
-from loc_default_config import Config
+from loc_default_config import Config, ConfigSplot
 from waf_model import WAF
 from skimage.feature import peak_local_max
 import itertools
@@ -78,6 +78,7 @@ class Localization:
         self.debug  = debug                    # debug mode do visulization stuff, which is time expensive
         self.utah   = False
         self.config = Config.naive_factory(case)
+        self.config_splot = ConfigSplot.naive_factory(case)
         print('{}\n{}'.format(case, self.config))
 
 
@@ -963,11 +964,12 @@ class Localization:
         prod = np.prod(variance)
         tmp = prod/variance
         delta_p = np.sum(tmp*(sensor_outputs - mean_vec))/(np.sum(tmp))   # closed form solution by doing derivatation on the MLE expresstion
+        delta_p_origin = delta_p
         if delta_p > threshold:
             delta_p = threshold
         elif delta_p < -threshold:
             delta_p = -threshold
-        return delta_p
+        return delta_p, delta_p_origin
 
 
     #@profile
@@ -985,9 +987,11 @@ class Localization:
             H_0 (bool): whether H_0 is the largest likelihood or not
             q (np.array): 2D array of Q
             power_grid (np.array): 2D array of power
+            far_from_intruder_grid (np.array): 2D array of describing how far away the location is from the intruder
         '''
         self.grid_posterior = np.zeros(self.grid_len * self.grid_len + 1)
         power_grid = np.zeros((self.grid_len, self.grid_len))
+        far_from_intruder_grid = [[0 for _ in range(self.grid_len)] for _ in range(self.grid_len)]
         out_prob = 0.2 # probability of sensor outside the radius
         constant = 3
         self.prune_hypothesis(hypotheses, sensor_outputs, radius, least_num_sensor=1)  # the Utah dataset is small, don't need to prune
@@ -1008,7 +1012,10 @@ class Localization:
                 mean_vec = np.copy(trans.mean_vec)
                 mean_vec = mean_vec[subset_sensors]
                 variance = np.diagonal(self.covariance)[subset_sensors]
-                delta_p = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                delta_p, delta_p_origin = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                far_from_intruder_score, far_ratio = self.compute_far_from_intruder_score(trans.x, trans.y, subset_sensors, sensor_outputs_copy, mean_vec)
+                # print(trans.x, trans.y, far_from_intruder_score, far_ratio, delta_p_origin)
+                far_from_intruder_grid[trans.x][trans.y] = (far_from_intruder_score, far_ratio, delta_p_origin)
                 mean_vec = mean_vec + delta_p  # add the delta of power
                 stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
                 array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
@@ -1068,7 +1075,41 @@ class Localization:
 
         grid_posterior_copy = np.nan_to_num(grid_posterior_copy)
         self.grid_posterior = grid_posterior_copy
-        return self.grid_posterior, H_0, q, power_grid
+        return self.grid_posterior, H_0, q, power_grid, far_from_intruder_grid
+
+
+    def compute_far_from_intruder_score(self, t_x, t_y, subset_sensors, sensor_outputs_copy, mean_vec):
+        '''The motivation of this method is to kill false alarms that are far from the intruder (for the indoor case)
+           A score is computed, the more negative the score, the higher chance it is far away from the transmitter
+           Also a ratio of sensor RSS smaller than mean is computed, the higher the raio, the higher chance it is far away from the transmitter
+        Args:
+            t_x -- int  -- x coordinate of transmitter
+            t_y -- int  -- y coordinate of transmitter
+            subset_sensors -- np.ndarray, n=1
+            sensor_outputs_copy -- np.ndarray, n=1
+            mean_vec -- np.ndarray, n=1
+        Return:
+            float, float
+        '''
+        deltas = []
+        weights = []
+        counter = 0
+        for i, sensor in enumerate(subset_sensors):
+            if sensor_outputs_copy[i] < -30:  # TODO: another (?) threshold to add in configurations
+                delta = sensor_outputs_copy[i] - mean_vec[i]
+                deltas.append(delta)
+                if delta < 0:
+                    counter += 1
+            else:
+                deltas.append(0)  # when RSS is larger than -30, a intruder cannot be far away
+            s_x = self.sensors[sensor].x
+            s_y = self.sensors[sensor].y
+            dist = distance((t_x, t_y), (s_x, s_y))
+            dist = dist if dist > 0 else 0.5
+            weights.append(1. / dist)
+        weights /= np.sum(weights)
+        score = np.array(deltas) * weights
+        return np.sum(score), counter / float(len(deltas))
 
 
     def reset(self):
@@ -1376,7 +1417,7 @@ class Localization:
                 visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
             detected = False
             previous_identified = list(set(previous_identified).union(set(identified)))
-            posterior, H_0, Q, power = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig, previous_identified)
+            posterior, H_0, Q, power, far_grid = self.posterior_iteration(hypotheses, radius, sensor_outputs, fig, previous_identified)
 
             if H_0:
                 print('H_0 is most likely')
@@ -1385,9 +1426,7 @@ class Localization:
             posterior = np.reshape(posterior[:-1], (self.grid_len, self.grid_len))
             if self.debug:
                 visualize_q_prime(posterior, fig)
-            indices = peak_local_max(posterior, radius, threshold_abs=self.config.Q_prime1, exclude_border = False)
             indices = my_local_max(posterior, radius, threshold_abs=self.config.Q_prime1)
-            # FUCK !!!
             if len(indices) == 0:
                 print("No Q' peaks...")
                 continue
@@ -1402,7 +1441,9 @@ class Localization:
                 q_threshold = self.get_q_threshold_custom(location, sen_inside)
                 print('Q = {:.2e}'.format(q), end='; ')
                 print('q-threshold = {:.2e}, inside = {}'.format(q_threshold, sen_inside), end=' ')
-                if q > q_threshold:
+                far = far_grid[index[0]][index[1]]
+                print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
+                if q > q_threshold and not all([far[0] < -2, far[1] >= 0.75, far[2] < -1]): # TODO: add them to the Config class
                     print(' **Intruder!**')
                     detected = True
                     p = power[index[0]][index[1]] - offset
@@ -1427,14 +1468,18 @@ class Localization:
         Return:
             list<(int, int)>: a list of 2D index
         '''
+        x_length, y_length = self.grid_len, self.grid_len
+        if self.MAP is not None:
+            x_length = min(x_length, self.MAP.x_axis_len)
+            y_length = min(y_length, self.MAP.y_axis_len)
         confined_area = []
         min_x = sensor.x - R
         min_y = sensor.y - R
         for x in range(min_x, min_x + 2*R):
-            if x < 0 or x >= self.grid_len:
+            if x < 0 or x >= x_length:
                 continue
             for y in range(min_y, min_y + 2*R):
-                if y < 0 or y >= self.grid_len:
+                if y < 0 or y >= y_length:
                     continue
                 dist = math.sqrt((x - sensor.x)**2 + (y - sensor.y)**2)
                 if dist < R:
@@ -1501,33 +1546,24 @@ class Localization:
             list<(int, int)>: a list of localized locations, each location is (a, b)
         '''
         self.reset()
-        sigma_x_square = 0.5
-        delta_c        = 1
-        n_p            = 2     # 2.46
-        minPL          = 0.5   # For SPLOT 1.5, for Ridge and LASSO 1.0
-        delta_N_square = 1     # no specification in MobiCom'17 ?
-        if R1 is None:
-            R1             = 8
-        if R2 is None:
-            R2             = 8     # larger R might help for ridge regression
-        if threshold is None:
-            threshold      = -60
+        sigma_x_square = self.config_splot.sigma_x_square
+        delta_c        = self.config_splot.delta_c
+        n_p            = self.config_splot.n_p                # 2.46
+        minPL          = self.config_splot.minPL              # For SPLOT 1.5, for Ridge and LASSO 1.0
+        delta_N_square = self.config_splot.delta_N_square     # no specification in MobiCom'17 ?
+        R1             = self.config_splot.R1
+        R2             = self.config_splot.R2     # larger R might help for ridge regression
+        threshold      = self.config_splot.localmax_threshold
         if self.debug:
-            visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+            visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
 
         R_list = [R1, R2]
         # R_list = np.unique(R_list)
         self.collect_sensors_in_radius_precompute(R_list, intruders)
 
-
         weight_global  = np.zeros((self.grid_len, self.grid_len))
         sensor_sorted_index = np.flip(np.argsort(sensor_outputs))
 
-        if threshold is None:
-            threshold = int(0.3*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
-            sensor_sorted_index = np.flip(np.argsort(sensor_outputs))  # decrease
-            threshold = sensor_outputs[sensor_sorted_index[threshold]]
-            threshold = threshold if threshold > -75 else -75
         #gradient, noise = self.compute_path_loss(sensor_outputs)
         detected_intruders = []
         sensor_outputs_copy = np.copy(sensor_outputs)
@@ -1559,7 +1595,6 @@ class Localization:
                     dist = self.euclidean((sensor.x, sensor.y), voxel, minPL)
                     W_matrix[i, q] = (dist/0.5) ** (-n_p)
 
-            
             W_transpose = np.transpose(W_matrix)
             y = np.zeros(len(sensor_subset))
             for i in range(len(sensor_subset)):
