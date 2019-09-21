@@ -11,7 +11,7 @@ from localize import Localization
 from input_output import Input, Output
 
 try:
-    sys.path.append('rtl-testbed/')
+    sys.path.append('../rtl-testbed/')
     from default_config import OutdoorMap, IndoorMap
 except:
     print('Import error')
