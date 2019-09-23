@@ -71,7 +71,7 @@ class PlotResult:
 
 if __name__ == '__main__':
 
-    logs = ['results/9.20/log']
+    logs = ['results/9.20/log', 'results/9.23/log']
     data = IOUtility.read_logs(logs)
 
     PlotResult.error_numintru(data, src='testbed-indoor', train_percent=100)

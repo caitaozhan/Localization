@@ -47,3 +47,4 @@ visualize/utah
 visualize/rss-dist
 rtl-testbed
 *.pyc
+*log_
