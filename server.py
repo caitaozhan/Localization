@@ -42,7 +42,7 @@ def localize():
 
     # step 2: set up ground truth
     ground_truth = myinput.ground_truth
-    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll, train_power=53)
+    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll)
 
     # step 3: do the localization
     outputs = []
@@ -70,15 +70,19 @@ def localize():
 class ServerSupport:
     '''Misc things to support the server running
     '''
-    def __init__(self, sensors_hostname, output_dir, output_file):
+    def __init__(self, sensors_hostname, output_dir, output_file, tx_calibrate):
         '''
         Args:
             sensors_hostname -- str -- a file name
+            output_dir       -- str -- a directory name
             output_file      -- str -- a file name
+            tx_calibrate     -- {str:int} -- the calibrated power for different transmitters
         '''
         self.hostname_2_index = {}
         self.init_hostname_2_index(sensors_hostname)
         self.output = self.init_output(output_dir, output_file)
+        self.tx_calibrate = tx_calibrate
+
 
     def init_hostname_2_index(self, sensors_hostname):
         '''init a dictionary'''
@@ -108,7 +112,7 @@ class ServerSupport:
         else:
             raise Exception('hostname {} do not exist'.format(hostname))
 
-    def parse_ground_truth(self, ground_truth, ll, train_power=50):
+    def parse_ground_truth(self, ground_truth, ll):
         '''parse the ground truth from the client
         Args:
             ground_truth -- {...} eg. {'T1': {'location': [9.5, 5.5], 'gain': '50'}}
@@ -121,7 +125,7 @@ class ServerSupport:
         grid_len = ll.grid_len
         true_locations, true_powers = [], []
         intruders = []
-        for _, truth in ground_truth.items():
+        for tx, truth in sorted(ground_truth.items()):
             for key, value in truth.items():
                 if key == 'location':
                     one_d_index = (int(value[0])*grid_len + int(value[1]))
@@ -129,6 +133,7 @@ class ServerSupport:
                     true_locations.append(two_d_index)
                     intruders.append(ll.transmitters[one_d_index])
                 elif key == 'gain':
+                    train_power = self.tx_calibrate[tx]
                     true_powers.append(train_power - float(value))
                 else:
                     raise Exception('key = {} invalid!'.format(key))
@@ -162,12 +167,12 @@ class ServerSupport:
 
 data_source = 'testbed-indoor'
 training_date = '9.19'
-result_date = '9.20'
+result_date = '9.22'
 train_percent = 100
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
-server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
+server_support = ServerSupport(train.sensors_hostname, output_dir, output_file, train.tx_calibrate)
 ll = Localization(grid_len=10, case=data_source, debug=True)
 ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 
@@ -186,7 +191,7 @@ if __name__ == '__main__':
     training_date = args.training_date[0]
 
     train = TrainingInfo.naive_factory(data_source, training_date, 100)
-    server_support = ServerSupport(train.sensors_hostname, output_dir, output_file)
+    server_support = ServerSupport(train.sensors_hostname, output_dir, output_file, train.tx_calibrate)
     ll = Localization(grid_len=10, case=data_source, debug=True)
     ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 

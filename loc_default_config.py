@@ -166,6 +166,7 @@ class TrainingInfo:
         self.hypothesis = hypothesis
         self.sensors_hostname = sensors_hostname
         self.train_percent = train_percent
+        self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}   # human calibration, so that these Tx transmite at similar power
 
     @classmethod
     def naive_factory(cls, data_source, date, train_percent):
@@ -175,13 +176,13 @@ class TrainingInfo:
             date          -- str, eg. "9.15"
             train_percent -- int
         Return:
-
+            TrainingInfo
         '''
         if data_source == 'testbed-indoor':
-            cov = 'rtl-testbed/training/{}/cov'.format(date)
-            sensors = 'rtl-testbed/training/{}/sensors'.format(date)
-            hypothesis = 'rtl-testbed/training/{}/hypothesis'.format(date)
-            sensors_hostname = 'rtl-testbed/rx_data/sensors'  # TODO: might need to alter, more generalized
+            cov = '../rtl-testbed/training/{}/cov'.format(date)
+            sensors = '../rtl-testbed/training/{}/sensors'.format(date)
+            hypothesis = '../rtl-testbed/training/{}/hypothesis'.format(date)
+            sensors_hostname = '../rtl-testbed/rx_data/sensors'  # TODO: might need to alter, more generalized
             return cls(cov, sensors, hypothesis, sensors_hostname, train_percent)
         elif data_source == 'testbed-outdoor':
             pass

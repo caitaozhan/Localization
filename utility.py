@@ -1,6 +1,8 @@
 '''
 Some useful utilities
 '''
+
+import os
 import json
 import numpy as np
 import random
@@ -516,6 +518,15 @@ def my_local_max(posterior, radius, threshold_abs):
             if is_local_max:
                 local_max.append((i, j))
     return local_max
+
+
+def guarantee_dir(directory):
+    '''Gurantee that a directory exists
+    Args:
+        directory -- str
+    '''
+    if os.path.exists(directory) is False:
+        os.mkdir(directory)
 
 
 if __name__ == '__main__':

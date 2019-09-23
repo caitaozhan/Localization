@@ -5,6 +5,7 @@ Plots
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from utility import guarantee_dir
 
 
 def save_data(plot_data, file_path):
@@ -134,6 +135,7 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
     #plt.show()
     plt.title('Intruders: ' + ' '.join(map(lambda intru: '({:2d}, {:2d})'.format(intru.x, intru.y), intruders)), fontsize=20)
+    guarantee_dir('visualize/localization')
     plt.savefig('visualize/localization/{}-sensor-output'.format(fig))
 
 
@@ -164,6 +166,7 @@ def visualize_sensor_output2(grid_len, intruders, sensor_outputs, sensors, thres
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
     #plt.show()
     plt.title('Intruders: ' + ' '.join(map(lambda intru: '({:2d}, {:2d})'.format(intru.x, intru.y), intruders)), fontsize=20)
+    guarantee_dir('visualize/localization')
     plt.savefig('visualize/localization/{}-sensor-output'.format(fig))
 
 

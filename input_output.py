@@ -89,8 +89,8 @@ class Output:
                        preds  = []):
         self.method = method
         self.error = [round(e, 3) for e in error]
-        self.false_alarm = false_alarm
-        self.miss = miss
+        self.false_alarm = round(false_alarm)
+        self.miss = round(miss, 3)
         self.power = [round(p, 3) for p in power]
         self.time = round(time, 3)
         self.preds  = preds
