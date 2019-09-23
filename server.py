@@ -167,7 +167,7 @@ class ServerSupport:
 
 data_source = 'testbed-indoor'
 training_date = '9.19'
-result_date = '9.22'
+result_date = '9.23'
 train_percent = 100
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     parser.add_argument('-src', '--data_source', type=str, nargs=1, default=['testbed-indoor'], help='data source: testbed-indoor, testbed-outdoor')
     parser.add_argument('-od', '--output_dir', type=str, nargs=1, default=['results/9.14'], help='the localization results')
     parser.add_argument('-of', '--output_file', type=str, nargs=1, default=['log'], help='the localization results')
-    parser.add_argument('-da', '--date', type=str, nargs=1, default=[None], help='the date when trainig data is trained')
+    parser.add_argument('-td', '--training_date', type=str, nargs=1, default=[None], help='the date when trainig data is trained')
     args = parser.parse_args()
 
     data_source = args.data_source[0]

@@ -96,16 +96,16 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 1.5
+            q        = 1.25
             q2       = 2.
             q_prime1 = 0.3
             q_prime2 = 0.1
             r        = [3.1, 2.3]
-            r2       = 3
+            r2       = 3.1
             e        = 0
             nf_p     = -47
-            c_thre   = -20
-            s_thre   = -25
+            c_thre   = -30
+            s_thre   = -40
             e_thre   = 1
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\

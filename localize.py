@@ -6,7 +6,6 @@ import random
 import math
 import copy
 import time
-import os
 import numpy as np
 import pandas as pd
 from scipy.stats import multivariate_normal, norm
@@ -14,7 +13,7 @@ from sensor import Sensor
 from transmitter import Transmitter
 from utility import read_config, ordered_insert, power_2_db, power_2_db_, db_2_power, db_2_power_, find_elbow#, print_results
 from counter import Counter
-from itertools import combinations
+from itertools import combinations, product
 from sklearn.cluster import KMeans
 from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
@@ -23,7 +22,6 @@ from utility import generate_intruders, generate_intruders_2, distance, Point, m
 from loc_default_config import Config, ConfigSplot
 from waf_model import WAF
 from skimage.feature import peak_local_max
-import itertools
 import line_profiler
 import matplotlib.pyplot as plt
 
@@ -1252,7 +1250,7 @@ class Localization:
             (list, list)
         '''
         if self.debug:
-            visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+            visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
         detected, power = [], []
         center_list = []
         center = self.get_center_sensor(sensor_outputs, R, center_list, previous_identified)
@@ -1262,12 +1260,14 @@ class Localization:
             location = self.sensors[center].x*self.grid_len + self.sensors[center].y
             sensor_subset = self.sensors_collect[self.key.format(location, R)]
             self.ignore_screwed_sensor(sensor_subset, previous_identified, min_dist=2)
-            hypotheses = [h for h in range(len(self.transmitters)) if h != location and \
-                          math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
+            # hypotheses = [h for h in range(len(self.transmitters)) if h != location and \   # CANNOT get why h != location
+            #               math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
+            hypotheses = [h for h in range(len(self.transmitters)) if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             for t in range(2, 4):
                 self.counter.time3_start()
                 self.counter.time4_start()
-                hypotheses_combination = list(combinations(hypotheses, t))
+                # hypotheses_combination = list(combinations(hypotheses, t))   # two Tx cannot be at a same hypothesis
+                hypotheses_combination = list(product(hypotheses, repeat=t))   # two Tx can be at a same hypothesis
                 hypotheses_combination = [x for x in hypotheses_combination if x not in combination_checked] # prevent checking the same combination again
                 if len(hypotheses_combination) == 0:
                     break
@@ -1444,8 +1444,11 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if all([far[0] < -2, far[1] >= 0.5, far[2] < -1]) or all([far[0] < -1, far[1] >= 0.66, far[2] < -1]): # TODO: add them to the Config class
-                        print('far false alarm')
+                    if all([far[0] < -2, far[1] > 0.5, far[2] < -1]) or all([far[0] < -1, far[1] > 0.66, far[2] < -1]): # TODO: add them to the Config class
+                        print('* power too weak, likely far false alarm')
+                        continue
+                    if all([far[0] > 2, far[1] < 0.5, far[2] > 1]) or all([far[0] > 1, far[1] < 0.33, far[2] > 1]): # TODO: add them to the Config class
+                        print('* power too strong, likely multiple Tx')
                         continue
                     print(' **Intruder!**')
                     detected = True
@@ -1459,7 +1462,7 @@ class Localization:
                 else:
                     print()
             print('---')
-            self.debug = False
+            # self.debug = False
         return identified, pred_power
 
 
