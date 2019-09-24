@@ -160,11 +160,11 @@ class ConfigSplot:
 class TrainingInfo:
     '''the information of training data
     '''
-    def __init__(self, cov, sensors, hypothesis, sensors_hostname, train_percent):
+    def __init__(self, cov, sensors, hypothesis, hostname_loc, train_percent):
         self.cov = cov
         self.sensors = sensors
         self.hypothesis = hypothesis
-        self.sensors_hostname = sensors_hostname
+        self.hostname_loc = hostname_loc
         self.train_percent = train_percent
         self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}   # human calibration, so that these Tx transmite at similar power
 
@@ -182,9 +182,12 @@ class TrainingInfo:
             cov = '../rtl-testbed/training/{}/cov'.format(date)
             sensors = '../rtl-testbed/training/{}/sensors'.format(date)
             hypothesis = '../rtl-testbed/training/{}/hypothesis'.format(date)
-            sensors_hostname = '../rtl-testbed/rx_data/sensors'  # TODO: might need to alter, more generalized
-            return cls(cov, sensors, hypothesis, sensors_hostname, train_percent)
+            hostname_loc = '../rtl-testbed/training/{}/hostname_loc'.format(date)
+            return cls(cov, sensors, hypothesis, hostname_loc, train_percent)
         elif data_source == 'testbed-outdoor':
             pass
         else:
             raise Exception('data source {} invalid'.format(data_source))
+
+    def __str__(self):
+        return 'Training data info:\ncov = {}\nsensors = {}\nhypothesis = {}\nsensors_hostname = {}\n'.format(self.cov, self.sensors, self.hypothesis, self.hostname_loc)

@@ -18,6 +18,13 @@ except:
 
 app = Flask(__name__)
 
+
+@app.route('/on', methods=['GET'])
+def on():
+    '''See whether the server is turned on'''
+    return 'on'
+
+
 @app.route('/localize', methods=['POST'])
 def localize():
     '''process the POST request
@@ -172,7 +179,8 @@ train_percent = 100
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
-server_support = ServerSupport(train.sensors_hostname, output_dir, output_file, train.tx_calibrate)
+print(train)
+server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
 ll = Localization(grid_len=10, case=data_source, debug=True)
 ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 
