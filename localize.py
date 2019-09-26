@@ -632,10 +632,13 @@ class Localization:
             #sensor_output_from_transmitter = db_2_amplitude(self.means[trans_index, sen_index])
             #sensor_output -= sensor_output_from_transmitter
             #sensor_outputs[sen_index] = amplitude_2_db(sensor_output)
-            sensor_output = db_2_power_(sensor_outputs[sen_index], utah=self.utah)
-            # if sen_index == 35 or sen_index == 26:
-            #    print(sensor_output)
+
+            if self.means[trans_index, sen_index] < self.config.noise_floor_prune: 
+                # print(trans_index, sen_index, self.means[trans_index, sen_index])
+                continue                           # if it is smaller than noise floor, then do not deduct
+
             sensor_output_from_transmitter = db_2_power_(self.means[trans_index, sen_index] + power, utah=self.utah)
+            sensor_output = db_2_power_(sensor_outputs[sen_index], utah=self.utah)
             sensor_output -= sensor_output_from_transmitter
             sensor_outputs[sen_index] = power_2_db_(sensor_output, utah=self.utah)
             # if sen_index == 35 or sen_index == 26:
@@ -1250,7 +1253,7 @@ class Localization:
             (list, list)
         '''
         if self.debug:
-            visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+            visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
         detected, power = [], []
         center_list = []
         center = self.get_center_sensor(sensor_outputs, R, center_list, previous_identified)
@@ -1320,7 +1323,7 @@ class Localization:
         prior = 1./len(hypotheses_combination)
         for i in range(len(hypotheses_combination)):
             combination = hypotheses_combination[i]
-            if combination == (73, 74):
+            if combination in [(0, 0), (0, 0, 0)]:
                 print(combination)
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
@@ -1447,13 +1450,14 @@ class Localization:
                     if all([far[0] < -2, far[1] >= 0.5, far[2] < -1]) or all([far[0] < -1, far[1] >= 0.6, far[2] < -1]) or all([far[0] < -0.2, far[1] >= 0.75, far[2] < -0.2]): # TODO: add them to the Config class
                         print('* power too weak, likely far false alarm')
                         continue
-                    if all([far[0] > 2, far[1] < 0.5, far[2] > 1]) or all([far[0] > 1.5, far[1] < 0.33, far[2] > 1]): # TODO: add them to the Config class
+                    if all([far[0] > 2, far[1] < 0.5, far[2] > 1]) or all([far[0] > 1, far[1] < 0.33, far[2] > 2]) or far[1] < 0.12: # TODO: add them to the Config class
                         print('* power too strong, likely multiple Tx')
                         continue
                     print(' **Intruder!**')
                     detected = True
                     p = power[index[0]][index[1]] - offset
                     self.delete_transmitter(index, p, range(len(self.sensors)), sensor_outputs)
+                    # self.delete_transmitter(index, p, subset_sensors, sensor_outputs)   # for test-bed, only delete neighbor's power
                     self.grid_priori[index[0]*self.grid_len + index[1]] = 0
                     for sen in subset_sensors:
                         self.sensors_used[sen] = True
@@ -1462,7 +1466,7 @@ class Localization:
                 else:
                     print()
             print('---')
-            self.debug = False
+            # self.debug = False
         return identified, pred_power
 
 

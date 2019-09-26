@@ -99,14 +99,14 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 1.5
-            q2       = 2.
+            q        = 1.2
+            q2       = 2.5
             q_prime1 = 0.3
             q_prime2 = 0.05
             r        = [3.1, 2.3]
-            r2       = 3.1
+            r2       = 2.3
             e        = 0
-            nf_p     = -48
+            nf_p     = -47.5
             c_thre   = -40
             s_thre   = -45
             e_thre   = 1
@@ -138,7 +138,7 @@ class ConfigSplot:
         if case == 'testbed-indoor':
             R1 = 3
             R2 = 3
-            localmax_threshold = -35
+            localmax_threshold = -42
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2
@@ -183,7 +183,7 @@ class TrainingInfo:
             if train_power[1] == 53.0:
                 self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}
             elif train_power[1] == 45.0:
-                self.tx_calibrate = {"T1":45, "T2":45, "T3":19, "T5":17}
+                self.tx_calibrate = {"T1":45, "T2":45, "T3":17, "T5":17}
         elif train_power[0] == 'T2':
             if train_power[1] == 45.0:
                 self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":15}
