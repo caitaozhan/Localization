@@ -172,10 +172,10 @@ class ServerSupport:
         self.output.flush()
 
 
-data_source = 'testbed-indoor'
-training_date = '9.19'
-result_date = '9.23'
-train_percent = 100
+data_source = 'testbed-indoor'  # 1
+training_date = '9.26'          # 2
+result_date = '9.26'            # 3
+train_percent = 100             # 4
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     training_date = args.training_date[0]
 
     train = TrainingInfo.naive_factory(data_source, training_date, 100)
-    server_support = ServerSupport(train.sensors_hostname, output_dir, output_file, train.tx_calibrate)
+    server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
     ll = Localization(grid_len=10, case=data_source, debug=True)
     ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
 
