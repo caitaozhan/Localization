@@ -1,6 +1,9 @@
 '''Naive Factory for thresholds and filepath
 '''
 
+import json
+
+
 class Config:
     def __init__(self, q_threshold_1, q_threshold_2, q_prime_threshold_1, q_prime_threshold_2,\
                        r_list, r_2, edge, noise_floor_prune, center_threshold, surround_threshold, error_threshold):
@@ -160,13 +163,33 @@ class ConfigSplot:
 class TrainingInfo:
     '''the information of training data
     '''
-    def __init__(self, cov, sensors, hypothesis, hostname_loc, train_percent):
+    def __init__(self, cov, sensors, hypothesis, hostname_loc, train_percent, train_power):
         self.cov = cov
         self.sensors = sensors
         self.hypothesis = hypothesis
         self.hostname_loc = hostname_loc
         self.train_percent = train_percent
-        self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}   # human calibration, so that these Tx transmite at similar power
+        self.train_power = train_power
+        self.tx_calibrate = None   # human calibration, so that these Tx transmite at similar power (during training)
+        self.init_tx_calibrate()
+
+    def init_tx_calibrate(self): # TODO to debug
+        '''init the tx calibration. Note that Tx are not homogeneous
+        '''
+        lines = open(self.train_power, 'r').readlines()
+        train_power = json.loads(lines[0])
+        train_power = list(train_power.items())[0]
+        if train_power[0] == 'T1':
+            if train_power[1] == 53.0:
+                self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}
+            elif train_power[1] == 45.0:
+                self.tx_calibrate = {"T1":45, "T2":45, "T3":19, "T5":17}
+        elif train_power[0] == 'T2':
+            if train_power[1] == 45.0:
+                self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":15}
+        if self.tx_calibrate is None:
+            raise Exception('error durring train power calibration ')
+
 
     @classmethod
     def naive_factory(cls, data_source, date, train_percent):
@@ -183,11 +206,13 @@ class TrainingInfo:
             sensors = '../rtl-testbed/training/{}/sensors'.format(date)
             hypothesis = '../rtl-testbed/training/{}/hypothesis'.format(date)
             hostname_loc = '../rtl-testbed/training/{}/hostname_loc'.format(date)
-            return cls(cov, sensors, hypothesis, hostname_loc, train_percent)
+            train_power = '../rtl-testbed/training/{}/train_power'.format(date)
+            return cls(cov, sensors, hypothesis, hostname_loc, train_percent, train_power)
         elif data_source == 'testbed-outdoor':
             pass
         else:
             raise Exception('data source {} invalid'.format(data_source))
 
     def __str__(self):
-        return 'Training data info:\ncov = {}\nsensors = {}\nhypothesis = {}\nsensors_hostname = {}\n'.format(self.cov, self.sensors, self.hypothesis, self.hostname_loc)
+        return 'Training data info:\ncov = {}\nsensors = {}\nhypothesis = {}\nsensors_hostname = {}\ntrain_power = {}\n'.format(\
+                self.cov, self.sensors, self.hypothesis, self.hostname_loc, self.train_power)
