@@ -138,7 +138,7 @@ class ConfigSplot:
         if case == 'testbed-indoor':
             R1 = 3
             R2 = 3
-            localmax_threshold = -44
+            localmax_threshold = -43
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2

@@ -68,12 +68,25 @@ class PlotResult:
             print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + [method + ' ' + metric for method in methods]), '\n')
 
 
-
-if __name__ == '__main__':
-
-    logs = ['results/9.20/log', 'results/9.23/log']
+def indoor_full_training():
+    ''' indoor full training
+    '''
+    logs = ['results/9.20/log', 'results/9.23/log', 'results/9.24/log', 'results/9.26/log', 'results/9.27/log']
     data = IOUtility.read_logs(logs)
-
     PlotResult.error_numintru(data, src='testbed-indoor', train_percent=100)
     PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=100)
 
+
+def indoor_interpolation():
+    ''' indoor interpolation
+    '''
+    logs = ['results/9.27-inter/log']
+    data = IOUtility.read_logs(logs)
+    PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37)
+    PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
+
+
+if __name__ == '__main__':
+
+    # indoor_full_training()
+    indoor_interpolation()
