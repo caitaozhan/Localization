@@ -99,8 +99,8 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 1.2
-            q2       = 2.5
+            q        = 2
+            q2       = 2.6
             q_prime1 = 0.3
             q_prime2 = 0.05
             r        = [3.1, 2.3]
@@ -138,7 +138,7 @@ class ConfigSplot:
         if case == 'testbed-indoor':
             R1 = 3
             R2 = 3
-            localmax_threshold = -42
+            localmax_threshold = -44
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2

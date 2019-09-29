@@ -172,10 +172,10 @@ class ServerSupport:
         self.output.flush()
 
 
-data_source = 'testbed-indoor'  # 1
-training_date = '9.26'          # 2
-result_date = '9.26'            # 3
-train_percent = 100             # 4
+data_source = 'testbed-indoor'   # 1
+training_date = '9.26.inter-sub' # 2
+result_date = '9.27'             # 3
+train_percent = 37               # 4
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
