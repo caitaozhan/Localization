@@ -1466,7 +1466,7 @@ class Localization:
                 else:
                     print()
             print('---')
-            # self.debug = False
+            self.debug = False
         return identified, pred_power
 
 

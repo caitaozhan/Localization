@@ -37,8 +37,9 @@ class Input:
                      'train_percent':self.train_percent,
                      'methods':self.methods,
                      'experiment_num':self.experiment_num,
-                     'sensor_data':self.sensor_data,
-                     'ground_truth':self.ground_truth}
+                     'ground_truth':self.ground_truth,
+                     'sensor_data':self.sensor_data
+                     }
         return json.dumps(inputdict)
 
 

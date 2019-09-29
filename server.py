@@ -173,8 +173,8 @@ class ServerSupport:
 
 
 data_source = 'testbed-indoor'  # 1
-training_date = '9.26'          # 2
-result_date = '9.26'            # 3
+training_date = '9.27'          # 2
+result_date = '9.27'            # 3
 train_percent = 100             # 4
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'
