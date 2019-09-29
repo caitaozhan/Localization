@@ -100,7 +100,7 @@ class Config:
 
         elif case == 'testbed-indoor':
             q        = 1.2
-            q2       = 2.5
+            q2       = 3
             q_prime1 = 0.3
             q_prime2 = 0.05
             r        = [3.1, 2.3]
@@ -138,7 +138,7 @@ class ConfigSplot:
         if case == 'testbed-indoor':
             R1 = 3
             R2 = 3
-            localmax_threshold = -42
+            localmax_threshold = -43
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2

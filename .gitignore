@@ -48,3 +48,5 @@ visualize/rss-dist
 rtl-testbed
 *.pyc
 *log_
+*.backup
+*log2
