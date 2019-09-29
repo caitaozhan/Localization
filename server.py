@@ -52,6 +52,7 @@ def localize():
     true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll)
 
     # step 3: do the localization
+    print('\n****\nNumber =', myinput.experiment_num)
     outputs = []
     if 'our' in myinput.methods:
         start = time.time()
@@ -174,10 +175,10 @@ class ServerSupport:
 
 data_source = 'testbed-indoor'  # 1
 training_date = '9.27'          # 2
-result_date = '9.27'            # 3
+result_date = '9.28'            # 3
 train_percent = 100             # 4
 output_dir  = 'results/{}'.format(result_date)
-output_file = 'log'
+output_file = 'log'             # 5
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
 print(train)
 server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)

@@ -1323,8 +1323,6 @@ class Localization:
         prior = 1./len(hypotheses_combination)
         for i in range(len(hypotheses_combination)):
             combination = hypotheses_combination[i]
-            if combination in [(0, 0), (0, 0, 0)]:
-                print(combination)
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
                 mean_vec += db_2_power_(self.means[hypo][sensor_subset], utah=self.utah)
