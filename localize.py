@@ -1445,7 +1445,7 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if all([far[0] < -2, far[1] >= 0.5, far[2] < -1]) or all([far[0] < -1, far[1] >= 0.6, far[2] < -1]) or all([far[0] < -0.2, far[1] >= 0.75, far[2] < -0.2]): # TODO: add them to the Config class
+                    if all([far[0] < -2, far[1] >= 0.5, far[2] < -1]) or all([far[0] < -1, far[1] >= 0.6, far[2] < -1]): # TODO: add them to the Config class
                         print('* power too weak, likely far false alarm')
                         continue
                     if all([far[0] > 2, far[1] < 0.5, far[2] > 1]) or all([far[0] > 1, far[1] < 0.33, far[2] > 2]) or far[1] < 0.12: # TODO: add them to the Config class

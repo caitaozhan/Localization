@@ -99,8 +99,8 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-indoor':
-            q        = 2
-            q2       = 2.6
+            q        = 1.4
+            q2       = 2.4
             q_prime1 = 0.3
             q_prime2 = 0.05
             r        = [3.1, 2.3]
@@ -183,7 +183,7 @@ class TrainingInfo:
             if train_power[1] == 53.0:
                 self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}
             elif train_power[1] == 45.0:
-                self.tx_calibrate = {"T1":45, "T2":45, "T3":17, "T5":17}
+                self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":17}
         elif train_power[0] == 'T2':
             if train_power[1] == 45.0:
                 self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":15}
