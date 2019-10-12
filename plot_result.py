@@ -257,7 +257,7 @@ def indoor_interpolation():
     data = IOUtility.read_logs(logs)
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
-    
+
     PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
 

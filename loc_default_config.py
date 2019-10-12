@@ -114,6 +114,22 @@ class Config:
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
+        elif case == 'testbed-outdoor':
+            q        = 1.8
+            q2       = 2.4
+            q_prime1 = 0.3
+            q_prime2 = 0.05
+            r        = [4.1, 3.1, 2.3]
+            r2       = 3.1
+            e        = 0
+            nf_p     = -47.5
+            c_thre   = -42
+            s_thre   = -45
+            e_thre   = 1
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+
         else:
             print('unknown case', case)
 
@@ -139,6 +155,18 @@ class ConfigSplot:
             R1 = 3
             R2 = 3
             localmax_threshold = -43
+            sigma_x_square = 0.5
+            delta_c = 1
+            n_p = 2
+            minPL = 1
+            delta_N_square = 1
+
+            return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
+
+        elif case == 'testbed-outdoor':
+            R1 = 4
+            R2 = 4
+            localmax_threshold = -44
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2
@@ -185,31 +213,29 @@ class TrainingInfo:
             elif train_power[1] == 45.0:
                 self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":17}
         elif train_power[0] == 'T2':
-            if train_power[1] == 45.0:
-                self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":15}
+            if train_power[1] == 58.0:
+                self.tx_calibrate = {"T1":59, "T2":58, "T3":29, "T5":27}
         if self.tx_calibrate is None:
             raise Exception('error durring train power calibration ')
 
 
     @classmethod
-    def naive_factory(cls, data_source, date, train_percent):
+    def naive_factory(cls, data_source, data, train_percent):
         '''a naive factory function for training data path
         Args:
             data_source   -- str,
-            date          -- str, eg. "9.15"
+            data          -- str, eg. "9.15"
             train_percent -- int
         Return:
             TrainingInfo
         '''
-        if data_source == 'testbed-indoor':
-            cov = '../rtl-testbed/training/{}/cov'.format(date)
-            sensors = '../rtl-testbed/training/{}/sensors'.format(date)
-            hypothesis = '../rtl-testbed/training/{}/hypothesis'.format(date)
-            hostname_loc = '../rtl-testbed/training/{}/hostname_loc'.format(date)
-            train_power = '../rtl-testbed/training/{}/train_power'.format(date)
+        if data_source == 'testbed-indoor' or data_source == 'testbed-outdoor':
+            cov = '../rtl-testbed/training/{}/cov'.format(data)
+            sensors = '../rtl-testbed/training/{}/sensors'.format(data)
+            hypothesis = '../rtl-testbed/training/{}/hypothesis'.format(data)
+            hostname_loc = '../rtl-testbed/training/{}/hostname_loc'.format(data)
+            train_power = '../rtl-testbed/training/{}/train_power'.format(data)
             return cls(cov, sensors, hypothesis, hostname_loc, train_percent, train_power)
-        elif data_source == 'testbed-outdoor':
-            pass
         else:
             raise Exception('data source {} invalid'.format(data_source))
 

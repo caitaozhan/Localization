@@ -173,17 +173,17 @@ class ServerSupport:
         self.output.flush()
 
 
-data_source = 'testbed-indoor'     # 1
-training_date = '9.26.inter-sub-2' # 2
-result_date = '9.28'               # 3
-train_percent = 37                 # 4
+data_source = 'testbed-outdoor'        # 1
+training_data = '10.6.inter-idw+-sub'  # 2
+result_date = '10.12'                  # 3
+train_percent = 18                     # 4
 output_dir  = 'results/{}'.format(result_date)
-output_file = 'log.backup'                # 5
-train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
+output_file = 'log'                    # 5
+train = TrainingInfo.naive_factory(data_source, training_data, train_percent)
 print(train)
 server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
 ll = Localization(grid_len=10, case=data_source, debug=True)
-ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
+ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)
 
 
 if __name__ == '__main__':
