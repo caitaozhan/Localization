@@ -1562,8 +1562,8 @@ class Localization:
         R1             = self.config_splot.R1
         R2             = self.config_splot.R2     # larger R might help for ridge regression
         threshold      = self.config_splot.localmax_threshold
-        if self.debug:
-            visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
+        #if self.debug:
+        #    visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
 
         R_list = [R1, R2]
         # R_list = np.unique(R_list)
@@ -1631,8 +1631,8 @@ class Localization:
                 weight_local[voxel[0]][voxel[1]] = x
                 weight_global[voxel[0]][voxel[1]] = x
             
-            if self.debug:
-                visualize_splot(weight_local, 'localization', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+            #if self.debug:
+            #    visualize_splot(weight_local, 'localization', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
@@ -1654,8 +1654,8 @@ class Localization:
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
             '''
-        if self.debug:
-            visualize_splot(weight_global, 'localization', fig)
+        #if self.debug:
+        #    visualize_splot(weight_global, 'localization', fig)
 
         return detected_intruders
 

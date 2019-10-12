@@ -116,6 +116,8 @@ class Output:
             return self.miss
         if metric == 'false_alarm':
             return self.false_alarm
+        if metric == 'power':
+            return self.power
 
 
     def to_json_str(self):

@@ -178,7 +178,7 @@ training_date = '9.26.inter-sub-2' # 2
 result_date = '9.28'               # 3
 train_percent = 37                 # 4
 output_dir  = 'results/{}'.format(result_date)
-output_file = 'log'                # 5
+output_file = 'log.backup'                # 5
 train = TrainingInfo.naive_factory(data_source, training_date, train_percent)
 print(train)
 server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
