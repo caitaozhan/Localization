@@ -177,7 +177,7 @@ def visualize_q(grid_len, posterior, fig):
     for x in range(grid_len):
         for y in range(grid_len):
             grid[x][y] = np.log10(posterior[x*grid_len + y])
-    grid[grid == -np.inf] = -30
+    grid[grid == -np.inf] = -60
 
     grid2 = np.copy(grid)
     for i in range(grid_len):

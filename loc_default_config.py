@@ -115,11 +115,11 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
 
         elif case == 'testbed-outdoor':
-            q        = 1.8
+            q        = 2
             q2       = 2.4
             q_prime1 = 0.3
             q_prime2 = 0.05
-            r        = [4.1, 3.1, 2.3]
+            r        = [4.1, 3.1]
             r2       = 3.1
             e        = 0
             nf_p     = -47.5
@@ -165,8 +165,8 @@ class ConfigSplot:
 
         elif case == 'testbed-outdoor':
             R1 = 4
-            R2 = 4
-            localmax_threshold = -44
+            R2 = 3
+            localmax_threshold = -42.5
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2

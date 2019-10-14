@@ -142,7 +142,7 @@ class ServerSupport:
                     intruders.append(ll.transmitters[one_d_index])
                 elif key == 'gain':
                     train_power = self.tx_calibrate[tx]
-                    true_powers.append(train_power - float(value))
+                    true_powers.append(float(value) - train_power)
                 else:
                     raise Exception('key = {} invalid!'.format(key))
         return true_locations, true_powers, intruders
@@ -175,7 +175,7 @@ class ServerSupport:
 
 data_source = 'testbed-outdoor'        # 1
 training_data = '10.6.inter-idw+-sub'  # 2
-result_date = '10.12'                  # 3
+result_date = '10.13'                  # 3
 train_percent = 18                     # 4
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'                    # 5
@@ -183,7 +183,11 @@ train = TrainingInfo.naive_factory(data_source, training_data, train_percent)
 print(train)
 server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
 ll = Localization(grid_len=10, case=data_source, debug=True)
-ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)
+if data_source == 'testbed-indoor':
+    MAP = IndoorMap
+elif data_source == 'testbed-outdoor':
+    MAP = OutdoorMap
+ll.init_data(train.cov, train.sensors, train.hypothesis, MAP)
 
 
 if __name__ == '__main__':

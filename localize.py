@@ -878,7 +878,7 @@ class Localization:
 
     #@profile
     def prune_hypothesis(self, hypotheses, sensor_outputs, radius, least_num_sensor=3):
-        '''Prune hypothesis who has less than 3 sensors with RSS > -80 in radius
+        '''Prune hypothesis who has less than 3 sensors with RSS > threshold in radius
         Args:
             transmitters (list): a list of candidate transmitter (hypothesis, location)
             sensor_outputs (list)
@@ -886,7 +886,7 @@ class Localization:
         Return:
             (list): an element is a transmitter index (int)
         '''
-        threshold = self.config.noise_floor_prune
+        threshold = self.config.noise_floor_prune + 3 # NOTE: above the noise floor
 
         prunes = []
         for tran in hypotheses:
@@ -1001,7 +1001,7 @@ class Localization:
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
                 continue
             subset_sensors = self.sensors_collect[self.key.format(trans.hypothesis, radius)]
-            self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
+            # self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)  # NOTE: remove in outdoor testbed
             subset_sensors = np.array(subset_sensors)
             if len(subset_sensors) < 3:
                 likelihood = 0
@@ -1013,7 +1013,7 @@ class Localization:
                 mean_vec = np.copy(trans.mean_vec)
                 mean_vec = mean_vec[subset_sensors]
                 variance = np.diagonal(self.covariance)[subset_sensors]
-                delta_p, delta_p_origin = self.mle_closedform(sensor_outputs_copy, mean_vec, variance)
+                delta_p, delta_p_origin = self.mle_closedform(sensor_outputs_copy, mean_vec, variance, threshold=1.5)
                 far_from_intruder_score, far_ratio = self.compute_far_from_intruder_score(trans.x, trans.y, subset_sensors, sensor_outputs_copy, mean_vec)
                 # print(trans.x, trans.y, far_from_intruder_score, far_ratio, delta_p_origin)
                 far_from_intruder_grid[trans.x][trans.y] = (far_from_intruder_score, far_ratio, delta_p_origin)
@@ -1021,9 +1021,9 @@ class Localization:
                 stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
                 # a hack for outdoor####
                 for i, sen_output in enumerate(sensor_outputs_copy):
-                    if sen_output > -30:
-                        stds[i] = 4
-                    elif sen_output > -35:
+                    if sen_output > -35:
+                        stds[i] = 3
+                    elif sen_output > -40:
                         stds[i] = 2
                     elif sen_output > -48:
                         stds[i] = 1
@@ -1475,7 +1475,7 @@ class Localization:
                 else:
                     print()
             print('---')
-            self.debug = False
+            # self.debug = False
         return identified, pred_power
 
 
@@ -1642,7 +1642,7 @@ class Localization:
                 weight_local[voxel[0]][voxel[1]] = x
                 weight_global[voxel[0]][voxel[1]] = x
             
-            #if self.debug:
+            # if self.debug:
             #    visualize_splot(weight_local, 'localization', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
             index = np.argmax(X)

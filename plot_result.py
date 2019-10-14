@@ -140,7 +140,7 @@ class PlotResult:
 
 
     @staticmethod
-    def error_missfalse_numintru(data, src, train_percent, cell_len):
+    def error_missfalse_numintru(data, src, train_percent, cell_len, figname):
         '''merging error and missfalse into one plot by subplots
         Args:
             data -- [ (Input, {str: Output}), ... ]
@@ -173,14 +173,15 @@ class PlotResult:
             print_table = [[x] + [reduce_f([y_by_method[method] for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
             d[metric] = print_table
             print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + [method + ' ' + metric for method in methods]), '\n')
+
+        return
+        # step 2: the plot
         miss  = np.array(d['miss'])
         false = np.array(d['false_alarm'])
         our_miss    = miss[:, 1] * 100
         splot_miss  = miss[:, 2] * 100
         our_false   = false[:, 1] * 100
         splot_false = false[:, 2] * 100
-
-        # step 2: the plot
         ind = np.arange(len(our_error))
         width = 0.25
         fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 15))
@@ -216,7 +217,7 @@ class PlotResult:
         plt.ylim([0, 31])
         plt.ylabel('Percentage (%)')
 
-        plt.savefig('plot/indoor-error-missfalse.png')
+        plt.savefig(figname)
 
 
     @staticmethod
@@ -258,11 +259,25 @@ def indoor_interpolation():
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
 
-    PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
+    PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len, figname='plot/indoor-error-missfalse.png')
     PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
+
+
+def outdoor_interpolation():
+    ''' outdoor interpolation
+    '''
+    logs = ['results/10.13/log']
+    data = IOUtility.read_logs(logs)
+    # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
+    # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
+
+    PlotResult.error_missfalse_numintru(data, src='testbed-outdoor', train_percent=18, cell_len=IndoorMap.cell_len, figname='plot/outdoor-error-missfalse.png')
+    PlotResult.power_numintru(data, src='testbed-outdoor', train_percent=18)
+
 
 
 if __name__ == '__main__':
 
     # indoor_full_training()
-    indoor_interpolation()
+    # indoor_interpolation()
+    outdoor_interpolation()
