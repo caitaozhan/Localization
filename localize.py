@@ -1113,7 +1113,8 @@ class Localization:
                 if delta < 0:
                     counter += 1
             else:
-                deltas.append(0)  # when RSS is larger than -30, a intruder cannot be far away
+                continue
+                # deltas.append(0)  # when RSS is larger than -30, a intruder cannot be far away
             s_x = self.sensors[sensor].x
             s_y = self.sensors[sensor].y
             dist = distance((t_x, t_y), (s_x, s_y))
@@ -1338,8 +1339,16 @@ class Localization:
             for hypo in combination:
                 mean_vec += db_2_power_(self.means[hypo][sensor_subset], utah=self.utah)
             mean_vec = power_2_db_(mean_vec, utah=self.utah)
+            sensor_outputs_copy = sensor_outputs[sensor_subset]
             stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
-            array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs[sensor_subset])
+            for j, sen_output in enumerate(sensor_outputs_copy):
+                if sen_output > -40:
+                    stds[j] = 1.5
+                elif sen_output > -48:
+                    stds[j] = 1
+                else:
+                    stds[j] = 0.5
+            array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
             likelihood = np.prod(array_of_pdfs)
             posterior[i] = likelihood * prior
         return posterior/np.sum(posterior), posterior  # question: is the denometer the summation of everything?
@@ -1456,7 +1465,7 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if all([far[0] < -2, far[1] >= 0.5, far[2] < -1]):   # TODO: add them to the Config class
+                    if all([far[0] < -2, far[1] > 0.5, far[2] < -1]):   # TODO: add them to the Config class
                         print('* power too weak, likely far false alarm')
                         continue
                     if all([far[0] > 2, far[1] < 0.5, far[2] > 1]):      # TODO: add them to the Config class
