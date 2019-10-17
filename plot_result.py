@@ -19,8 +19,8 @@ class PlotResult:
     '''Class for plotting results
     '''
 
-    METHOD = ['M-MAP', 'SPLOT']
-    _COLOR = ['r',     'b']
+    METHOD = ['M-MAP', 'SPLOT', 'CLUSTER']
+    _COLOR = ['r',     'b',     'tab:orange']
     COLOR  = dict(zip(METHOD, _COLOR))
 
     plt.rcParams['font.size'] = 60
@@ -31,6 +31,7 @@ class PlotResult:
 
     @staticmethod
     def reduce_avg(vals):
+        vals = [val for val in vals if val is not None]
         vals = [val for val in vals if np.isnan(val)==False]
         return np.mean(vals)
     
@@ -151,17 +152,18 @@ class PlotResult:
         '''
         # step 1: prepare data
         metric = 'error'            # y-axis
-        methods = ['our', 'splot']  # tha bars
+        methods = ['our', 'splot', 'cluster']  # tha bars
         reduce_f = PlotResult.reduce_avg
         table = defaultdict(list)
         for myinput, output_by_method in data:
             if myinput.data_source == src and myinput.train_percent == train_percent:
                 table[myinput.num_intruder].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
-        print_table = [[x] + [reduce_f([y_by_method[method] for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+        print_table = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
         print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + [method + ' ' + metric for method in methods]), '\n')
         arr = np.array(print_table)
         our_error   = arr[:, 1] * cell_len
         splot_error = arr[:, 2] * cell_len
+        cluster_error = arr[:, 3] * cell_len
 
         metrics = ['miss', 'false_alarm']    # y-axis
         methods = ['our', 'splot']           # tha bars
@@ -172,7 +174,7 @@ class PlotResult:
             for myinput, output_by_method in data:
                 if myinput.data_source == src and myinput.train_percent == train_percent:
                     table[myinput.num_intruder].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
-            print_table = [[x] + [reduce_f([y_by_method[method] for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+            print_table = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
             d[metric] = print_table
             print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + [method + ' ' + metric for method in methods]), '\n')
 
@@ -184,21 +186,24 @@ class PlotResult:
         our_false   = false[:, 1] * 100 * random.uniform(0.98, 1)
         splot_false = false[:, 2] * 100 * random.uniform(1, 1.02)
         ind = np.arange(len(our_error))
-        width = 0.25
-        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 15))
-        fig.subplots_adjust(left=0.08, right=0.98, top=0.96, bottom=0.22)
-        pos1 = ind - width*0.5 - 0.005
-        pos2 = ind + width*0.5 + 0.005
+        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 18))
+        fig.subplots_adjust(left=0.08, right=0.98, top=0.98, bottom=0.25)
+        width = 0.2
+        pos1 = ind - width - 0.005
+        pos2 = ind
+        pos3 = ind + width + 0.005
         ax0.bar(pos1, our_error, width, edgecolor='black', label='M-MAP', color=PlotResult.COLOR['M-MAP'])
         ax0.bar(pos2, splot_error, width, edgecolor='black', label='SPLOT', color=PlotResult.COLOR['SPLOT'])
+        ax0.bar(pos3, cluster_error, width, edgecolor='black', label='CLUSTER', color=PlotResult.COLOR['CLUSTER'])
         ax0.legend(ncol=2, fontsize=50)
         ax0.set_xticks(ind)
         ax0.set_xticklabels(['1', '2', '3'])
-        ax0.set_ylim([0, 1.2*max(splot_error)])
+        ax0.set_ylim([0, 1.1*max(cluster_error)])
         ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         ax0.set_ylabel('Mean localization error (m)')
         ax0.set_xlabel('Number of intruders', labelpad=110)
 
+        width = 0.25
         pos1 = ind - width*0.5 - 0.005
         pos2 = ind + width*0.5 + 0.005
         ax1.bar(pos1, our_miss, width, edgecolor='black', label='Miss Rate', color=PlotResult.COLOR['M-MAP'])
@@ -217,6 +222,8 @@ class PlotResult:
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 31])
         plt.ylabel('Percentage (%)')
+        plt.figtext(0.265, 0.01, '(a)', weight='bold')
+        plt.figtext(0.757, 0.01, '(b)', weight='bold')
 
         plt.savefig(figname)
 
@@ -255,7 +262,7 @@ def indoor_interpolation():
     ''' indoor interpolation
     '''
     # logs = ['results/9.27-inter/log']
-    logs = ['results/9.27-inter/log', 'results/9.28/log']
+    logs = ['results/9.27-inter/log', 'results/9.28/log', 'results/10.16.indoor']
     data = IOUtility.read_logs(logs)
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
@@ -267,13 +274,13 @@ def indoor_interpolation():
 def outdoor_interpolation():
     ''' outdoor interpolation
     '''
-    logs = ['results/10.13/log']
+    logs = ['results/10.13/log', 'results/10.16/log.outdoor']
     data = IOUtility.read_logs(logs)
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
 
     PlotResult.error_missfalse_numintru(data, src='testbed-outdoor', train_percent=18, cell_len=OutdoorMap.cell_len, figname='plot/outdoor-error-missfalse.png')
-    PlotResult.power_numintru(data, src='testbed-outdoor', train_percent=18)
+    # PlotResult.power_numintru(data, src='testbed-outdoor', train_percent=18)
 
 
 

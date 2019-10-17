@@ -692,28 +692,28 @@ class Localization:
         Return:
             (list): a list of locations [ [x1, y1], [x2, y2], ... ]
         '''
-        threshold = int(0.25*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
-        arg_decrease = np.flip(np.argsort(sensor_outputs))
-        threshold = sensor_outputs[arg_decrease[threshold]]
-        threshold = threshold if threshold > -70 else -70
+        # threshold = int(0.25*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
+        # arg_decrease = np.flip(np.argsort(sensor_outputs))
+        # threshold = sensor_outputs[arg_decrease[threshold]]
+        threshold = self.config.noise_floor_prune + 1
         #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, threshold)
 
         sensor_to_cluster = []
         for index, output in enumerate(sensor_outputs):
             if output > threshold:
                 sensor_to_cluster.append((self.sensors[index].x, self.sensors[index].y))
-        k = 1
-        inertias = []
-        upper_bound = min(2*num_of_intruders, num_of_intruders+5)
-        while k <= len(sensor_to_cluster) and k <= upper_bound:    # try all K, up to # of sensors above a threshold
-            kmeans = KMeans(n_clusters=k).fit(sensor_to_cluster)
-            inertias.append(kmeans.inertia_)  # inertia is the sum of squared distances of samples to their closest cluster center
-            #visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
-            k += 1
+        # k = 1
+        # inertias = []
+        # upper_bound = min(2*num_of_intruders, num_of_intruders+5)
+        # while k <= len(sensor_to_cluster) and k <= upper_bound:    # try all K, up to # of sensors above a threshold
+        #     kmeans = KMeans(n_clusters=k).fit(sensor_to_cluster)
+        #     inertias.append(kmeans.inertia_)  # inertia is the sum of squared distances of samples to their closest cluster center
+        #     #visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
+        #     k += 1
 
-        k = find_elbow(inertias, num_of_intruders)              # the elbow point is the best K
-        print('Real K = {}, clustered K = {}'.format(len(intruders), k))
-        kmeans = KMeans(n_clusters=k).fit(sensor_to_cluster)
+        # k = find_elbow(inertias, num_of_intruders)              # the elbow point is the best K
+        # print('Real K = {}, clustered K = {}'.format(len(intruders), k))
+        kmeans = KMeans(n_clusters=num_of_intruders).fit(sensor_to_cluster)
         #visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
 
         localize = kmeans.cluster_centers_

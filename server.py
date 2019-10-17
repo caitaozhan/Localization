@@ -68,6 +68,14 @@ def localize():
         pred_locations = server_support.pred_loc_to_center(pred_locations)
         errors, miss, false_alarm = ll.compute_error2(true_locations, pred_locations)
         outputs.append(Output('splot', errors, false_alarm, miss, [0], end-start, pred_locations))
+    if 'cluster' in myinput.methods:
+        start = time.time()
+        pred_locations = ll.cluster_localization(intruders, np.copy(sensor_outputs), num_of_intruders=int(myinput.num_intruder))
+        end = time.time()
+        pred_locations = server_support.pred_loc_to_center(pred_locations)
+        errors, miss, false_alarm = ll.compute_error2(true_locations, pred_locations)
+        outputs.append(Output('cluster', errors, false_alarm, miss, [0], end-start, pred_locations))
+
 
     # step 4: log the input and output
     server_support.log(myinput, outputs)
@@ -175,7 +183,7 @@ class ServerSupport:
 
 data_source = 'testbed-outdoor'        # 1
 training_data = '10.6.inter-idw+-sub'  # 2
-result_date = '10.13'                  # 3
+result_date = '10.16'                  # 3
 train_percent = 18                     # 4
 output_dir  = 'results/{}'.format(result_date)
 output_file = 'log'                    # 5
