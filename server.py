@@ -181,12 +181,12 @@ class ServerSupport:
         self.output.flush()
 
 
-data_source = 'testbed-outdoor'        # 1
-training_data = '10.6.inter-idw+-sub'  # 2
+data_source = 'testbed-indoor'        # 1
+training_data = '9.26.inter-sub-2'  # 2
 result_date = '10.16'                  # 3
-train_percent = 18                     # 4
+train_percent = 37                     # 4
 output_dir  = 'results/{}'.format(result_date)
-output_file = 'log'                    # 5
+output_file = 'log.indoor'                    # 5
 train = TrainingInfo.naive_factory(data_source, training_data, train_percent)
 print(train)
 server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)

@@ -695,7 +695,7 @@ class Localization:
         # threshold = int(0.25*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
         # arg_decrease = np.flip(np.argsort(sensor_outputs))
         # threshold = sensor_outputs[arg_decrease[threshold]]
-        threshold = self.config.noise_floor_prune + 1
+        threshold = self.config.noise_floor_prune + 5
         #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, threshold)
 
         sensor_to_cluster = []
@@ -714,7 +714,7 @@ class Localization:
         # k = find_elbow(inertias, num_of_intruders)              # the elbow point is the best K
         # print('Real K = {}, clustered K = {}'.format(len(intruders), k))
         kmeans = KMeans(n_clusters=num_of_intruders).fit(sensor_to_cluster)
-        #visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
+        # visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
 
         localize = kmeans.cluster_centers_
         for i in range(len(localize)):

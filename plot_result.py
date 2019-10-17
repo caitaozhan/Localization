@@ -262,13 +262,13 @@ def indoor_interpolation():
     ''' indoor interpolation
     '''
     # logs = ['results/9.27-inter/log']
-    logs = ['results/9.27-inter/log', 'results/9.28/log', 'results/10.16.indoor']
+    logs = ['results/9.27-inter/log', 'results/9.28/log', 'results/10.16/log.indoor']
     data = IOUtility.read_logs(logs)
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
 
     PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len, figname='plot/indoor-error-missfalse.png')
-    PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
+    # PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
 
 
 def outdoor_interpolation():
@@ -287,5 +287,5 @@ def outdoor_interpolation():
 if __name__ == '__main__':
     random.seed(0)
     # indoor_full_training()
-    # indoor_interpolation()
-    outdoor_interpolation()
+    indoor_interpolation()
+    # outdoor_interpolation()

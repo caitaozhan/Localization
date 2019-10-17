@@ -225,11 +225,17 @@ def visualize_cluster(grid_len, intruders, sensor_to_cluster, labels):
         grid[sensor[0]][sensor[1]] = color
     for intr in intruders:
         grid[intr.x][intr.y] = -1
+    
+    grid2 = np.copy(grid)
+    for i in range(grid_len):
+        for j in range(grid_len):
+            grid2[i, j] = grid[j, grid_len-1-i]
+
     sns.set(style="white")
     f, ax = plt.subplots(figsize=(10, 10))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    sns.heatmap(grid, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
-    plt.show()
+    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.savefig('visualize/localization/tmp.png')
 
 
 def visualize_localization(grid_len, true_locations, pred_locations, fig):
