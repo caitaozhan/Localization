@@ -201,22 +201,25 @@ class TrainingInfo:
         self.tx_calibrate = None   # human calibration, so that these Tx transmite at similar power (during training)
         self.init_tx_calibrate()
 
-    def init_tx_calibrate(self): # TODO to debug
+    def init_tx_calibrate(self):
         '''init the tx calibration. Note that Tx are not homogeneous
         '''
-        lines = open(self.train_power, 'r').readlines()
-        train_power = json.loads(lines[0])
-        train_power = list(train_power.items())[0]
-        if train_power[0] == 'T1':
-            if train_power[1] == 53.0:
-                self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}
-            elif train_power[1] == 45.0:
-                self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":17}
-        elif train_power[0] == 'T2':
-            if train_power[1] == 58.0:
-                self.tx_calibrate = {"T1":59, "T2":58, "T3":29, "T5":27}
-        if self.tx_calibrate is None:
-            raise Exception('error durring train power calibration ')
+        try:                                # for testbed
+            lines = open(self.train_power, 'r').readlines()
+            train_power = json.loads(lines[0])
+            train_power = list(train_power.items())[0]
+            if train_power[0] == 'T1':
+                if train_power[1] == 53.0:
+                    self.tx_calibrate = {"T1":53, "T2":53, "T3":26, "T5":23}
+                elif train_power[1] == 45.0:
+                    self.tx_calibrate = {"T1":45, "T2":45, "T3":15, "T5":17}
+            elif train_power[0] == 'T2':
+                if train_power[1] == 58.0:
+                    self.tx_calibrate = {"T1":59, "T2":58, "T3":29, "T5":27}
+            if self.tx_calibrate is None:
+                raise Exception('error durring train power calibration ')
+        except:
+            self.tx_calibrate = {"T1":30}   # for splat
 
 
     @classmethod
@@ -235,6 +238,13 @@ class TrainingInfo:
             hypothesis = '../rtl-testbed/training/{}/hypothesis'.format(data)
             hostname_loc = '../rtl-testbed/training/{}/hostname_loc'.format(data)
             train_power = '../rtl-testbed/training/{}/train_power'.format(data)
+            return cls(cov, sensors, hypothesis, hostname_loc, train_percent, train_power)
+        elif data_source == 'splat':
+            cov = '../mysplat/ipsn/{}/cov'.format(data)
+            sensors = '../mysplat/ipsn/{}/sensors'.format(data)
+            hypothesis = '../mysplat/ipsn/{}/hypothesis'.format(data)
+            hostname_loc = '../mysplat/ipsn/{}/hostname_loc'.format(data)
+            train_power = '../mysplat/ipsn/{}/train_power'.format(data)
             return cls(cov, sensors, hypothesis, hostname_loc, train_percent, train_power)
         else:
             raise Exception('data source {} invalid'.format(data_source))

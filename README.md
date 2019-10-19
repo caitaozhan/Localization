@@ -3,7 +3,7 @@
 Multiple transmitter localization
 
 # TODO
-## testbed
+## testbed (Done)
 1. interpolation error: for outdoors, need to remove part of the training data to act as the ground truth) (10.16)
 2. power error: for indoors (...) (10.16)
 3. localization error: add cluster in the plot (10.19)

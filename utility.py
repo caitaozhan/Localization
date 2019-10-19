@@ -5,6 +5,7 @@ Some useful utilities
 import os
 import json
 import numpy as np
+import pandas as pd
 import random
 import scipy
 import math
@@ -527,6 +528,56 @@ def guarantee_dir(directory):
     '''
     if os.path.exists(directory) is False:
         os.mkdir(directory)
+
+
+def subsample_from_full(train, grid_len, sensor_density, transmit_power):
+    random.seed(sensor_density)
+    s = train.cov
+    full_training_dir = s[:s.find('-sub')]
+    subsample_dir     = s[:s.find('-sub') + 4]
+    guarantee_dir(subsample_dir)
+
+    # step 1: get a subset of sensors
+    all_sensors = list(range(grid_len * grid_len))
+    random_sensors_subset = random.sample(all_sensors, sensor_density)
+    random_sensors_subset.sort()
+    with open(full_training_dir + '/sensors', 'r') as full_f, open(train.sensors, 'w') as sub_f:
+        all_lines = full_f.readlines()
+        for sen_index in random_sensors_subset:
+            sub_line = all_lines[sen_index]
+            sub_f.write(sub_line)
+
+    # step 2: deal with the subsample cov
+    cov = pd.read_csv(full_training_dir + '/cov', header=None, delimiter=' ')
+    cov = cov.values
+    cov = cov[np.ix_(random_sensors_subset, random_sensors_subset)]
+    np.savetxt(subsample_dir + '/cov', cov, delimiter='', fmt='%1.3f ')
+
+    # step 3: deal with hypothesis file
+    power = transmit_power["T1"]
+    with open(full_training_dir + '/hypothesis', 'r') as full_f, open(subsample_dir + '/hypothesis', 'w') as sub_f:
+        lines = full_f.readlines()
+        num_all_sensors = len(all_sensors)
+        for i in range(num_all_sensors):
+            for sen_index in random_sensors_subset:
+                index = i*num_all_sensors + sen_index
+                # print(index, lines[index])
+                line = lines[index].split(' ')
+                pathloss = float(line[4])
+                rss = power - pathloss
+                line[4] = str(rss)
+                sub_f.write(' '.join(line))
+
+    with open(subsample_dir + '/train_power', 'w') as f:
+        f.write(json.dumps(transmit_power))
+
+    with open(subsample_dir + '/sensors') as f_sen, open(subsample_dir + '/hostname_loc', 'w') as f_hl:
+        index = 0   # index is the hostname
+        for line in f_sen:
+            line = line.split(' ')
+            x, y = line[0], line[1]
+            f_hl.write('{}: ({}, {})\n'.format(index, x, y))
+            index += 1
 
 
 if __name__ == '__main__':

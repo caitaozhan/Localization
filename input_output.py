@@ -79,7 +79,7 @@ class Input:
 
 
 class Output:
-    '''Encapsulate the the output of the algorithms
+    '''Encapsulate the output of the algorithms
     '''
     def __init__(self, method = None,        # str
                        error  = [],          #

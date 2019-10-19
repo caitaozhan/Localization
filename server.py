@@ -9,10 +9,11 @@ from flask import Flask, request
 from loc_default_config import TrainingInfo
 from localize import Localization
 from input_output import Input, Output
+from utility import subsample_from_full
 
 try:
     sys.path.append('../rtl-testbed/')
-    from default_config import OutdoorMap, IndoorMap
+    from default_config import OutdoorMap, IndoorMap, SplatMap
 except:
     print('Import error')
 
@@ -181,21 +182,46 @@ class ServerSupport:
         self.output.flush()
 
 
-data_source = 'testbed-indoor'        # 1
-training_data = '9.26.inter-sub-2'  # 2
-result_date = '10.16'                  # 3
-train_percent = 37                     # 4
-output_dir  = 'results/{}'.format(result_date)
-output_file = 'log.indoor'                    # 5
-train = TrainingInfo.naive_factory(data_source, training_data, train_percent)
-print(train)
-server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
-ll = Localization(grid_len=10, case=data_source, debug=True)
-if data_source == 'testbed-indoor':
-    MAP = IndoorMap
-elif data_source == 'testbed-outdoor':
-    MAP = OutdoorMap
-ll.init_data(train.cov, train.sensors, train.hypothesis, MAP)
+
+
+if __name__ == 'server':
+    ########## Testbed ############
+    # data_source = 'testbed-indoor'         # 1
+    # training_data = '9.26.inter-sub-2'     # 2
+    # result_date = '10.16'                  # 3
+    # train_percent = 37                     # 4
+    # output_dir  = 'results/{}'.format(result_date)
+    # output_file = 'log.indoor'                    # 5
+    # train = TrainingInfo.naive_factory(data_source, training_data, train_percent)
+    # print(train)
+    # server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
+    # ll = Localization(grid_len=10, case=data_source, debug=True)
+    # if data_source == 'testbed-indoor':
+    #     MAP = IndoorMap
+    # elif data_source == 'testbed-outdoor':
+    #     MAP = OutdoorMap
+    # ll.init_data(train.cov, train.sensors, train.hypothesis, MAP)
+
+    ######## Splat ############
+    grid_len       = 40
+    data_source    = 'splat'
+    gran           = 18                                  # 1   [6, 8, 10, 12, 14, 16, 18]
+    sensor_density = 240                                 # 2   [80, 160, 240, 320, 400]
+    transmit_power = {"T1":30}                           # 3
+    full_training_data = 'inter-' + str(gran)
+    sub_training_data  = full_training_data + '-sub'     # 4
+
+    result_date = '10.18'                                # 5
+    train_percent = int(gran*gran/1600)                  # 6
+    output_dir  = 'results/{}'.format(result_date)
+    output_file = 'log'                                  # 7
+    train = TrainingInfo.naive_factory(data_source, sub_training_data, train_percent)
+    # subsample_from_full(train, grid_len, sensor_density, transmit_power) # 8
+
+    print(train)
+    server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
+    ll = Localization(grid_len=grid_len, case=data_source, debug=True)
+    ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
 
 if __name__ == '__main__':
