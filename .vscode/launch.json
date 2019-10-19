@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["-src", "testbed-indoor"]
+            "args": ["-gran", "12", "-num", "5", "-sen", "240", "-met", "our", "-rep", "10"]
         },
 
         {

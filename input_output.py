@@ -9,6 +9,7 @@ class Default:
     num_intruder = 5
     data_source  = 'splat'    # splat, utah, testbed-indoor, testbed-outdoor
     methods      = ['splot', 'our', 'cluster']
+    sen_density  = 18
 
 
 
@@ -17,7 +18,8 @@ class Input:
     '''
     def __init__(self, num_intruder = Default.num_intruder,  # int
                        data_source  = Default.data_source,   # str
-                       methods      = Default.methods):      # list<str>
+                       methods      = Default.methods,
+                       sen_density  = Default.sen_density):  # list<str>
         self.num_intruder   = num_intruder
         self.data_source    = data_source
         self.train_percent  = -1
@@ -25,6 +27,7 @@ class Input:
         self.experiment_num = -1
         self.sensor_data    = None
         self.ground_truth   = None
+        self.sensor_density = sen_density
 
 
     def to_json_str(self):
@@ -38,6 +41,7 @@ class Input:
                      'methods':self.methods,
                      'experiment_num':self.experiment_num,
                      'ground_truth':self.ground_truth,
+                     'sensor_density':self.sensor_density,
                      'sensor_data':self.sensor_data
                      }
         return json.dumps(inputdict)
@@ -71,6 +75,7 @@ class Input:
         myinput.experiment_num = json_dict['experiment_num']
         myinput.sensor_data    = json_dict['sensor_data']
         myinput.ground_truth   = json_dict['ground_truth']
+        myinput.sensor_density = json_dict['sensor_density']
         return myinput
 
 

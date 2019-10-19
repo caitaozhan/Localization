@@ -9,6 +9,7 @@ import pandas as pd
 import random
 import scipy
 import math
+import shutil
 import matplotlib.pyplot as plt
 
 
@@ -530,13 +531,31 @@ def guarantee_dir(directory):
         os.mkdir(directory)
 
 
+def clean_itwom(itwom, fspl):
+    '''itwom has strange pathloss. eg. pathloss = 0 when distance between tx and rx is small (0 ~ 200m)
+       Use fspl to replace the strange fspl
+    Args:
+        itwom -- np.1darray
+        fslp  -- np.1darray
+    '''
+    if len(itwom) != len(fspl):
+        print('itwom and fslp length not equal')
+        return
+
+    for i in range(len(itwom)):
+        if itwom[i] <= 0.:
+            itwom[i] = fspl[i]
+
+
 def subsample_from_full(train, grid_len, sensor_density, transmit_power):
     random.seed(sensor_density)
     s = train.cov
-    full_training_dir = s[:s.find('-sub')]
-    subsample_dir     = s[:s.find('-sub') + 4]
+    full_training_dir = s[:s.find('_')]
+    subsample_dir     = s[:s.rfind('/')]
+    sen_density       = s[s.find('_')+1:s.rfind('/')]
     guarantee_dir(subsample_dir)
 
+    # Phase 1: subsample the interpolated data
     # step 1: get a subset of sensors
     all_sensors = list(range(grid_len * grid_len))
     random_sensors_subset = random.sample(all_sensors, sensor_density)
@@ -579,8 +598,35 @@ def subsample_from_full(train, grid_len, sensor_density, transmit_power):
             f_hl.write('{}: ({}, {})\n'.format(index, x, y))
             index += 1
 
+    # Phase 2: subsample the full data
+    full_truth_training_dir = '../mysplat/output8'
+    sub_truth_training_dir  = full_truth_training_dir + '_{}'.format(sen_density)
+    if os.path.exists(sub_truth_training_dir) is True:
+        return
+    guarantee_dir(sub_truth_training_dir)
+    # step 1: use the same set of sensors
+    shutil.copy(subsample_dir + '/sensors', sub_truth_training_dir + '/sensors')
+
+    # step 2: use the same cov
+    shutil.copy(subsample_dir + '/cov', sub_truth_training_dir + '/cov')
+
+    # step 3: hypothesis file
+    with open(sub_truth_training_dir + '/hypothesis', 'w') as f:
+        for hypo in range(grid_len*grid_len):
+            t_x = hypo // grid_len
+            t_y = hypo % grid_len
+            hypo4 = '{:04}'.format(hypo)
+            output = np.loadtxt(full_truth_training_dir + '/{}'.format(hypo4), delimiter=',')
+            fspl, itwom = output[0], output[1]
+            clean_itwom(itwom, fspl)
+            for sen_1dindex in random_sensors_subset:
+                s_x = sen_1dindex // grid_len
+                s_y = sen_1dindex % grid_len
+                rss = power - itwom[sen_1dindex]
+                std = 1
+                f.write('{} {} {} {} {:.2f} {}\n'.format(t_x, t_y, s_x, s_y, rss, std))
+
 
 if __name__ == '__main__':
     for _ in range(20):
         print('intruders = ', generate_intruders(grid_len=50, edge=2, num=6, min_dist=20, powers=[-4, -2, 0, 2, 4]))
-
