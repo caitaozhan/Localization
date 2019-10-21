@@ -2,11 +2,12 @@
 Generate plots that go into the paper
 '''
 import sys
+import random
+from collections import defaultdict
+import shutil
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import tabulate
-from collections import defaultdict
 from input_output import IOUtility
 from loc_default_config import Default
 try:
@@ -278,7 +279,7 @@ class PlotResult:
 
         # step 2: the plot
         ind = np.arange(len(our_error))
-        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 18))
+        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 20))
         fig.subplots_adjust(left=0.08, right=0.99, top=0.98, bottom=0.25)
         width = 0.24
         pos1 = ind - width - 0.005
@@ -311,8 +312,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind) + ['SPLOT']*len(ind) + ['CLUST']*len(ind)
         ax1.set_xlabel('Percentage of Training Data')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=30, rotation=40)
-        ax1.tick_params(axis='x', which='major', pad=105)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=33, rotation=60, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=125)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 31])
         plt.ylabel('Percentage (%)')
@@ -386,6 +387,7 @@ def splat_vary_traindata():
             'results/10.20-5/log-gran-12', 'results/10.20-5/log-gran-14', 'results/10.20-5/log-gran-16', 'results/10.20-5/log-gran-18']
     data = IOUtility.read_logs(logs)
     PlotResult.error_missfalse_vary_training(data, src='splat', num_intruder=Default.num_intruder, sensor_density=Default.sen_density, cell_len=SplatMap.cell_len, figname='plot/splat-vary-training')
+    shutil.copy('plot/splat-vary-training.png', '/home/caitao/Project/latex/localize/ipsn/figures')
 
 
 if __name__ == '__main__':
