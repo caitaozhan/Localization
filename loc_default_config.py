@@ -13,7 +13,7 @@ class Default:
     methods        = ['our', 'splot', 'cluster']
     true_data_path = '../mysplat/output8_{}'
     trained_power  = 30
-    server_ip      = '0.0.0.0' 
+    server_ip      = '0.0.0.0'
 
 
 class Config:
@@ -60,7 +60,7 @@ class Config:
                'center threshold      = {}\n'.format(self.center_threshold) + \
                'surround threshold    = {}\n'.format(self.surround_threshold) + \
                'error threshold       = {}\n'.format(self.error_threshold) + \
-               'power delta threshold = {}\n'.format(self.delta_threshold) 
+               'power delta threshold = {}\n'.format(self.delta_threshold)
 
     @classmethod
     def naive_factory(cls, case):
@@ -195,9 +195,9 @@ class ConfigSplot:
             return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
 
         else:
-            R1 = 9
+            R1 = 8
             R2 = 8
-            localmax_threshold = -59
+            localmax_threshold = -62
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2

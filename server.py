@@ -216,7 +216,7 @@ if __name__ == 'server':
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.20'                                # 5
+    result_date = '10.20-num'                                # 5
     train_percent = int(gran*gran/(40*40)*100)                  # 6
     output_dir  = 'results/{}'.format(result_date)
     output_file = 'log'                                  # 7
@@ -234,24 +234,44 @@ if __name__ == '__main__':
 
     hint = 'python server.py -gran 12'
     parser = argparse.ArgumentParser(description='server side of experiments. | hint ' + hint)
-    parser.add_argument('-gran', '--granularity', type=int, nargs=1, default=[Default.training_gran], help='granularity of the training coarse grid')
+    parser.add_argument('-gran', '--granularity', type=int, nargs=1, default=[None], help='granularity of the training coarse grid')
+    parser.add_argument('-num', '--num_intruder', type=int, nargs=1, default=[None], help='number of intruders')
+    parser.add_argument('-sen', '--sensor_density', type=int, nargs=1, default=[None], help='sensor density')
     args = parser.parse_args()
 
-    gran = args.granularity[0]                           # 1 [6, 8, 10, 12, 14, 16, 18]
+    gran        = args.granularity[0]                    # 1 [6, 8, 10, 12, 14, 16, 18]
+    num_intru   = args.num_intruder[0]                   # 2 [80, 160, 240, 320, 400]
+    sensor_density = args.sensor_density[0]
 
-    print('granularity = ', gran)
+    if gran is not None:
+        num_intru = Default.num_intruder
+        sensor_density = Default.sen_density
+        port = int(gran)
+        output_file = 'log-gran-{}'.format(gran)
+    elif num_intru is not None:
+        gran = Default.training_gran
+        sensor_density = Default.sen_density
+        port = int(num_intru)
+        output_file = 'log-num-{}'.format(num_intru)
+    elif sensor_density is not None:
+        gran = Default.training_gran
+        num_intru = Default.num_intruder
+        port = int(sensor_density)
+        output_file = 'log-sen-{}'.format(sensor_density)
+    else:
+        raise Exception('argument mistakes!')
+
+    print('granularity = {}\nnum intruder = {}\nsensor density = {}\n'.format(gran, num_intru, sensor_density))
 
     grid_len       = 40
     data_source    = 'splat'
-    sensor_density = 240                                 # 2   [80, 160, 240, 320, 400]
     transmit_power = {"T1":30}                           # 3
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.20-5'                                # 5
-    train_percent = int(gran*gran/(40*40)*100)                  # 6
+    result_date = '10.21-2'                                # 5
+    train_percent = int(gran*gran/(40*40)*100)           # 6
     output_dir  = 'results/{}'.format(result_date)
-    output_file = 'log-gran-{}'.format(gran)                                  # 7
     train = TrainingInfo.naive_factory(data_source, sub_training_data, train_percent)
     subsample_from_full(train, grid_len, sensor_density, transmit_power)       # 8
 
@@ -260,4 +280,4 @@ if __name__ == '__main__':
     ll = Localization(grid_len=grid_len, case=data_source, debug=False)
     ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
-    app.run(host="0.0.0.0", port=5000+gran, debug=False)
+    app.run(host="0.0.0.0", port=5000 + int(port), debug=False)

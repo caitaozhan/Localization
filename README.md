@@ -10,7 +10,7 @@ Multiple transmitter localization
 
 
 ## synthetic
-1. plots for various amount of training. do not use multi-granularity. pick a default amount of training. (10.16-17)
+1. plots for various amount of training. do not use multi-granularity. pick a default amount of training. (10.16-17) (Done)
 2. plots for various amount of intruders. (10.18-10.19)
 3. plots for various amount of sensors density. (10.20)
 

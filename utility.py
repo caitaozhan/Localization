@@ -130,6 +130,7 @@ def find_elbow(inertias, num_intruder):
     '''
     param = {  # splat
         1:0.5,
+        2:0.3,
         3:0.15,
         5:0.06,
         7:0.05,
