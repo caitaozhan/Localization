@@ -115,8 +115,8 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         grid[sensor.x][sensor.y] = color
         #print((sensor[0], sensor[1]), sensor_output[index], '--', color)
 
-    # for intr in intruders:
-    #     grid[intr.x][intr.y] = -1
+    for intr in intruders:
+        grid[intr.x][intr.y] = -1
 
     # for index, sensor in enumerate(sensors):
     #     color = sensor_outputs[index]
@@ -129,9 +129,8 @@ def visualize_sensor_output(grid_len, intruders, sensor_outputs, sensors, thresh
         for j in range(grid_len):
             grid2[i, j] = grid[j, grid_len-1-i]
     sns.set(style="white")
-    plt.subplots(figsize=(10, 10))
-    cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=False)
+    plt.subplots(figsize=(25, 25))
+    sns.heatmap(grid2, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=True)
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
     #plt.show()
     plt.title('Intruders: ' + ' '.join(map(lambda intru: '({:2d}, {:2d})'.format(intru.x, intru.y), intruders)), fontsize=20)
@@ -155,14 +154,18 @@ def visualize_sensor_output2(grid_len, intruders, sensor_outputs, sensors, thres
             color = threshold
         grid[sensor.x][sensor.y] = color
 
+    rss_max = np.max(grid)
+    for intr in intruders:
+        grid[intr.x][intr.y] = 30
+
     grid2 = np.copy(grid)
     for i in range(grid_len):
         for j in range(grid_len):
             grid2[i, j] = grid[j, grid_len-1-i]
     sns.set(style="white")
-    plt.subplots(figsize=(10, 10))
+    plt.subplots(figsize=(20, 20))
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
-    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=True)
+    sns.heatmap(grid2, cmap="PiYG", center=0, square=True, linewidth=1, cbar_kws={"shrink": .5}, annot=True)
     plt.xlabel('red (>0) = sensor outputs; -1.2 = intruders (dark blue); -0.2 = is noise (light blue) ')
     #plt.show()
     plt.title('Intruders: ' + ' '.join(map(lambda intru: '({:2d}, {:2d})'.format(intru.x, intru.y), intruders)), fontsize=20)
@@ -177,15 +180,15 @@ def visualize_q(grid_len, posterior, fig):
     for x in range(grid_len):
         for y in range(grid_len):
             grid[x][y] = np.log10(posterior[x*grid_len + y])
-    grid[grid == -np.inf] = -60
+    grid[grid == -np.inf] = -300
 
     grid2 = np.copy(grid)
     for i in range(grid_len):
         for j in range(grid_len):
             grid2[i, j] = grid[j, grid_len-1-i]
 
-    plt.subplots(figsize=(8, 8))
-    sns.heatmap(grid2, vmin=np.min(grid2), vmax=np.max(grid2), square=True, linewidth=0.5, annot=True)
+    plt.subplots(figsize=(30, 30))
+    sns.heatmap(grid2, vmin=np.min(grid2), vmax=np.max(grid2), square=True, linewidth=0.5, annot=False)
     plt.title('Q: ploting the exponent of Q, \n min exponent = -infinity (modify to -330 for plotting), max = {}'.format(round(np.max(grid), 3)))
     plt.savefig('visualize/localization/{}-q'.format(fig))
 

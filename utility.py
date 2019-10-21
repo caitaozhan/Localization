@@ -129,7 +129,7 @@ def find_elbow(inertias, num_intruder):
     }
     '''
     param = {  # splat
-        1:1.1,
+        1:0.5,
         3:0.15,
         5:0.06,
         7:0.05,
@@ -547,6 +547,36 @@ def clean_itwom(itwom, fspl):
             itwom[i] = fspl[i]
 
 
+def relocate_sensors(random_sensors, grid_len):
+    '''Relocate sensors that are side by side
+    '''
+    new_random_sensors = []
+    need_to_relocate = []
+    ocupy_grid = np.zeros((grid_len, grid_len), dtype=int)
+    random_sensors.sort()
+    for sen in random_sensors:
+        s_x = sen // grid_len
+        s_y = sen % grid_len
+        if ocupy_grid[s_x][s_y] == 1:
+            need_to_relocate.append(sen)
+        else:
+            new_random_sensors.append(sen)
+            for x, y in [(0, 0), (-1, 0), (0, -1), (0, 1), (1, 0)]:
+                try:
+                    ocupy_grid[s_x + x][s_y + y] = 1
+                except:
+                    pass
+    available = []
+    for x in range(grid_len):
+        for y in range(grid_len):
+            if ocupy_grid[x][y] == 0:
+                available.append(x*grid_len + y)
+
+    relocated = random.sample(available, len(need_to_relocate))
+    new_random_sensors.extend(relocated)
+    return new_random_sensors
+
+
 def subsample_from_full(train, grid_len, sensor_density, transmit_power):
     random.seed(sensor_density)
     s = train.cov
@@ -559,6 +589,8 @@ def subsample_from_full(train, grid_len, sensor_density, transmit_power):
     # step 1: get a subset of sensors
     all_sensors = list(range(grid_len * grid_len))
     random_sensors_subset = random.sample(all_sensors, sensor_density)
+    random_sensors_subset = relocate_sensors(random_sensors_subset, grid_len)
+    random_sensors_subset = relocate_sensors(random_sensors_subset, grid_len)
     random_sensors_subset.sort()
     with open(full_training_dir + '/sensors', 'r') as full_f, open(train.sensors, 'w') as sub_f:
         all_lines = full_f.readlines()
@@ -601,8 +633,8 @@ def subsample_from_full(train, grid_len, sensor_density, transmit_power):
     # Phase 2: subsample the full data
     full_truth_training_dir = '../mysplat/output8'
     sub_truth_training_dir  = full_truth_training_dir + '_{}'.format(sen_density)
-    if os.path.exists(sub_truth_training_dir) is True:
-        return
+    # if os.path.exists(sub_truth_training_dir) is True:
+    #     return
     guarantee_dir(sub_truth_training_dir)
     # step 1: use the same set of sensors
     shutil.copy(subsample_dir + '/sensors', sub_truth_training_dir + '/sensors')

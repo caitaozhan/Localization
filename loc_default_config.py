@@ -4,9 +4,21 @@
 import json
 
 
+class Default:
+    grid_len       = 40
+    training_gran  = 12    # [6, 8, 10, 12, 14, 16, 18]
+    num_intruder   = 5     # [1, 3, 5, 7, 10]
+    sen_density    = 240   # [80, 160, 240, 320, 400]
+    repeat         = 10    # repeating experiments
+    methods        = ['our', 'splot', 'cluster']
+    true_data_path = '../mysplat/output8_{}'
+    trained_power  = 30
+    server_ip      = '0.0.0.0' 
+
+
 class Config:
     def __init__(self, q_threshold_1, q_threshold_2, q_prime_threshold_1, q_prime_threshold_2,\
-                       r_list, r_2, edge, noise_floor_prune, center_threshold, surround_threshold, error_threshold):
+                       r_list, r_2, edge, noise_floor_prune, center_threshold, surround_threshold, error_threshold, delta_threshold):
         '''
         Configurations for our algorithm
         Args:
@@ -33,6 +45,7 @@ class Config:
         self.center_threshold   = center_threshold
         self.surround_threshold = surround_threshold
         self.error_threshold    = error_threshold
+        self.delta_threshold    = delta_threshold
 
 
     def __str__(self):
@@ -43,10 +56,11 @@ class Config:
                'R_list = {}\n'.format(self.R_list) + \
                'R2     = {}\n'.format(self.R2) + \
                'edge   = {}\n'.format(self.edge) + \
-               'noise floor prune  = {}\n'.format(self.noise_floor_prune) + \
-               'center threshold   = {}\n'.format(self.center_threshold) + \
-               'surround threshold = {}\n'.format(self.surround_threshold) + \
-               'error threshold    = {}\n'.format(self.error_threshold)
+               'noise floor prune     = {}\n'.format(self.noise_floor_prune) + \
+               'center threshold      = {}\n'.format(self.center_threshold) + \
+               'surround threshold    = {}\n'.format(self.surround_threshold) + \
+               'error threshold       = {}\n'.format(self.error_threshold) + \
+               'power delta threshold = {}\n'.format(self.delta_threshold) 
 
     @classmethod
     def naive_factory(cls, case):
@@ -62,25 +76,27 @@ class Config:
             c_thre   = -65
             s_thre   = -75
             e_thre   = 0.2
+            d_thre   = 2    # power delta
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
-                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
         elif case == 'splat':
-            q        = 2.3
-            q2       = 2.
-            q_prime1 = 0.5
+            q        = 2.4
+            q2       = 4
+            q_prime1 = 0.6
             q_prime2 = 0.1
-            r        = [8, 6, 5, 4]
+            r        = [8, 6, 5, 4, 3]
             r2       = 6
             e        = 2
-            nf_p     = -75
-            c_thre   = -65
-            s_thre   = -75
-            e_thre   = 0.2
+            nf_p     = -70
+            c_thre   = -50
+            s_thre   = -60
+            e_thre   = 1
+            d_thre   = 2
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
-                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
         elif case == 'utah':
             q        = 3.
@@ -94,9 +110,10 @@ class Config:
             c_thre   = -50
             s_thre   = -60
             e_thre   = 1
+            d_thre   = 2
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
-                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
         elif case == 'testbed-indoor':
             q        = 1.5
@@ -110,9 +127,10 @@ class Config:
             c_thre   = -40
             s_thre   = -45
             e_thre   = 1
+            d_thre   = 1.5
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
-                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
         elif case == 'testbed-outdoor':
             q        = 1.9
@@ -126,9 +144,10 @@ class Config:
             c_thre   = -42
             s_thre   = -45
             e_thre   = 1
+            d_thre   = 2
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
-                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre)
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
         else:
             print('unknown case', case)
@@ -176,9 +195,9 @@ class ConfigSplot:
             return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
 
         else:
-            R1 = 8
+            R1 = 9
             R2 = 8
-            localmax_threshold = -60
+            localmax_threshold = -59
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2
@@ -219,7 +238,9 @@ class TrainingInfo:
             if self.tx_calibrate is None:
                 raise Exception('error durring train power calibration ')
         except:
-            self.tx_calibrate = {"T1":30}   # for splat
+            self.tx_calibrate = {}
+            for i in range(15):
+                self.tx_calibrate[str(i)] = 30   # for splat assume all the Tx are well calibrated
 
 
     @classmethod

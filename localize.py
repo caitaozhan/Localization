@@ -684,7 +684,33 @@ class Localization:
 
 
     def cluster_localization(self, intruders, sensor_outputs, num_of_intruders):
-        '''A baseline clustering localization method
+        '''A baseline clustering localization method: Kmeans with exact number of intruders provided
+        Args:
+            intruders (list): a list of integers (transmitter index)
+            sensor_outputs (list): a list of float (RSSI)
+            num_of_intruders:
+        Return:
+            (list): a list of locations [ [x1, y1], [x2, y2], ... ]
+        '''
+        threshold = self.config_splot.localmax_threshold
+        #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, threshold)
+
+        sensor_to_cluster = []
+        for index, output in enumerate(sensor_outputs):
+            if output > threshold:
+                sensor_to_cluster.append((self.sensors[index].x, self.sensors[index].y))
+        kmeans = KMeans(n_clusters=num_of_intruders).fit(sensor_to_cluster)
+        # visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
+
+        localize = kmeans.cluster_centers_
+        for i in range(len(localize)):
+            localize[i][0] = round(localize[i][0])
+            localize[i][1] = round(localize[i][1])
+        return localize
+
+    
+    def cluster_localization_range(self, intruders, sensor_outputs, num_of_intruders):
+        '''A baseline clustering localization method: Kmeans with a range of intruders provided
         Args:
             intruders (list): a list of integers (transmitter index)
             sensor_outputs (list): a list of float (RSSI)
@@ -695,25 +721,25 @@ class Localization:
         # threshold = int(0.25*len(sensor_outputs))       # threshold: instead of a specific value, it is a percentage of sensors
         # arg_decrease = np.flip(np.argsort(sensor_outputs))
         # threshold = sensor_outputs[arg_decrease[threshold]]
-        threshold = self.config.noise_floor_prune + 5
+        threshold = self.config_splot.localmax_threshold
         #visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, threshold)
 
         sensor_to_cluster = []
         for index, output in enumerate(sensor_outputs):
             if output > threshold:
                 sensor_to_cluster.append((self.sensors[index].x, self.sensors[index].y))
-        # k = 1
-        # inertias = []
-        # upper_bound = min(2*num_of_intruders, num_of_intruders+5)
-        # while k <= len(sensor_to_cluster) and k <= upper_bound:    # try all K, up to # of sensors above a threshold
-        #     kmeans = KMeans(n_clusters=k).fit(sensor_to_cluster)
-        #     inertias.append(kmeans.inertia_)  # inertia is the sum of squared distances of samples to their closest cluster center
-        #     #visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
-        #     k += 1
+        k = 1
+        inertias = []
+        upper_bound = min(2*num_of_intruders, num_of_intruders+5)
+        while k <= len(sensor_to_cluster) and k <= upper_bound:    # try all K, up to # of sensors above a threshold
+            kmeans = KMeans(n_clusters=k).fit(sensor_to_cluster)
+            inertias.append(kmeans.inertia_)  # inertia is the sum of squared distances of samples to their closest cluster center
+            #visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
+            k += 1
 
-        # k = find_elbow(inertias, num_of_intruders)              # the elbow point is the best K
-        # print('Real K = {}, clustered K = {}'.format(len(intruders), k))
-        kmeans = KMeans(n_clusters=num_of_intruders).fit(sensor_to_cluster)
+        k = find_elbow(inertias, num_of_intruders)              # the elbow point is the best K
+        print('Real K = {}, clustered K = {}'.format(len(intruders), k))
+        kmeans = KMeans(n_clusters=k).fit(sensor_to_cluster)
         # visualize_cluster(self.grid_len, intruders, sensor_to_cluster, kmeans.labels_)
 
         localize = kmeans.cluster_centers_
@@ -973,7 +999,7 @@ class Localization:
         return delta_p, delta_p_origin
 
 
-    #@profile
+    # @profile
     def posterior_iteration(self, hypotheses, radius, sensor_outputs, fig, previous_identified, subset_index = None):
         '''
         Args:
@@ -1001,7 +1027,7 @@ class Localization:
                 self.grid_posterior[trans.x * self.grid_len + trans.y] = 0
                 continue
             subset_sensors = self.sensors_collect[self.key.format(trans.hypothesis, radius)]
-            # self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)  # NOTE: remove in outdoor testbed
+            self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=1)  # NOTE: remove in outdoor testbed
             subset_sensors = np.array(subset_sensors)
             if len(subset_sensors) < 3:
                 likelihood = 0
@@ -1013,7 +1039,7 @@ class Localization:
                 mean_vec = np.copy(trans.mean_vec)
                 mean_vec = mean_vec[subset_sensors]
                 variance = np.diagonal(self.covariance)[subset_sensors]
-                delta_p, delta_p_origin = self.mle_closedform(sensor_outputs_copy, mean_vec, variance, threshold=1.5)
+                delta_p, delta_p_origin = self.mle_closedform(sensor_outputs_copy, mean_vec, variance, threshold=self.config.delta_threshold)
                 far_from_intruder_score, far_ratio = self.compute_far_from_intruder_score(trans.x, trans.y, subset_sensors, sensor_outputs_copy, mean_vec)
                 # print(trans.x, trans.y, far_from_intruder_score, far_ratio, delta_p_origin)
                 far_from_intruder_grid[trans.x][trans.y] = (far_from_intruder_score, far_ratio, delta_p_origin)
@@ -1021,14 +1047,14 @@ class Localization:
                 stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
                 # a hack for outdoor####
                 for i, sen_output in enumerate(sensor_outputs_copy):
-                    if sen_output > -35:
+                    if sen_output > -40:
                         stds[i] = 3
-                    elif sen_output > -40:
+                    elif sen_output > -50:
+                        stds[i] = 2.5
+                    elif sen_output > -60:
                         stds[i] = 2
-                    elif sen_output > -48:
-                        stds[i] = 1
                     else:
-                        stds[i] = 0.5
+                        stds[i] = 1
                 ########################
                 array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
                 likelihood = np.prod(array_of_pdfs)
@@ -1128,7 +1154,7 @@ class Localization:
     def reset(self):
         '''Reset some members for our localization
         '''
-        self.debug = True
+        # self.debug = True
         self.set_priori()
         self.sensors_used = np.zeros(len(self.sensors), dtype=bool)
         self.sensors_collect = {}
@@ -1171,7 +1197,7 @@ class Localization:
         #     self.counter.proc_1_1 += len(identified_R)
         # self.counter.time2_end()
 
-        print('Procedure 2')  # issue in test #6
+        print('Procedure 2')
         identified2, pred_power2 = self.procedure2(sensor_outputs, intruders, fig, R=self.config.R2, previous_identified=identified)
         identified.extend(identified2)
         pred_power.extend(pred_power2)
@@ -1252,7 +1278,7 @@ class Localization:
 
 
 
-    #@profile
+    # @profile
     def procedure2(self, sensor_outputs, intruders, fig, R, previous_identified):
         '''Our hypothesis-based localization algorithm's procedure 2
         Args:
@@ -1264,8 +1290,8 @@ class Localization:
         Return:
             (list, list)
         '''
-        if self.debug:
-            visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
+        # if self.debug:
+        #     visualize_sensor_output2(self.grid_len, intruders, sensor_outputs, self.sensors, self.config.noise_floor_prune, fig)
         detected, power = [], []
         center_list = []
         center = self.get_center_sensor(sensor_outputs, R, center_list, previous_identified)
@@ -1274,10 +1300,11 @@ class Localization:
             center_list.append(center)
             location = self.sensors[center].x*self.grid_len + self.sensors[center].y
             sensor_subset = self.sensors_collect[self.key.format(location, R)]
-            self.ignore_screwed_sensor(sensor_subset, previous_identified, min_dist=2)
+            self.ignore_screwed_sensor(sensor_subset, previous_identified, min_dist=1)
             # hypotheses = [h for h in range(len(self.transmitters)) if h != location and \   # CANNOT get why h != location
             #               math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             hypotheses = [h for h in range(len(self.transmitters)) if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
+            hypotheses = [h for h in hypotheses if self.grid_priori[h] != 0.]
             for t in range(2, 4):
                 self.counter.time3_start()
                 self.counter.time4_start()
@@ -1307,8 +1334,10 @@ class Localization:
                         self.counter.proc_2_2 += 1
                     elif t == 3:
                         self.counter.proc_2_3 += 1
-                    if self.debug:
-                        visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+                    # if self.debug:
+                    #     visualize_sensor_output(self.grid_len, intruders, sensor_outputs, self.sensors, -80, fig)
+                    break
+                elif np.max(Q) == 0:  # no need to search for t=3
                     break
                 if t == 2:
                     self.counter.time3_end()
@@ -1414,7 +1443,7 @@ class Localization:
         return center
 
 
-    #@profile
+    # @profile
     def procedure1(self, hypotheses, sensor_outputs, intruders, fig, radius, previous_identified):
         '''Our hypothesis-based localization algorithm's procedure 1
         Args:
@@ -1457,7 +1486,7 @@ class Localization:
                 q = Q[index[0]*self.grid_len + index[1]]
                 location = index[0]*self.grid_len + index[1]
                 subset_sensors = self.sensors_collect[self.key.format(location, radius)]
-                self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=2)
+                self.ignore_screwed_sensor(subset_sensors, previous_identified, min_dist=1)
                 sen_inside = len(subset_sensors)
                 q_threshold = self.get_q_threshold_custom(location, sen_inside)
                 print('Q = {:.2e}'.format(q), end='; ')
@@ -1465,10 +1494,10 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if all([far[0] < -2, far[1] > 0.5, far[2] < -1]):   # TODO: add them to the Config class
+                    if far[2] < -3.5 or all([far[1] >= 0.15, far[2] < -2.5]):
                         print('* power too weak, likely far false alarm')
                         continue
-                    if all([far[0] > 2, far[1] < 0.5, far[2] > 1]):      # TODO: add them to the Config class
+                    if far[2] > 3.5 or all([far[1] <= 0.15, far[2] > 2.5]):
                         print('* power too strong, likely multiple Tx')
                         continue
                     print(' **Intruder!**')
@@ -1476,7 +1505,8 @@ class Localization:
                     p = power[index[0]][index[1]] - offset
                     self.delete_transmitter(index, p, range(len(self.sensors)), sensor_outputs)
                     # self.delete_transmitter(index, p, subset_sensors, sensor_outputs)   # for test-bed, only delete neighbor's power
-                    self.grid_priori[index[0]*self.grid_len + index[1]] = 0
+                    self.update_priori(index, radius)
+                    # self.grid_priori[index[0]*self.grid_len + index[1]] = 0
                     for sen in subset_sensors:
                         self.sensors_used[sen] = True
                     identified.append(tuple(index))
@@ -1486,6 +1516,16 @@ class Localization:
             print('---')
             # self.debug = False
         return identified, pred_power
+
+    def update_priori(self, tx, radius):
+        '''When a tx is located, clear the neighbor's priori to zero
+        '''
+        radius = radius if radius <= 4 else 4
+        for i in range(tx[0]-radius+1, tx[0]+radius):
+            for j in range(tx[1]-radius+1, tx[1]+radius):
+                if all([i >= 0, j >= 0, i < self.grid_len, j < self.grid_len]):
+                    if distance((i, j), tx) < radius:
+                        self.grid_priori[i*self.grid_len + j] = 0
 
 
     def get_confined_area(self, sensor, R):
@@ -1651,8 +1691,8 @@ class Localization:
                 weight_local[voxel[0]][voxel[1]] = x
                 weight_global[voxel[0]][voxel[1]] = x
             
-            # if self.debug:
-            #    visualize_splot(weight_local, 'localization', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
+            if self.debug:
+                visualize_splot(weight_local, 'localization', str(fig)+'-'+str(self.sensors[sen_local_max].x)+'-'+str(self.sensors[sen_local_max].y))
 
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
@@ -1674,7 +1714,7 @@ class Localization:
             index = np.argmax(X)
             detected_intruders.append(confined_area[index])
             '''
-        #if self.debug:
+        # if self.debug:
         #    visualize_splot(weight_global, 'localization', fig)
 
         return detected_intruders

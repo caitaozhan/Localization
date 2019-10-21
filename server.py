@@ -4,12 +4,16 @@ import os
 import time
 import argparse
 import sys
+import argparse
 import numpy as np
 from flask import Flask, request
 from loc_default_config import TrainingInfo
+from client import Default
 from localize import Localization
 from input_output import Input, Output
 from utility import subsample_from_full
+from plots import visualize_localization
+
 
 try:
     sys.path.append('../rtl-testbed/')
@@ -60,6 +64,7 @@ def localize():
         pred_locations, pred_power = ll.our_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
         end = time.time()
         pred_locations = server_support.pred_loc_to_center(pred_locations)
+        # visualize_localization(40, true_locations, pred_locations, myinput.experiment_num)
         errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
         outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start, pred_locations))
     if 'splot' in myinput.methods:
@@ -71,7 +76,7 @@ def localize():
         outputs.append(Output('splot', errors, false_alarm, miss, [0], end-start, pred_locations))
     if 'cluster' in myinput.methods:
         start = time.time()
-        pred_locations = ll.cluster_localization(intruders, np.copy(sensor_outputs), num_of_intruders=int(myinput.num_intruder))
+        pred_locations = ll.cluster_localization_range(intruders, np.copy(sensor_outputs), num_of_intruders=int(myinput.num_intruder))
         end = time.time()
         pred_locations = server_support.pred_loc_to_center(pred_locations)
         errors, miss, false_alarm = ll.compute_error2(true_locations, pred_locations)
@@ -211,12 +216,12 @@ if __name__ == 'server':
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.18'                                # 5
+    result_date = '10.20'                                # 5
     train_percent = int(gran*gran/(40*40)*100)                  # 6
     output_dir  = 'results/{}'.format(result_date)
     output_file = 'log'                                  # 7
     train = TrainingInfo.naive_factory(data_source, sub_training_data, train_percent)
-    subsample_from_full(train, grid_len, sensor_density, transmit_power)       # 8
+    # subsample_from_full(train, grid_len, sensor_density, transmit_power)       # 8
 
     print(train)
     server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
@@ -224,22 +229,35 @@ if __name__ == 'server':
     ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
 
+
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='localization server')
-    parser.add_argument('-src', '--data_source', type=str, nargs=1, default=['testbed-indoor'], help='data source: testbed-indoor, testbed-outdoor')
-    parser.add_argument('-od', '--output_dir', type=str, nargs=1, default=['results/9.14'], help='the localization results')
-    parser.add_argument('-of', '--output_file', type=str, nargs=1, default=['log'], help='the localization results')
-    parser.add_argument('-td', '--training_date', type=str, nargs=1, default=[None], help='the date when trainig data is trained')
+    hint = 'python server.py -gran 12'
+    parser = argparse.ArgumentParser(description='server side of experiments. | hint ' + hint)
+    parser.add_argument('-gran', '--granularity', type=int, nargs=1, default=[Default.training_gran], help='granularity of the training coarse grid')
     args = parser.parse_args()
 
-    data_source = args.data_source[0]
-    output_file = args.output_file[0]
-    training_date = args.training_date[0]
+    gran = args.granularity[0]                           # 1 [6, 8, 10, 12, 14, 16, 18]
 
-    train = TrainingInfo.naive_factory(data_source, training_date, 100)
+    print('granularity = ', gran)
+
+    grid_len       = 40
+    data_source    = 'splat'
+    sensor_density = 240                                 # 2   [80, 160, 240, 320, 400]
+    transmit_power = {"T1":30}                           # 3
+    full_training_data = 'inter-' + str(gran)
+    sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
+
+    result_date = '10.20-5'                                # 5
+    train_percent = int(gran*gran/(40*40)*100)                  # 6
+    output_dir  = 'results/{}'.format(result_date)
+    output_file = 'log-gran-{}'.format(gran)                                  # 7
+    train = TrainingInfo.naive_factory(data_source, sub_training_data, train_percent)
+    subsample_from_full(train, grid_len, sensor_density, transmit_power)       # 8
+
+    print(train)
     server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
-    ll = Localization(grid_len=10, case=data_source, debug=True)
-    ll.init_data(train.cov, train.sensors, train.hypothesis, IndoorMap)  # improve map
+    ll = Localization(grid_len=grid_len, case=data_source, debug=False)
+    ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", port=5000+gran, debug=False)

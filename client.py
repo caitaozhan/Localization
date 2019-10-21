@@ -11,19 +11,8 @@ from subprocess import PIPE, Popen
 from input_output import Input, Output
 from localize import Localization
 from utility import generate_intruders
+from loc_default_config import Default
 
-
-
-class Default:
-    grid_len       = 40
-    training_gran  = 12    # [6, 8, 10, 12, 14, 16, 18]
-    num_intruder   = 5     # [1, 3, 5, 7, 10]
-    sen_density    = 240   # [80, 160, 240, 320, 400]
-    repeat         = 10    # repeating experiments
-    methods        = ['our', 'splot', 'cluster']
-    true_data_path = '../mysplat/output8_{}'
-    trained_power  = 30
-    server_ip      = '0.0.0.0' 
 
 
 class Client:
@@ -55,7 +44,7 @@ class Client:
 
 if __name__ == '__main__':
 
-    hint = 'python client.py -gran 12 -num 5 -sen 240 -met our -rep 10'
+    hint = 'python client.py -gran 12 -num 5 -sen 240 -met our -rep 10 -p 5012'
 
     parser = argparse.ArgumentParser(description='client side | hint: ' + hint)
     parser.add_argument('-gran', '--training_gran', type=int, nargs=1 ,default=[Default.training_gran], help='Training granularity')
@@ -87,7 +76,12 @@ if __name__ == '__main__':
     ll.init_data(cov_file, sensor_file, hypothesis_file)
     ll.init_truehypo(hypothesis_file)
 
-    for i in range(repeat):
+    if repeat > 0:
+        myrange = range(repeat)
+    if repeat < 0:
+        myrange = range(-repeat, -(repeat-1))
+    print('myrange is:', myrange)
+    for i in myrange:
         random.seed(i)
         np.random.seed(i)
 
@@ -101,6 +95,7 @@ if __name__ == '__main__':
         myinput.train_percent = int(training_gran**2/Default.grid_len**2 * 100)
         myinput.sensor_data = Client.prepare_sensor_output(sensor_outputs)
         myinput.ground_truth = Client.prepare_ground_truth(intruders, true_powers)
+        print(myinput.experiment_num, '\n', myinput.ground_truth, '\n')
 
         curl = "curl -d \'{}\' -H \'Content-Type: application/json\' -X POST http://{}:{}/localize"
         command = curl.format(myinput.to_json_str(), Default.server_ip, port)
