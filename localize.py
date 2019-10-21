@@ -1494,10 +1494,10 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if far[2] < -3.5 or all([far[1] >= 0.15, far[2] < -2.5]):
+                    if far[2] < -3.5 or all([far[1] >= 0.2, far[2] < -2.5]):
                         print('* power too weak, likely far false alarm')
                         continue
-                    if far[2] > 3.5 or all([far[1] <= 0.15, far[2] > 2.5]):
+                    if far[2] > 3.5 or all([far[1] <= 0.2, far[2] > 2.5]):
                         print('* power too strong, likely multiple Tx')
                         continue
                     print(' **Intruder!**')

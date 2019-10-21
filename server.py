@@ -210,8 +210,8 @@ if __name__ == 'server':
     ######## Splat ############
     grid_len       = 40
     data_source    = 'splat'
-    gran           = 12                                   # 1   [6, 8, 10, 12, 14, 16, 18]
-    sensor_density = 240                                 # 2   [80, 160, 240, 320, 400]
+    gran           = 12                                  # 1   [6, 8, 10, 12, 14, 16, 18]
+    sensor_density = 400                                 # 2   [80, 160, 240, 320, 400]
     transmit_power = {"T1":30}                           # 3
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.21-2'                                # 5
+    result_date = '10.21-4'                                # 5
     train_percent = int(gran*gran/(40*40)*100)           # 6
     output_dir  = 'results/{}'.format(result_date)
     train = TrainingInfo.naive_factory(data_source, sub_training_data, train_percent)

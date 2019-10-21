@@ -82,17 +82,17 @@ class Config:
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
         elif case == 'splat':
-            q        = 2.4
+            q        = 2.6
             q2       = 4
             q_prime1 = 0.6
             q_prime2 = 0.1
-            r        = [8, 6, 5, 4, 3]
+            r        = [8, 6, 5, 4, 3, 2]
             r2       = 6
             e        = 2
             nf_p     = -70
             c_thre   = -50
             s_thre   = -60
-            e_thre   = 1
+            e_thre   = 0.5
             d_thre   = 2
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
@@ -197,7 +197,7 @@ class ConfigSplot:
         else:
             R1 = 8
             R2 = 8
-            localmax_threshold = -62
+            localmax_threshold = -60
             sigma_x_square = 0.5
             delta_c = 1
             n_p = 2
