@@ -9,9 +9,9 @@ Multiple transmitter localization
 3. localization error: add cluster in the plot (10.19)
 
 
-## synthetic
+## synthetic (Done)
 1. plots for various amount of training. do not use multi-granularity. pick a default amount of training. (10.16-17) (Done)
-2. plots for various amount of intruders. (10.18-10.19)
-3. plots for various amount of sensors density. (10.20)
+2. plots for various amount of intruders. (10.18-10.19) (Done)
+3. plots for various amount of sensors density. (10.20) (Done)
 
-## MSS-MAP
+## MSS-MAP (10.21-10.22)

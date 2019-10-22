@@ -30,6 +30,63 @@ def on():
     return 'on'
 
 
+@app.route('/localize_ss', methods=['POST'])
+def localize_ss():
+    '''ss stands for shared spectrum
+    '''
+    # step 0: parse the request data
+    myinput = Input.from_json_dict(request.get_json())  # get_json() return a dict
+    myinput.train_percent = train.train_percent
+
+    # step 1: set up sensor data
+    try:
+        sensor_data = myinput.sensor_data
+        sensor_outputs = np.zeros(len(sensor_data))
+        for hostname, rss in sensor_data.items():
+            index = server_support.get_index(hostname)
+            sensor_outputs[index] = rss
+    except Exception as e:
+        print(e)
+        print('most probability a few sensors did not send its data')
+        print(sensor_data)
+        print(hostname, index)
+        return 'Bad Request'
+
+    # step 2.1: set up ground truth
+    ground_truth = myinput.ground_truth
+    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll_ss)
+
+
+
+    # step 3: do the localization
+    print('\n****\nNumber =', myinput.experiment_num)
+    outputs = []
+    if 'our-ss' in myinput.methods:
+        start = time.time()
+        # step 2.2: update the hypothesis data by adding the secondaries
+        # TODO
+        pred_locations, pred_power = ll_ss.our_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
+        end = time.time()
+        pred_locations = server_support.pred_loc_to_center(pred_locations)
+        visualize_localization(40, true_locations, pred_locations, myinput.experiment_num)
+        errors, miss, false_alarm, power_errors = ll_ss.compute_error(true_locations, true_powers, pred_locations, pred_power)
+        outputs.append(Output('our-ss', errors, false_alarm, miss, power_errors, end-start, pred_locations))
+    if 'our' in myinput.methods:
+        start = time.time()
+        pred_locations, pred_power = ll.our_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
+        end = time.time()
+        pred_locations = server_support.pred_loc_to_center(pred_locations)
+        visualize_localization(40, true_locations, pred_locations, myinput.experiment_num)
+        # TODO deduct the authorized users
+        errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
+        outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start, pred_locations))
+
+    # step 4: log the input and output
+    server_support.log(myinput, outputs)
+
+    return 'Hello world'
+
+
 @app.route('/localize', methods=['POST'])
 def localize():
     '''process the POST request
@@ -211,12 +268,12 @@ if __name__ == 'server':
     grid_len       = 40
     data_source    = 'splat'
     gran           = 12                                  # 1   [6, 8, 10, 12, 14, 16, 18]
-    sensor_density = 80                                 # 2   [80, 160, 240, 320, 400]
+    sensor_density = 240                                 # 2   [80, 160, 240, 320, 400]
     transmit_power = {"T1":30}                           # 3
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.21'                                # 5
+    result_date = '10.21-10'                                # 5
     train_percent = int(gran*gran/(40*40)*100)                  # 6
     output_dir  = 'results/{}'.format(result_date)
     output_file = 'log'                                  # 7
@@ -225,9 +282,12 @@ if __name__ == 'server':
 
     print(train)
     server_support = ServerSupport(train.hostname_loc, output_dir, output_file, train.tx_calibrate)
-    ll = Localization(grid_len=grid_len, case=data_source, debug=True)
+    ll = Localization(grid_len=grid_len, case=data_source, debug=False)
     ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
+    # TODO init another object named ll_ss add primary
+    ll_ss = Localization(grid_len=grid_len, case=data_source, debug=False)
+    ll_ss.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
 
 if __name__ == '__main__':
