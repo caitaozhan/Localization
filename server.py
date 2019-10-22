@@ -64,7 +64,7 @@ def localize():
         pred_locations, pred_power = ll.our_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
         end = time.time()
         pred_locations = server_support.pred_loc_to_center(pred_locations)
-        # visualize_localization(40, true_locations, pred_locations, myinput.experiment_num)
+        visualize_localization(40, true_locations, pred_locations, myinput.experiment_num)
         errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
         outputs.append(Output('our', errors, false_alarm, miss, power_errors, end-start, pred_locations))
     if 'splot' in myinput.methods:
@@ -211,12 +211,12 @@ if __name__ == 'server':
     grid_len       = 40
     data_source    = 'splat'
     gran           = 12                                  # 1   [6, 8, 10, 12, 14, 16, 18]
-    sensor_density = 400                                 # 2   [80, 160, 240, 320, 400]
+    sensor_density = 80                                 # 2   [80, 160, 240, 320, 400]
     transmit_power = {"T1":30}                           # 3
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.20-num'                                # 5
+    result_date = '10.21'                                # 5
     train_percent = int(gran*gran/(40*40)*100)                  # 6
     output_dir  = 'results/{}'.format(result_date)
     output_file = 'log'                                  # 7

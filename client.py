@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     if repeat > 0:
         myrange = range(repeat)
-    if repeat < 0:
+    if repeat <= 0:
         myrange = range(-repeat, -(repeat-1))
     print('myrange is:', myrange)
     for i in myrange:

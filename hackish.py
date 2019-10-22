@@ -76,11 +76,12 @@ def main1():
 
 def main2():
     '''random power'''
+    a = 2
     errors = []
     i = 0
     while i < 1000000:
-        true = random.uniform(-1, 1)
-        pred = random.uniform(-1, 1)
+        true = random.uniform(-a, a)
+        pred = random.uniform(0, 0)
         error = abs(pred - true)
         errors.append(error)
         i += 1

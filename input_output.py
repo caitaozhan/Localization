@@ -75,7 +75,7 @@ class Input:
         myinput.experiment_num = json_dict['experiment_num']
         myinput.sensor_data    = json_dict['sensor_data']
         myinput.ground_truth   = json_dict['ground_truth']
-        myinput.sensor_density = json_dict['sensor_density']
+        myinput.sensor_density = json_dict.get('sensor_density')
         return myinput
 
 
@@ -123,6 +123,8 @@ class Output:
             return self.false_alarm
         if metric == 'power':
             return self.power
+        if metric == 'time':
+            return self.time
 
 
     def to_json_str(self):

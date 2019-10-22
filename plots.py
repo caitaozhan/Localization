@@ -249,12 +249,12 @@ def visualize_localization(grid_len, true_locations, pred_locations, fig):
     '''
     grid = np.zeros((grid_len, grid_len))
     for true in true_locations:
-        grid[true[0]][true[1]] = -1       # miss
+        grid[int(true[0])][int(true[1])] = -1       # miss
     for pred in pred_locations:
-        if grid[pred[0]][pred[1]] == -1:
-            grid[pred[0]][pred[1]] = 0.4  # accurate prediction
+        if grid[int(pred[0])][int(pred[1])] == -1:
+            grid[int(pred[0])][int(pred[1])] = 0.4  # accurate prediction
         else:
-            grid[pred[0]][pred[1]] = 1    # false alarm
+            grid[int(pred[0])][int(pred[1])] = 1    # false alarm
 
     grid2 = np.copy(grid)
     for i in range(grid_len):

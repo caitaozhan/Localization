@@ -36,14 +36,25 @@ class PlotResult:
         vals = [val for val in vals if val is not None]
         vals = [val for val in vals if np.isnan(val)==False]
         return np.mean(vals)
-    
+
     @staticmethod
-    def reduce_avg_list(vals):
+    def reduce_abs_avg_list(vals):
         '''for power'''
+        vals = [val for val in vals if val is not None]
         new_vals = []
         for l in vals:
             for e in l:
                 new_vals.append(abs(e))
+        return PlotResult.reduce_avg(new_vals)
+
+    @staticmethod
+    def reduce_avg_list(vals):
+        '''for power'''
+        vals = [val for val in vals if val is not None]
+        new_vals = []
+        for l in vals:
+            for e in l:
+                new_vals.append(e)
         return PlotResult.reduce_avg(new_vals)
 
     @staticmethod
@@ -421,6 +432,31 @@ class PlotResult:
 
 
     @staticmethod
+    def power_vary_numintru(data, src, train_gran, sensor_density, filename):
+        '''Varying training data used
+        Args:
+            data -- [ (Input, {str: Output}), ... ]
+            src  -- str -- source of data
+            num_intruder -- int --
+        '''
+        train_percent = int(train_gran**2/Default.grid_len**2 * 100)
+        metrics = ['power', 'time']                   # y-axis
+        methods = ['our', 'splot', 'cluster']         # tha bars
+        reduce_f = PlotResult.reduce_avg
+        d = {}
+        for metric in metrics:
+            table = defaultdict(list)
+            for myinput, output_by_method in data:
+                if myinput.data_source == src and myinput.train_percent == train_percent and myinput.sensor_density:
+                    table[myinput.num_intruder].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
+            print_table = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+            d[metric] = print_table
+            print('Metric:', metric)
+            print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + methods), '\n')
+
+
+
+    @staticmethod
     def error_missfalse_vary_sendensity(data, src, train_gran, num_intruder, cell_len, figname):
         '''Varying training data used
         Args:
@@ -524,6 +560,7 @@ class PlotResult:
         '''
         metrics = ['power']
         methods = ['our']
+        reduce_f_abs = PlotResult.reduce_abs_avg_list
         reduce_f = PlotResult.reduce_avg_list
         table = defaultdict(list)
         for metric in metrics:
@@ -531,8 +568,34 @@ class PlotResult:
                 if myinput.data_source == src and myinput.train_percent == train_percent:
                     table[myinput.num_intruder].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
 
-            print_table = [[x] + [reduce_f([y_by_method[method] for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
-            print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + [method + ' ' + metric for method in methods]), '\n')
+            print_table1 = [[x] + [reduce_f_abs([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+            print_table2 = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+            print('Metric: absolute', metric)
+            print(tabulate.tabulate(print_table1, headers = ['NUM INTRU'] + methods), '\n')
+            print('Metric:', metric)
+            print(tabulate.tabulate(print_table2, headers = ['NUM INTRU'] + methods), '\n')
+
+
+    @staticmethod
+    def time_numintru(data, src, train_percent):
+        '''merging error and missfalse into one plot by subplots
+        Args:
+            data -- [ (Input, {str: Output}), ... ]
+            src  -- str -- source of data
+            train_percent -- int -- training data percentage
+        '''
+        metrics = ['time']
+        methods = ['our', 'splot', 'cluster']
+        reduce_f = PlotResult.reduce_avg
+        table = defaultdict(list)
+        for metric in metrics:
+            for myinput, output_by_method in data:
+                if myinput.data_source == src and myinput.train_percent == train_percent:
+                    table[myinput.num_intruder].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
+
+            print_table = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+            print('Metric:', metric)
+            print(tabulate.tabulate(print_table, headers = ['NUM INTRU'] + methods), '\n')
 
 
 def indoor_full_training():
@@ -553,8 +616,8 @@ def indoor_interpolation():
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
 
-    PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len, figname='plot/indoor-error-missfalse.png')
-    # PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
+    # PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len, figname='plot/indoor-error-missfalse.png')
+    PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
 
 
 def outdoor_interpolation():
@@ -589,9 +652,10 @@ def splat_vary_numintru():
     logs = logs + ['results/10.21-2/log-num-1', 'results/10.21-2/log-num-3', 'results/10.21-2/log-num-5', \
                    'results/10.21-2/log-num-7', 'results/10.21-2/log-num-10']
     data = IOUtility.read_logs(logs)
-    PlotResult.error_missfalse_vary_numintru(data, src='splat', train_gran=Default.training_gran, sensor_density=Default.sen_density, cell_len=SplatMap.cell_len, figname='plot/splat-vary-numintru')
-    shutil.copy('plot/splat-vary-numintru.png', '/home/caitao/Project/latex/localize/ipsn/figures')
-
+    # PlotResult.error_missfalse_vary_numintru(data, src='splat', train_gran=Default.training_gran, sensor_density=Default.sen_density, cell_len=SplatMap.cell_len, figname='plot/splat-vary-numintru')
+    # shutil.copy('plot/splat-vary-numintru.png', '/home/caitao/Project/latex/localize/ipsn/figures')
+    # PlotResult.power_numintru(data, src='splat', train_percent=9)
+    PlotResult.time_numintru(data, src='splat', train_percent=9)
 
 def splat_vary_sendensity():
     '''Varies sensor density
@@ -613,5 +677,5 @@ if __name__ == '__main__':
     # indoor_interpolation()
     # outdoor_interpolation()
     # splat_vary_traindata()
-    # splat_vary_numintru()
-    splat_vary_sendensity()
+    splat_vary_numintru()
+    # splat_vary_sendensity()
