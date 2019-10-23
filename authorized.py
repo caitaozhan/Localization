@@ -55,6 +55,14 @@ class Authorized:
                         self.secondaries[i].append((x, y))
                         power = 2
                         self.secondaries_power[i].append(power)
+            elif num == 5:
+                self.primaries = [(5, 5), (34, 34)]                    # 2 primaries at two opposite corners
+                self.primaries_power = [2, 2]
+                random.seed(0)
+                for i in range(100):
+                    for j in range(3):                                 # 3 secondaries randomly spread out
+                        self.secondaries[i].append(self.random_secondary(j, edge))
+                        self.secondaries_power[i].append(2)
             elif num == 6:
                 self.primaries = [(5, 5), (34, 5), (34, 34)]           # the 3 primaries are fixed
                 random.seed(0)
@@ -84,6 +92,25 @@ class Authorized:
         if case == 'outdoor-testbed':
             pass
 
+    def random_secondary(self, j, edge):
+        '''
+        Args:
+            j -- int -- [0, 2]
+        Return:
+            (int, int) -- a 2D location for secondaries
+        '''
+        if j == 0:
+            x = random.randint(edge+2, edge+5)
+            y = random.randint(self.grid_len-edge-5, self.grid_len-edge-2)
+        elif j == 1:
+            x = random.randint(int(self.grid_len/2)-2, int(self.grid_len/2)+3)
+            y = random.randint(int(self.grid_len/2)-2, int(self.grid_len/2)+3)
+        elif j == 2:
+            x = random.randint(self.grid_len-edge-5, self.grid_len-edge-2)
+            y = random.randint(edge+2, edge+5)
+        return (x, y)
+
+
     def __str__(self):
         return 'Primary = {}\n'.format(str(self.primaries)) + 'Primary power = {}\n'.format(str(self.primaries_power)) + \
                '\nSecondary = {}\n'.format(str(self.secondaries)) + '\nSecondary power = {}\n'.format(str(self.secondaries_power))
@@ -104,5 +131,5 @@ class Authorized:
 
 
 if __name__ == '__main__':
-    authorized = Authorized(40, 2, 'splat', 2)
+    authorized = Authorized(40, 2, 'splat', 5)
     print(authorized)

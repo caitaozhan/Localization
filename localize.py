@@ -21,6 +21,7 @@ from plots import visualize_sensor_output, visualize_sensor_output2, visualize_c
 from utility import generate_intruders, generate_intruders_2, distance, Point, my_local_max
 from loc_default_config import Config, ConfigSplot
 from waf_model import WAF
+from authorized import Authorized
 from skimage.feature import peak_local_max
 import line_profiler
 import matplotlib.pyplot as plt
@@ -50,7 +51,7 @@ class Localization:
         lookup_table (np.array):     trade space for time on the q function
         config (Config):             'lognormal', 'splat', 'utah'
     '''
-    def __init__(self, grid_len, case='lognormal', debug=False):
+    def __init__(self, grid_len, case='lognormal', debug=False, authorized=None):
         self.grid_len = grid_len
         self.grid_priori = np.zeros(0)
         self.grid_posterior = np.zeros(0)
@@ -76,6 +77,7 @@ class Localization:
         self.debug  = debug                    # debug mode do visulization stuff, which is time expensive
         self.utah   = False
         self.config = Config.naive_factory(case)
+        self.authorized = authorized
         self.config_splot = ConfigSplot.naive_factory(case)
         print('{}\n{}'.format(case, self.config))
 
@@ -1610,8 +1612,14 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if far[2] < -0.5 or all([far[1] >= 0.8, far[2] < -1]):
+                    if far[2] < -0.45 or all([far[1] >= 0.8, far[2] < -1]):
                         print('* power too weak, likely far false alarm, or authorized users present')
+                        continue
+                    if self.authorized is not None and far[2] < 0 and self.check_authorized(index, fig):
+                        print('* likely authorized user')
+                        continue
+                    if self.authorized is not None and self.check_authorized2(index, fig):
+                        print('* likely authorized user')
                         continue
                     if far[2] > 3.5 or all([far[1] <= 0.2, far[2] > 2.5]):
                         print('* power too strong, likely multiple Tx')
@@ -1632,6 +1640,36 @@ class Localization:
             print('---')
             # self.debug = False
         return identified, pred_power
+
+
+    def check_authorized(self, pred_location, exp_num):
+        '''Check if there is an authorized user nearby, high chance of false alarm
+        Args:
+            pred_location -- (int, int)
+        Return:
+            bool
+        '''
+        all_authorized = self.authorized.primaries + self.authorized.secondaries[int(exp_num)]
+        for authorized in all_authorized:
+            if distance(pred_location, authorized) < 2.8:
+                return True
+            elif distance(pred_location, authorized) <= 1:
+                return True
+        return False
+    
+    def check_authorized2(self, pred_location, exp_num):
+        '''Check if there is an authorized user nearby, high chance of false alarm
+        Args:
+            pred_location -- (int, int)
+        Return:
+            bool
+        '''
+        all_authorized = self.authorized.primaries + self.authorized.secondaries[int(exp_num)]
+        for authorized in all_authorized:
+            if distance(pred_location, authorized) <= 1:
+                return True
+        return False
+
 
     def update_priori(self, tx, radius):
         '''When a tx is located, clear the neighbor's priori to zero

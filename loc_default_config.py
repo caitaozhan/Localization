@@ -9,7 +9,7 @@ class Default:
     training_gran  = 12    # [6, 8, 10, 12, 14, 16, 18]
     num_intruder   = 5     # [1, 3, 5, 7, 10]
     sen_density    = 240   # [80, 160, 240, 320, 400]
-    num_authorized = 0     # [0, 2, 4, 6, 8]
+    num_authorized = 5     # [0 or 5] NOTE: watchout!
     repeat         = 10    # repeating experiments
     methods        = ['our', 'splot', 'cluster', 'our-ss']
     true_data_path = '../mysplat/output8_{}'

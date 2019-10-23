@@ -12,7 +12,7 @@ from loc_default_config import Default
 from localize import Localization
 from input_output import Input, Output
 from utility import subsample_from_full
-from plots import visualize_localization
+from plots import visualize_localization, visualize_all_transmitters
 from authorized import Authorized
 
 
@@ -29,6 +29,32 @@ app = Flask(__name__)
 def on():
     '''See whether the server is turned on'''
     return 'on'
+
+
+@app.route('/visualize', methods=['POST'])
+def visualize():
+    # step 0: parse the request data
+    myinput = Input.from_json_dict(request.get_json())  # get_json() return a dict
+    myinput.train_percent = train.train_percent
+
+    # step 1: set up sensor data
+    try:
+        sensor_data = myinput.sensor_data
+        sensor_outputs = np.zeros(len(sensor_data))
+        for hostname, rss in sensor_data.items():
+            index = server_support.get_index(hostname)
+            sensor_outputs[index] = rss
+    except Exception as e:
+        print(e)
+        print('most probability a few sensors did not send its data')
+        print(sensor_data)
+        print(hostname, index)
+        return 'Bad Request'
+
+    # step 2.1: set up ground truth
+    ground_truth = myinput.ground_truth
+    true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll_ss)
+    visualize_all_transmitters(Default.grid_len, true_locations, authorized.primaries, authorized.secondaries[int(myinput.experiment_num)], myinput.experiment_num)
 
 
 @app.route('/localize_ss', methods=['POST'])
@@ -58,7 +84,7 @@ def localize_ss():
     true_locations, true_powers, intruders = server_support.parse_ground_truth(ground_truth, ll_ss)
 
     # step 3: do the localization
-    print('\n****\nNumber =', myinput.experiment_num)
+    print('\n\n****\n\nNumber =', myinput.experiment_num)
     outputs = []
     if 'our-ss' in myinput.methods:
         start = time.time()
@@ -77,7 +103,7 @@ def localize_ss():
         pred_locations, pred_power = ll.our_localization(np.copy(sensor_outputs), intruders, myinput.experiment_num)
         end = time.time()
         pred_locations = server_support.pred_loc_to_center(pred_locations)
-        visualize_localization(40, true_locations, pred_locations, myinput.experiment_num)
+        visualize_localization(40, true_locations, pred_locations, str(myinput.experiment_num)+'-')
         # deduct the authorized users
         ll.remove_authorized_users(pred_locations, pred_power, authorized, myinput.experiment_num)
         errors, miss, false_alarm, power_errors = ll.compute_error(true_locations, true_powers, pred_locations, pred_power)
@@ -275,7 +301,7 @@ if __name__ == 'server':
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)    # 4
 
-    result_date = '10.22'                                                  # 5
+    result_date = '10.22-2'                                                  # 5
     train_percent = int(gran*gran/(40*40)*100)                                # 6
     output_dir  = 'results/{}'.format(result_date)
     output_file = 'log'                                                       # 7
@@ -288,14 +314,14 @@ if __name__ == 'server':
     ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
     # init another object named ll_ss add primary
-    ll_ss = Localization(grid_len=grid_len, case=data_source, debug=True)
+    num_authorized = 5                                                         # 9
+    authorized = Authorized(grid_len=grid_len, edge=2, case=data_source, num=num_authorized)
+    ll_ss = Localization(grid_len=grid_len, case=data_source, debug=True, authorized=authorized)
     ll_ss.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
     true_data_path = Default.true_data_path.format(sensor_density)
     hypothesis_file = true_data_path + '/hypothesis'
     print('client side true data: {}\n'.format(hypothesis_file))    # the primary users are train offline
     ll_ss.init_truehypo(hypothesis_file)   # they are fixed, so use the truth data, not interpolated data
-    num_authorized = 2                                                         # 9
-    authorized = Authorized(grid_len=grid_len, edge=2, case=data_source, num=num_authorized)
     ll_ss.add_primary2(authorized)
 
 
@@ -349,7 +375,7 @@ if __name__ == '__main__':
     full_training_data = 'inter-' + str(gran)
     sub_training_data  = full_training_data + '_{}'.format(sensor_density)     # 4
 
-    result_date = '10.22'                                # 5
+    result_date = '10.23-2'                                # 5
     train_percent = int(gran*gran/(40*40)*100)           # 6
     output_dir  = 'results/{}'.format(result_date)
     train = TrainingInfo.naive_factory(data_source, sub_training_data, train_percent)
@@ -361,13 +387,13 @@ if __name__ == '__main__':
     ll.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
 
     # init another object named ll_ss
-    ll_ss = Localization(grid_len=grid_len, case=data_source, debug=False)
+    authorized = Authorized(grid_len=grid_len, edge=2, case=data_source, num=num_authorized)
+    ll_ss = Localization(grid_len=grid_len, case=data_source, debug=False, authorized=authorized)
     ll_ss.init_data(train.cov, train.sensors, train.hypothesis, SplatMap)
     true_data_path = Default.true_data_path.format(sensor_density)
     hypothesis_file = true_data_path + '/hypothesis'
     print('client side true data: {}\n'.format(hypothesis_file))    # the primary users are train offline
     ll_ss.init_truehypo(hypothesis_file)   # they are fixed, so use the truth data, not interpolated data
-    authorized = Authorized(grid_len=grid_len, edge=2, case=data_source, num=num_authorized)
     ll_ss.add_primary2(authorized)
 
     app.run(host="0.0.0.0", port=5000 + int(port), debug=False)

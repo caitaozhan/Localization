@@ -314,5 +314,31 @@ def figure_localization_error():
     #plt.bar(loc_error)
     plt.show()
 
+
+def visualize_all_transmitters(grid_len, true_locations, primaries, secondaries, fig):
+    '''visualize intruders, primaries, and secondaries
+    '''
+    grid = np.zeros((grid_len, grid_len))
+    for true in true_locations:
+        grid[int(true[0])][int(true[1])] = -1
+    for pri in primaries:
+        grid[int(pri[0])][int(pri[1])] = 0.4
+    for sec in secondaries:
+        grid[int(sec[0])][int(sec[1])] = 1
+
+    grid2 = np.copy(grid)
+    for i in range(grid_len):
+        for j in range(grid_len):
+            grid2[i, j] = grid[j, grid_len-1-i]
+
+    sns.set(style="white")
+    f, ax = plt.subplots(figsize=(10, 10))
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+    sns.heatmap(grid2, cmap=cmap, center=0, square=True, linewidth=1, cbar_kws={"shrink": .5})
+    plt.xlabel('1 = false alarm; 0.4 = accurate prediction; -1 = miss')
+    #plt.show()
+    plt.savefig('visualize/localization/{}-all-TX'.format(fig))
+
+
 if __name__ == '__main__':
     figure_localization_error()

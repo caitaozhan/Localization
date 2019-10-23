@@ -119,7 +119,7 @@ if __name__ == '__main__':
     parser.add_argument('-aut', '--num_authorized', type=int, nargs=1, default=[0], help='Number of authorized users')
     parser.add_argument('-sen', '--sen_density', type=int, nargs=1, default=[Default.sen_density], help='Sensor density')
     parser.add_argument('-met', '--methods', type=str, nargs='+', default=Default.methods, help='Methods to compare')
-    parser.add_argument('-rep', '--repeat', type=int, nargs=1, default=[Default.repeat], help='Number of experiments to repeat')
+    parser.add_argument('-rep', '--repeat', type=int, nargs=2, default=[Default.repeat], help='Number of experiments to repeat')
     parser.add_argument('-p',   '--port', type=int, nargs=1, default=[5012], help='Different port of the server holds different data')
     args = parser.parse_args()
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     num_authorized = args.num_authorized[0]
     sen_density    = args.sen_density[0]
     methods        = args.methods
-    repeat         = args.repeat[0]
+    repeat         = args.repeat
     port           = args.port[0]
 
     # Client.test_server(Default.server_ip, port)
@@ -147,15 +147,11 @@ if __name__ == '__main__':
 
     authorized = Authorized(grid_len=Default.grid_len, edge=2, case='splat', num=num_authorized)
 
-    if repeat > 0:
-        myrange = range(repeat)
-    if repeat <= 0:
-        myrange = range(-repeat, -(repeat-1))
+    myrange = range(repeat[0], repeat[1])
     print('myrange is:', myrange)
     for i in myrange:
         random.seed(i)
         np.random.seed(i)
-
         # generate testing data and the ground truth
         true_powers = [random.uniform(0.5, 1) for i in range(num_intruder)]  # confine the power to help
         true_indices, true_powers = generate_intruders(grid_len=ll.grid_len, edge=2, num=num_intruder, min_dist=1, powers=true_powers)
@@ -178,6 +174,7 @@ if __name__ == '__main__':
         print('ground truth with authorized\n', ground_truth_with_autho)
 
         curl = "curl -d \'{}\' -H \'Content-Type: application/json\' -X POST http://{}:{}/localize_ss"
+        # curl = "curl -d \'{}\' -H \'Content-Type: application/json\' -X POST http://{}:{}/visualize"
         command = curl.format(myinput.to_json_str(), Default.server_ip, port)
         p = Popen(command, stdout=PIPE, shell=True)
         p.wait()
