@@ -12,6 +12,7 @@ from input_output import Input, Output
 from localize import Localization
 from utility import generate_intruders
 from loc_default_config import Default
+from authorized import Authorized
 
 
 
@@ -115,22 +116,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='client side | hint: ' + hint)
     parser.add_argument('-gran', '--training_gran', type=int, nargs=1 ,default=[Default.training_gran], help='Training granularity')
     parser.add_argument('-num', '--num_intruder', type=int, nargs=1, default=[Default.num_intruder], help='Number of intruders')
+    parser.add_argument('-aut', '--num_authorized', type=int, nargs=1, default=[0], help='Number of authorized users')
     parser.add_argument('-sen', '--sen_density', type=int, nargs=1, default=[Default.sen_density], help='Sensor density')
     parser.add_argument('-met', '--methods', type=str, nargs='+', default=Default.methods, help='Methods to compare')
     parser.add_argument('-rep', '--repeat', type=int, nargs=1, default=[Default.repeat], help='Number of experiments to repeat')
     parser.add_argument('-p',   '--port', type=int, nargs=1, default=[5012], help='Different port of the server holds different data')
     args = parser.parse_args()
 
-    training_gran = args.training_gran[0]
-    num_intruder  = args.num_intruder[0]
-    sen_density   = args.sen_density[0]
-    methods       = args.methods
-    repeat        = args.repeat[0]
-    port          = args.port[0]
+    training_gran  = args.training_gran[0]
+    num_intruder   = args.num_intruder[0]
+    num_authorized = args.num_authorized[0]
+    sen_density    = args.sen_density[0]
+    methods        = args.methods
+    repeat         = args.repeat[0]
+    port           = args.port[0]
 
     # Client.test_server(Default.server_ip, port)
 
-    myinput = Input(num_intruder=num_intruder, data_source='splat', methods=methods, sen_density=sen_density)
+    myinput = Input(num_intruder=num_intruder, data_source='splat', methods=methods, sen_density=sen_density, num_authorized=num_authorized)
 
     # initialize a Localization object with the ground truth, use it to generate read data
     ll = Localization(grid_len=40, case='splat', debug=False)
@@ -142,6 +145,8 @@ if __name__ == '__main__':
     ll.init_data(cov_file, sensor_file, hypothesis_file)
     ll.init_truehypo(hypothesis_file)
 
+    authorized = Authorized(grid_len=Default.grid_len, edge=2, case='splat', num=num_authorized)
+
     if repeat > 0:
         myrange = range(repeat)
     if repeat <= 0:
@@ -152,19 +157,25 @@ if __name__ == '__main__':
         np.random.seed(i)
 
         # generate testing data and the ground truth
-        true_powers = [random.uniform(-2, 2) for i in range(num_intruder)]
+        true_powers = [random.uniform(0.5, 1) for i in range(num_intruder)]  # confine the power to help
         true_indices, true_powers = generate_intruders(grid_len=ll.grid_len, edge=2, num=num_intruder, min_dist=1, powers=true_powers)
 
-        # TODO: add authorized users
-
+        # the ground truth labels do not contain authorized users
         intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True, truemeans=True)
+        myinput.ground_truth = Client.prepare_ground_truth(intruders, true_powers)
+
+        # the sensor outputs do contain the power of authorized users
+        # add authorized users (DONE+debug)
+        authorized.add_authorized_users(true_indices, true_powers, i)
+        intruders, sensor_outputs = ll.set_intruders(true_indices=true_indices, powers=true_powers, randomness=True, truemeans=True)
+        ground_truth_with_autho   = Client.prepare_ground_truth(intruders, true_powers)
 
         # set up myinput
         myinput.experiment_num = i
         myinput.train_percent = int(training_gran**2/Default.grid_len**2 * 100)
         myinput.sensor_data = Client.prepare_sensor_output(sensor_outputs)
-        myinput.ground_truth = Client.prepare_ground_truth(intruders, true_powers)
-        print(myinput.experiment_num, '\n', myinput.ground_truth, '\n')
+        print('Experiment #', myinput.experiment_num, '\n', myinput.ground_truth, '\n')
+        print('ground truth with authorized\n', ground_truth_with_autho)
 
         curl = "curl -d \'{}\' -H \'Content-Type: application/json\' -X POST http://{}:{}/localize_ss"
         command = curl.format(myinput.to_json_str(), Default.server_ip, port)

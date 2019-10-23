@@ -6,20 +6,22 @@ import numpy as np
 import json   # json.dumps(): dict --> str;  json.loads(): str --> dict
 
 class Default:
-    num_intruder = 5
-    data_source  = 'splat'    # splat, utah, testbed-indoor, testbed-outdoor
-    methods      = ['splot', 'our', 'cluster']
-    sen_density  = 18
+    num_intruder   = 5
+    data_source    = 'splat'    # splat, utah, testbed-indoor, testbed-outdoor
+    methods        = ['splot', 'our', 'cluster', 'our-ss']
+    sen_density    = 240
+    num_authorized = 0
 
 
 
 class Input:
     '''Encapsulate the input of the algorithm
     '''
-    def __init__(self, num_intruder = Default.num_intruder,  # int
-                       data_source  = Default.data_source,   # str
-                       methods      = Default.methods,
-                       sen_density  = Default.sen_density):  # list<str>
+    def __init__(self, num_intruder   = Default.num_intruder,  # int
+                       data_source    = Default.data_source,   # str
+                       methods        = Default.methods,
+                       sen_density    = Default.sen_density,
+                       num_authorized = Default.num_authorized):
         self.num_intruder   = num_intruder
         self.data_source    = data_source
         self.train_percent  = -1
@@ -28,6 +30,7 @@ class Input:
         self.sensor_data    = None
         self.ground_truth   = None
         self.sensor_density = sen_density
+        self.num_authorized = num_authorized
 
 
     def to_json_str(self):
@@ -36,12 +39,13 @@ class Input:
             str
         '''
         inputdict = {'num_intruder':self.num_intruder,
-                     'data_source':self.data_source,
+                     'experiment_num':self.experiment_num,
+                     'num_authorized':self.num_authorized,
                      'train_percent':self.train_percent,
                      'methods':self.methods,
-                     'experiment_num':self.experiment_num,
-                     'ground_truth':self.ground_truth,
                      'sensor_density':self.sensor_density,
+                     'ground_truth':self.ground_truth,
+                     'data_source':self.data_source,
                      'sensor_data':self.sensor_data
                      }
         return json.dumps(inputdict)
@@ -76,6 +80,7 @@ class Input:
         myinput.sensor_data    = json_dict['sensor_data']
         myinput.ground_truth   = json_dict['ground_truth']
         myinput.sensor_density = json_dict.get('sensor_density')
+        myinput.num_authorized = json_dict.get('num_authorized')
         return myinput
 
 

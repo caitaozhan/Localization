@@ -69,7 +69,7 @@ class Localization:
         self.subset = {}
         self.subset_index = []
         self.meanvec_array = np.zeros(0)
-        self.primary_trans = []                # introduce the legal transmitters as secondary user in the Mobicom version
+        self.primary_trans = []
         self.secondary_trans = []              # they include primary and secondary
         self.lookup_table_norm = norm(0, 1).pdf(np.arange(0, 39, 0.0001))  # norm(0, 1).pdf(39) = 0
         self.counter = Counter()               # timer
@@ -420,6 +420,43 @@ class Localization:
         self.means_primary = power_2_db(self.means_primary)
 
 
+    def add_primary2(self, authorized):
+        '''Add primary's RSS to intruder's RSS and save the sum to self.means_primary
+        Args:
+            authorized -- Authorized
+        '''
+        print('Setting up primary transmitters...', end=' ')
+        self.primary_trans = []
+        for trans, power in zip(authorized.primaries, authorized.primaries_power):
+            self.primary_trans.append((Transmitter(trans[0], trans[1]), power))
+        dic_mean = {}   # (sensor.x, sensor.y) --> [legal_mean1, legal_mean2, ...]
+        for sensor in self.sensors:
+            dic_mean[(sensor.x, sensor.y)] = []
+            for primary, power in self.primary_trans:
+                pri_index = self.grid_len * primary.x + primary.y
+                dic_mean[(sensor.x, sensor.y)].append(self.truemeans[pri_index, sensor.index] + power)  # the primaries are from truth data
+        authorized_power_dic = {}
+        for key, value in dic_mean.items():
+            powers = db_2_power(value)
+            addition = sum(powers)
+            authorized_power_dic[(key[0], key[1])] = addition
+
+        print('adding primaries')
+        self.means_primary = np.zeros((len(self.transmitters), len(self.sensors)))
+        means_power = db_2_power(self.means)
+        for hypo in range(len(self.transmitters)):
+            new_means = np.zeros(len(self.sensors))
+            for sen_index in range(len(self.sensors)):
+                intru_power = means_power[hypo, sen_index]
+                sen_x = self.sensors[sen_index].x
+                sen_y = self.sensors[sen_index].y
+                authorized_power = authorized_power_dic.get((sen_x, sen_y))
+                added_power = intru_power + authorized_power
+                new_means[sen_index] = added_power
+            self.means_primary[hypo, :] = new_means
+        self.means_primary = power_2_db(self.means_primary)
+
+
     def setup_secondary_transmitters(self, secondary_transmitter, secondary_hypo_file):
         '''Setup the secondary transmitters, then "train" the distribution of them by linearly adding up the milliwatt power
         Args:
@@ -455,7 +492,7 @@ class Localization:
 
 
     def rescale_all_hypothesis(self):
-        '''Rescale hypothesis, and save it in a new np.array # TODO
+        '''Rescale hypothesis, and save it in a new np.array
         '''
         threshold = -80
         num_trans = len(self.transmitters)
@@ -501,6 +538,47 @@ class Localization:
                 new_means[sen_index] = add_amplitude
             self.means_all[trans_index, :] = new_means
         self.means_all = power_2_db(self.means_all)
+
+
+    def add_secondary2(self, authorized, exp_num):
+        '''Add the secondaries "online"
+        Args:
+            authorized -- Authorized -- predefined object that contains the authorized users
+            exp_num    -- int -- experiment number, determine the authorized users
+        '''
+        print('Setting up secondary transmitters...', end=' ')
+        self.secondary_trans = []
+        for trans, power in zip(authorized.secondaries[int(exp_num)], authorized.secondaries_power[int(exp_num)]):
+            self.secondary_trans.append((Transmitter(trans[0], trans[1]), power))
+        dic_mean = {}   # (sensor.x, sensor.y) --> [legal_mean1, legal_mean2, ...]
+        for sensor in self.sensors:
+            dic_mean[(sensor.x, sensor.y)] = []
+            for secondary, power in self.secondary_trans:
+                sec_index = self.grid_len * secondary.x + secondary.y
+                dic_mean[(sensor.x, sensor.y)].append(self.means[sec_index, sensor.index] + power)  # the secondaries are from interpolated data
+        authorized_power_dic = {}
+        for key, value in dic_mean.items():
+            powers = db_2_power(value)
+            addition = sum(powers)
+            authorized_power_dic[(key[0], key[1])] = addition
+
+        print('adding secondary')
+        self.means_all = np.zeros((len(self.transmitters), len(self.sensors)))
+        means_primary_power = db_2_power(self.means_primary)
+        for hypo in range(len(self.transmitters)):
+            new_means = np.zeros(len(self.sensors))
+            for sen_index in range(len(self.sensors)):
+                intru_pri_power = means_primary_power[hypo, sen_index]
+                sen_x = self.sensors[sen_index].x
+                sen_y = self.sensors[sen_index].y
+                authorized_power = authorized_power_dic.get((sen_x, sen_y))
+                added_power = intru_pri_power + authorized_power
+                new_means[sen_index] = added_power
+            self.means_all[hypo, :] = new_means
+        self.means_all = power_2_db(self.means_all)
+
+        for hypo in range(len(self.transmitters)):
+            self.transmitters[hypo].mean_vec = self.means_all[hypo]  # likelihood and delta_p computation relies on this mean_vec
 
 
     def rescale_intruder_hypothesis(self):
@@ -871,6 +949,43 @@ class Localization:
             return errors, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations), power_errors
         except:
             return [], 0, 0, []
+
+
+    def remove_authorized_users(self, pred_locations, pred_powers, authorized, exp_num):
+        '''Remove the authorized users from the predicted locations
+        Args:
+            pred_locations (list): an element is a tuple (predicted transmitter 2D location)
+            pred_powers (list):    an element is a float
+            authorized (Authorized)
+            exp_num -- str -- experiment number
+        '''
+        if len(pred_locations) == 0:
+            return [], 1, 0, []
+        all_authorized = authorized.primaries + authorized.secondaries[int(exp_num)]
+        print('\nAuthorized are:', all_authorized)
+        distances = np.zeros((len(all_authorized), len(pred_locations)))
+        for i in range(len(all_authorized)):
+            for j in range(len(pred_locations)):
+                distances[i, j] = np.sqrt((all_authorized[i][0] - pred_locations[j][0]) ** 2 + (all_authorized[i][1] - pred_locations[j][1]) ** 2)
+
+        k = 0
+        matches = []
+        pred_loc_remove = []
+        pred_power_remove = []
+        while k < min(len(all_authorized), len(pred_locations)):
+            min_distance_index = np.argmin(distances)
+            i = min_distance_index // len(pred_locations)
+            j = min_distance_index % len(pred_locations)
+            matches.append((i, j))          # authoried i matches predicted j
+            pred_loc_remove.append(pred_locations[j])
+            pred_power_remove.append(pred_powers[j])
+            distances[i, :] = np.inf
+            distances[:, j] = np.inf
+            k += 1
+
+        for loc, power in zip(pred_loc_remove, pred_power_remove):
+            pred_locations.remove(loc)
+            pred_powers.remove(power)
 
 
     def ignore_boarders(self, edge):
@@ -1366,7 +1481,8 @@ class Localization:
             combination = hypotheses_combination[i]
             mean_vec = np.zeros(len(sensor_subset))
             for hypo in combination:
-                mean_vec += db_2_power_(self.means[hypo][sensor_subset], utah=self.utah)
+                # mean_vec += db_2_power_(self.means[hypo][sensor_subset], utah=self.utah)  # in shared spectrum, this is not true
+                mean_vec += db_2_power_(self.transmitters[hypo].mean_vec[sensor_subset], utah=self.utah)
             mean_vec = power_2_db_(mean_vec, utah=self.utah)
             sensor_outputs_copy = sensor_outputs[sensor_subset]
             stds = np.sqrt(np.diagonal(self.covariance)[sensor_subset])
@@ -1494,8 +1610,8 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if far[2] < -3.5 or all([far[1] >= 0.2, far[2] < -2.5]):
-                        print('* power too weak, likely far false alarm')
+                    if far[2] < -0.5 or all([far[1] >= 0.8, far[2] < -1]):
+                        print('* power too weak, likely far false alarm, or authorized users present')
                         continue
                     if far[2] > 3.5 or all([far[1] <= 0.2, far[2] > 2.5]):
                         print('* power too strong, likely multiple Tx')

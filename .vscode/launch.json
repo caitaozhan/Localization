@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["-gran", "12", "-num", "5", "-sen", "240", "-met", "our", "-rep", "10"]
+            "args": ["-gran", "12", "-num", "3", "-aut", "2", "-sen", "240", "-met", "our", "ours", "-rep", "1"]
         },
 
         {

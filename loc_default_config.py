@@ -9,8 +9,9 @@ class Default:
     training_gran  = 12    # [6, 8, 10, 12, 14, 16, 18]
     num_intruder   = 5     # [1, 3, 5, 7, 10]
     sen_density    = 240   # [80, 160, 240, 320, 400]
+    num_authorized = 0     # [0, 2, 4, 6, 8]
     repeat         = 10    # repeating experiments
-    methods        = ['our', 'splot', 'cluster']
+    methods        = ['our', 'splot', 'cluster', 'our-ss']
     true_data_path = '../mysplat/output8_{}'
     trained_power  = 30
     server_ip      = '0.0.0.0'
@@ -84,7 +85,7 @@ class Config:
         elif case == 'splat':
             q        = 2.6
             q2       = 4
-            q_prime1 = 0.6
+            q_prime1 = 0.4
             q_prime2 = 0.1
             r        = [8, 6, 5, 4, 3, 2]
             r2       = 6

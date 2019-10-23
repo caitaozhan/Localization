@@ -66,6 +66,27 @@ class Hackish:
         print('ratio of power error true_delta is 1 of -1 to true_delta is 0 = ', np.mean([p_errors2[1.0], p_errors2[-1.0]]) / p_errors2[0.0])
         print('all mean = {}'.format(np.mean(all_errors)))
 
+    @staticmethod
+    def add_num_authorized_to_input(file1, file2):
+        aut = file1[file1.rfind('-')+1:]
+        aut = int(aut)
+        file1 = open(file1, 'r')
+        file2 = open(file2, 'w')
+        while True:
+            inputline = file1.readline()
+            if inputline == '':
+                break
+            myinput = Input.from_json_str(inputline)
+            myinput.num_authorized = aut
+            file2.write(myinput.log())
+            outputline = file1.readline()
+            while outputline != '' and outputline != '\n':
+                output = Output.from_json_str(outputline)
+                file2.write(output.log())
+                outputline = file1.readline()
+            file2.write('\n')
+
+
 def main1():
     '''power error'''
     logs = ['results/9.27-inter/log', 'results/9.28/log']
@@ -87,10 +108,17 @@ def main2():
         i += 1
     print(np.mean(errors), np.std(errors))
 
+
 def main3():
-    '''Interpolation for outdoors'''
-    pass
+    '''
+    '''
+    inputfiles  = ['results/10.22/log-aut-0', 'results/10.22/log-aut-2', 'results/10.22/log-aut-4', 'results/10.22/log-aut-6', 'results/10.22/log-aut-8']
+    outputfiles = ['results/10.22-1/log-aut-0', 'results/10.22-1/log-aut-2', 'results/10.22-1/log-aut-4', 'results/10.22-1/log-aut-6', 'results/10.22-1/log-aut-8']
+    for inpt, output in zip(inputfiles, outputfiles):
+        Hackish.add_num_authorized_to_input(inpt, output)
+
 
 if __name__ == '__main__':
     # main1()
-    main2()
+    # main2()
+    main3()
