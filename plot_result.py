@@ -23,11 +23,11 @@ class PlotResult:
     '''
 
     METHOD = ['M-MAP', 'SPLOT',     'CLUSTER',    'MSS-MAP']
-    _COLOR = ['r',     'tab:blue',  'tab:orange', 'tab:green']
+    _COLOR = ['r',     'tab:cyan',  'tab:orange', 'tab:green']
     COLOR  = dict(zip(METHOD, _COLOR))
 
     METRIC = ['miss', 'false']
-    _HATCH = ['o', '|']
+    _HATCH = ['*', 'x']
     HATCH  = dict(zip(METRIC, _HATCH))
 
     plt.rcParams['font.size'] = 60
@@ -218,7 +218,7 @@ class PlotResult:
         ax0.bar(pos1, our_error, width, edgecolor='black', label='MAP$^*$', color=PlotResult.COLOR['M-MAP'])
         ax0.bar(pos2, splot_error, width, edgecolor='black', label='SPLOT', color=PlotResult.COLOR['SPLOT'])
         ax0.bar(pos3, cluster_error, width, edgecolor='black', label='CLUST', color=PlotResult.COLOR['CLUSTER'])
-        ax0.legend(ncol=3, fontsize=50)
+        ax0.legend(ncol=3, fontsize=50, bbox_to_anchor=(0.51, 0.52, 0.5, 0.5))
         ax0.set_xticks(ind)
         ax0.set_xticklabels([str(int(x)) for x in X_lable])
         ax0.set_ylim([0, 1.2*max(cluster_error)])
@@ -235,9 +235,9 @@ class PlotResult:
         ax1.bar(pos2, splot_false, width, edgecolor='black', color=PlotResult.COLOR['SPLOT'], bottom=splot_miss, hatch=PlotResult.HATCH['false'])
         ax1.bar(pos3, cluster_miss, width, edgecolor='black', color=PlotResult.COLOR['CLUSTER'], hatch=PlotResult.HATCH['miss'])
         ax1.bar(pos3, cluster_false, width, edgecolor='black', color=PlotResult.COLOR['CLUSTER'], bottom=cluster_miss, hatch=PlotResult.HATCH['false'])
-        miss_patch = mpatches.Patch(facecolor='0.8', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
-        fasle_patch = mpatches.Patch(facecolor='0.8',hatch=PlotResult.HATCH['false'], label='False Rate')
-        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.3, 0.52, 0.5, 0.5))
+        miss_patch = mpatches.Patch(facecolor='0.95', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
+        fasle_patch = mpatches.Patch(facecolor='0.95',hatch=PlotResult.HATCH['false'], label='False Rate')
+        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.32, 0.52, 0.5, 0.5))
         ax1.set_xticks(ind)
         ax1.set_xticklabels([str(int(x)) for x in X_lable])
         minor_pos = np.concatenate([pos1, pos2, pos3])
@@ -256,7 +256,7 @@ class PlotResult:
 
 
     @staticmethod
-    def error_missfalse_vary_training(data, src, num_intruder, sensor_density, cell_len, figname):
+    def error_missfalse_vary_training_DEPRECATED(data, src, num_intruder, sensor_density, cell_len, figname):
         '''Varying training data used
         Args:
             data -- [ (Input, {str: Output}), ... ]
@@ -349,6 +349,85 @@ class PlotResult:
 
 
     @staticmethod
+    def error_missfalse_vary_training(data, src, num_intruder, sensor_density, cell_len, figname):
+        '''Varying training data used
+        Args:
+            data -- [ (Input, {str: Output}), ... ]
+            src  -- str -- source of data
+            num_intruder -- int --
+        '''
+        # step 1: prepare data
+        metric = 'error'            # y-axis
+        methods = ['our']  # tha bars
+        reduce_f = PlotResult.reduce_avg
+        table = defaultdict(list)
+        for myinput, output_by_method in data:
+            if myinput.data_source == src and myinput.num_intruder == num_intruder and myinput.sensor_density == sensor_density:
+                table[myinput.train_percent].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
+        print_table = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+        print('Metric:', metric)
+        print(tabulate.tabulate(print_table, headers = ['TRAIN %'] + methods), '\n')
+        arr = np.array(print_table)
+        our_error   = arr[:, 1] * cell_len
+
+        metrics = ['miss', 'false_alarm']    # y-axis
+        methods = ['our']                    # tha bars
+        reduce_f = PlotResult.reduce_avg
+        d = {}
+        for metric in metrics:
+            table = defaultdict(list)
+            for myinput, output_by_method in data:
+                if myinput.data_source == src and myinput.num_intruder == num_intruder and myinput.sensor_density:
+                    table[myinput.train_percent].append({method: output.get_metric(metric) for method, output in output_by_method.items()})
+            print_table = [[x] + [reduce_f([(y_by_method[method] if method in y_by_method else None) for y_by_method in list_of_y_by_method]) for method in methods] for x, list_of_y_by_method in sorted(table.items())]
+            d[metric] = print_table
+            print('Metric:', metric)
+            print(tabulate.tabulate(print_table, headers = ['TRAIN %'] + methods), '\n')
+        miss  = np.array(d['miss'])
+        false = np.array(d['false_alarm'])
+        our_miss      = miss[:, 1] * 100
+        our_false     = false[:, 1] * 100
+        X_lable       = miss[:, 0]
+
+        # step 2: the plot
+        ind = np.arange(len(our_error))
+        fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 20))
+        fig.subplots_adjust(left=0.08, right=0.99, top=0.98, bottom=0.25)
+        width = 0.55
+        pos1 = ind
+        ax0.bar(pos1, our_error, width, edgecolor='black', label='MAP$^*$', color=PlotResult.COLOR['M-MAP'])
+        ax0.legend(fontsize=60, bbox_to_anchor=(0.18, 0.5, 0.5, 0.5))
+        ax0.set_xticks(ind)
+        ax0.set_xticklabels([str(int(x)) for x in X_lable])
+        ax0.set_ylim([0, 1.2*max(our_error)])
+        ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
+        ax0.set_ylabel('Mean localization error (m)')
+        ax0.set_xlabel('Percentage of Training Data', labelpad=110)
+
+        pos1 = ind
+        ax1.bar(pos1, our_miss, width, edgecolor='black', label='Miss Rate', color=PlotResult.COLOR['M-MAP'], hatch=PlotResult.HATCH['miss'])
+        ax1.bar(pos1, our_false, width, edgecolor='black', label='False Alarm Rate', color=PlotResult.COLOR['M-MAP'], bottom=our_miss, hatch=PlotResult.HATCH['false'])
+        miss_patch = mpatches.Patch(facecolor='0.95', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
+        fasle_patch = mpatches.Patch(facecolor='0.95',hatch=PlotResult.HATCH['false'], label='False Rate')
+        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.22, 0.5, 0.5, 0.5))
+        ax1.set_xticks(ind)
+        ax1.set_xticklabels([str(int(x)) for x in X_lable])
+        minor_pos = np.concatenate([pos1])
+        minor_lab = ['MAP$^*$']*len(ind)
+        ax1.set_xlabel('Percentage of Training Data')
+        ax1.set_xticks(minor_pos, minor=True)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=30, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=125)
+        ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
+        plt.ylim([0, 21])
+        plt.ylabel('Percentage (%)')
+        plt.figtext(0.265, 0.01, '(a)', weight='bold')
+        plt.figtext(0.757, 0.01, '(b)', weight='bold')
+
+        plt.savefig(figname)
+
+
+    @staticmethod
     def error_missfalse_vary_numintru(data, src, train_gran, sensor_density, cell_len, figname):
         '''Varying training data used
         Args:
@@ -407,7 +486,7 @@ class PlotResult:
         ax0.bar(pos1, our_error, width, edgecolor='black', label='MAP$^*$', color=PlotResult.COLOR['M-MAP'])
         ax0.bar(pos2, splot_error, width, edgecolor='black', label='SPLOT', color=PlotResult.COLOR['SPLOT'])
         ax0.bar(pos3, cluster_error, width, edgecolor='black', label='CLUST', color=PlotResult.COLOR['CLUSTER'])
-        ax0.legend(ncol=3, fontsize=50)
+        ax0.legend(ncol=3, fontsize=50, bbox_to_anchor=(0.51, 0.52, 0.5, 0.5))
         ax0.set_xticks(ind)
         ax0.set_xticklabels([str(int(x)) for x in X_lable])
         ax0.set_ylim([0, 1.2*max(splot_error)])
@@ -424,9 +503,9 @@ class PlotResult:
         ax1.bar(pos2, splot_false, width, edgecolor='black', color=PlotResult.COLOR['SPLOT'], bottom=splot_miss, hatch=PlotResult.HATCH['false'])
         ax1.bar(pos3, cluster_miss, width, edgecolor='black', color=PlotResult.COLOR['CLUSTER'], hatch=PlotResult.HATCH['miss'])
         ax1.bar(pos3, cluster_false, width, edgecolor='black', color=PlotResult.COLOR['CLUSTER'], bottom=cluster_miss, hatch=PlotResult.HATCH['false'])
-        miss_patch = mpatches.Patch(facecolor='0.8', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
-        fasle_patch = mpatches.Patch(facecolor='0.8',hatch=PlotResult.HATCH['false'], label='False Rate')
-        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.18, 0.5, 0.5, 0.5))
+        miss_patch = mpatches.Patch(facecolor='0.95', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
+        fasle_patch = mpatches.Patch(facecolor='0.95',hatch=PlotResult.HATCH['false'], label='False Rate')
+        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.21, 0.5, 0.5, 0.5))
 
         ax1.set_xticks(ind)
         ax1.set_xticklabels([str(int(x)) for x in X_lable])
@@ -434,8 +513,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind) + ['SPLOT']*len(ind) + ['CLUST']*len(ind)
         ax1.set_xlabel('Number of Intruders')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=33, rotation=60, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=125)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=38, rotation=45, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=135)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 31])
         plt.ylabel('Percentage (%)')
@@ -524,14 +603,14 @@ class PlotResult:
         ind = np.arange(len(our_error))
         fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 20))
         fig.subplots_adjust(left=0.08, right=0.99, top=0.98, bottom=0.25)
-        width = 0.24
+        width = 0.25
         pos1 = ind - width - 0.005
         pos2 = ind
         pos3 = ind + width + 0.005
         ax0.bar(pos1, our_error, width, edgecolor='black', label='MAP$^*$', color=PlotResult.COLOR['M-MAP'])
         ax0.bar(pos2, splot_error, width, edgecolor='black', label='SPLOT', color=PlotResult.COLOR['SPLOT'])
         ax0.bar(pos3, cluster_error, width, edgecolor='black', label='CLUST', color=PlotResult.COLOR['CLUSTER'])
-        ax0.legend(ncol=3, fontsize=50)
+        ax0.legend(ncol=3, fontsize=50, bbox_to_anchor=(0.51, 0.52, 0.5, 0.5))
         ax0.set_xticks(ind)
         ax0.set_xticklabels([str(int(x)) for x in X_lable])
         ax0.set_ylim([0, 1.2*max(splot_error)])
@@ -548,9 +627,9 @@ class PlotResult:
         ax1.bar(pos2, splot_false, width, edgecolor='black', color=PlotResult.COLOR['SPLOT'], bottom=splot_miss, hatch=PlotResult.HATCH['false'])
         ax1.bar(pos3, cluster_miss, width, edgecolor='black', color=PlotResult.COLOR['CLUSTER'], hatch=PlotResult.HATCH['miss'])
         ax1.bar(pos3, cluster_false, width, edgecolor='black', color=PlotResult.COLOR['CLUSTER'], bottom=cluster_miss, hatch=PlotResult.HATCH['false'])
-        miss_patch = mpatches.Patch(facecolor='0.8', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
-        fasle_patch = mpatches.Patch(facecolor='0.8',hatch=PlotResult.HATCH['false'], label='False Rate')
-        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.18, 0.5, 0.5, 0.5))
+        miss_patch = mpatches.Patch(facecolor='0.95', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
+        fasle_patch = mpatches.Patch(facecolor='0.95',hatch=PlotResult.HATCH['false'], label='False Rate')
+        ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.20, 0.5, 0.5, 0.5))
 
         ax1.set_xticks(ind)
         ax1.set_xticklabels([str(int(x)) for x in X_lable])
@@ -558,8 +637,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind) + ['SPLOT']*len(ind) + ['CLUST']*len(ind)
         ax1.set_xlabel('Sensor density')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=33, rotation=60, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=125)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=38, rotation=45, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=135)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 31])
         plt.ylabel('Percentage (%)')
@@ -618,11 +697,11 @@ class PlotResult:
         ind = np.arange(len(our_error))
         fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(40, 20))
         fig.subplots_adjust(left=0.08, right=0.99, top=0.98, bottom=0.25)
-        width = 0.28
+        width = 0.35
         pos1 = ind - width - 0.005
         pos2 = ind
         pos3 = ind + width + 0.005
-        ax0.bar(pos1, our_error, width, edgecolor='black', label='MAP$^*$', color=PlotResult.COLOR['M-MAP'])
+        ax0.bar(pos1, our_error, width, edgecolor='black', label='MAP$^{*+}$', color=PlotResult.COLOR['M-MAP'])
         ax0.bar(pos2, ourss_error, width, edgecolor='black', label='MAP$^{**}$', color=PlotResult.COLOR['MSS-MAP'])
         legend_properties = {'weight':'bold'}
         ax0.legend(ncol=3, fontsize=60, prop=legend_properties, bbox_to_anchor=(0.35, 0.5, 0.5, 0.5))
@@ -640,16 +719,16 @@ class PlotResult:
         ax1.bar(pos1, our_false, width, edgecolor='black', color=PlotResult.COLOR['M-MAP'], bottom=our_miss, hatch=PlotResult.HATCH['false'])
         ax1.bar(pos2, ourss_miss, width, edgecolor='black', color=PlotResult.COLOR['MSS-MAP'], hatch=PlotResult.HATCH['miss'])
         ax1.bar(pos2, ourss_false, width, edgecolor='black', color=PlotResult.COLOR['MSS-MAP'], bottom=ourss_miss, hatch=PlotResult.HATCH['false'])
-        miss_patch = mpatches.Patch(facecolor='0.8', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
-        fasle_patch = mpatches.Patch(facecolor='0.8',hatch=PlotResult.HATCH['false'], label='False Rate')
+        miss_patch = mpatches.Patch(facecolor='0.95', hatch=PlotResult.HATCH['miss'], label='Miss Rate')
+        fasle_patch = mpatches.Patch(facecolor='0.95',hatch=PlotResult.HATCH['false'], label='False Rate')
         ax1.legend(handles=[miss_patch, fasle_patch], fontsize=60, bbox_to_anchor=(0.35, 0.5, 0.5, 0.5))
         ax1.set_xticks(ind)
         ax1.set_xticklabels([str(int(x)) for x in X_lable])
         minor_pos = np.concatenate([pos1, pos2, pos3])
-        minor_lab = ['MAP$^*$']*len(ind) + ['MAP$^{**}$']*len(ind)
+        minor_lab = ['MAP$^{*+}$']*len(ind) + ['MAP$^{**}$']*len(ind)
         ax1.set_xlabel('Number of Intruders')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=40, rotation=40, weight='bold')
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=30, weight='bold')
         ax1.tick_params(axis='x', which='major', pad=125)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 61])
@@ -727,10 +806,10 @@ def indoor_interpolation():
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
 
-    PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len, figname='plot/indoor-error-missfalse.png')
-    # PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
+    # PlotResult.error_missfalse_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len, figname='plot/indoor-error-missfalse.png')
+    PlotResult.power_numintru(data, src='testbed-indoor', train_percent=37)
     print('indoor intepolation')
-    shutil.copy('plot/indoor-error-missfalse.png', '/home/caitao/Project/latex/localize/ipsn/figures')
+    # shutil.copy('plot/indoor-error-missfalse.png', '/home/caitao/Project/latex/localize/ipsn/figures')
     print('\n\n')
 
 def outdoor_interpolation():
@@ -741,8 +820,8 @@ def outdoor_interpolation():
     # PlotResult.error_numintru(data, src='testbed-indoor', train_percent=37, cell_len=IndoorMap.cell_len)
     # PlotResult.missfalse_numintru(data, src='testbed-indoor', train_percent=37)
 
-    PlotResult.error_missfalse_numintru(data, src='testbed-outdoor', train_percent=18, cell_len=OutdoorMap.cell_len, figname='plot/outdoor-error-missfalse.png')
-    # PlotResult.power_numintru(data, src='testbed-outdoor', train_percent=18)
+    # PlotResult.error_missfalse_numintru(data, src='testbed-outdoor', train_percent=18, cell_len=OutdoorMap.cell_len, figname='plot/outdoor-error-missfalse.png')
+    PlotResult.power_numintru(data, src='testbed-outdoor', train_percent=18)
     shutil.copy('plot/outdoor-error-missfalse.png', '/home/caitao/Project/latex/localize/ipsn/figures')
     print('outdoor intepolation')
     print('\n\n')
@@ -755,6 +834,7 @@ def splat_vary_traindata():
             'results/10.20-4/log-gran-12', 'results/10.20-4/log-gran-14', 'results/10.20-4/log-gran-16', 'results/10.20-4/log-gran-18']
     logs = logs + ['results/10.20-5/log-gran-6', 'results/10.20-5/log-gran-8', 'results/10.20-5/log-gran-10', \
             'results/10.20-5/log-gran-12', 'results/10.20-5/log-gran-14', 'results/10.20-5/log-gran-16', 'results/10.20-5/log-gran-18']
+    logs = logs + ['results/10.20-5/log-gran-4', 'results/10.20-5/log-gran-28', 'results/10.20-5/log-gran-40']
     data = IOUtility.read_logs(logs)
     PlotResult.error_missfalse_vary_training(data, src='splat', num_intruder=Default.num_intruder, sensor_density=Default.sen_density, cell_len=SplatMap.cell_len, figname='plot/splat-vary-training')
     print('varying training data')
@@ -811,11 +891,13 @@ def splat_vary_numauthorized():
 
 
 if __name__ == '__main__':
+    plt.rcParams['font.weight'] = 'bold'
+    plt.rcParams['axes.labelweight'] = 'bold'
     random.seed(0)
-    indoor_full_training()
+    # indoor_full_training()
     indoor_interpolation()
     outdoor_interpolation()
-    splat_vary_traindata()
-    splat_vary_numintru()
-    splat_vary_sendensity()
-    splat_vary_numauthorized()
+    # splat_vary_traindata()
+    # splat_vary_numintru()
+    # splat_vary_sendensity()
+    # splat_vary_numauthorized()

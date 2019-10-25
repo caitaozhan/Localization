@@ -32,6 +32,7 @@ class Hackish:
     @staticmethod
     def indoor_power(logs):
         data = Hackish.read_data(logs)
+        print('caitao')
 
     @staticmethod
     def outdoor_power(logs):
@@ -58,13 +59,17 @@ class Hackish:
             p_errors[true_delta].append(p_error)
         p_errors2 = {}
         all_errors = []
+        all_errors2 = []
         for delta, errors in p_errors.items():
             error = np.mean(np.absolute(errors))
             print(delta, error, len(errors))
             p_errors2[delta] = error
             all_errors.extend(list(np.absolute(errors)))
+            all_errors2.extend(errors)
         print('ratio of power error true_delta is 1 of -1 to true_delta is 0 = ', np.mean([p_errors2[1.0], p_errors2[-1.0]]) / p_errors2[0.0])
-        print('all mean = {}'.format(np.mean(all_errors)))
+        print('all absolute mean = {}'.format(np.mean(all_errors)))
+        print('all mean = {}'.format(np.mean(all_errors2)))
+
 
     @staticmethod
     def add_num_authorized_to_input(file1, file2):
@@ -119,6 +124,6 @@ def main3():
 
 
 if __name__ == '__main__':
-    # main1()
+    main1()
     # main2()
-    main3()
+    # main3()
