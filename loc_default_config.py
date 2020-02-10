@@ -6,7 +6,7 @@ import json
 
 class Default:
     grid_len       = 40
-    training_gran  = 40    # [6, 8, 10, 12, 14, 16, 18]
+    training_gran  = 12    # [6, 8, 10, 12, 14, 16, 18]
     num_intruder   = 5     # [1, 3, 5, 7, 10]
     sen_density    = 240   # [80, 160, 240, 320, 400]
     num_authorized = 0     # the default values can be 0 or 5 NOTE: watchout! it is 5 only in the shared spectrum experiments.
