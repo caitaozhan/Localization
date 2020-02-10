@@ -516,13 +516,12 @@ class PlotResult:
         ax1.set_xticklabels(minor_lab, minor=True, fontsize=38, rotation=45, weight='bold')
         ax1.tick_params(axis='x', which='major', pad=135)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
-        plt.ylim([0, 31])
+        plt.ylim([0, 55])
         plt.ylabel('Percentage (%)')
         plt.figtext(0.265, 0.01, '(a)', weight='bold')
         plt.figtext(0.757, 0.01, '(b)', weight='bold')
 
-        ax1.annotate('148', xy=(0.07, 30.8), xytext=(0, 27), arrowprops=dict(facecolor='black', shrink=0.05, width=10, headwidth=25), horizontalalignment='right')
-        ax1.annotate('49', xy=(4.07, 30.8), xytext=(4, 27), arrowprops=dict(facecolor='black', shrink=0.05, width=10, headwidth=25), horizontalalignment='right')
+        ax1.annotate('153', xy=(0.07, 54.5), xytext=(0.02, 48), arrowprops=dict(facecolor='black', shrink=0.05, width=10, headwidth=25), horizontalalignment='right')
 
         plt.savefig(figname)
 
@@ -845,17 +844,19 @@ def splat_vary_traindata():
 def splat_vary_numintru():
     '''Vaires amount of training data
     '''
-    logs = ['results/10.21/log-num-1', 'results/10.21/log-num-3', 'results/10.21/log-num-5', \
-            'results/10.21/log-num-7', 'results/10.21/log-num-10']
-    logs = logs + ['results/10.21-2/log-num-1', 'results/10.21-2/log-num-3', 'results/10.21-2/log-num-5', \
-                   'results/10.21-2/log-num-7', 'results/10.21-2/log-num-10']
+    # logs = ['results/10.21/log-num-1', 'results/10.21/log-num-3', 'results/10.21/log-num-5', \
+    #         'results/10.21/log-num-7', 'results/10.21/log-num-10']
+    # logs = logs + ['results/10.21-2/log-num-1', 'results/10.21-2/log-num-3', 'results/10.21-2/log-num-5', \
+    #                'results/10.21-2/log-num-7', 'results/10.21-2/log-num-10']
+    logs = ['results/10.25/log-num-1', 'results/10.25/log-num-3', 'results/10.25/log-num-5', \
+                   'results/10.25/log-num-7', 'results/10.25/log-num-10']
     data = IOUtility.read_logs(logs)
-    PlotResult.error_missfalse_vary_numintru(data, src='splat', train_gran=Default.training_gran, sensor_density=Default.sen_density, cell_len=SplatMap.cell_len, figname='plot/splat-vary-numintru')
+    PlotResult.error_missfalse_vary_numintru(data, src='splat', train_gran=Default.training_gran, sensor_density=Default.sen_density, cell_len=SplatMap.cell_len, figname='plot/splat-vary-numintru-fulltrain')
     # shutil.copy('plot/splat-vary-numintru.png', '/home/caitao/Project/latex/localize/ipsn/figures')
     # PlotResult.power_numintru(data, src='splat', train_percent=9)
     # PlotResult.time_numintru(data, src='splat', train_percent=9)
     print('varying number of intruders')
-    shutil.copy('plot/splat-vary-numintru.png', '/home/caitao/Project/latex/localize/ipsn/figures')
+    # shutil.copy('plot/splat-vary-numintru.png', '/home/caitao/Project/latex/localize/ipsn/figures')
     print('\n\n')
 
 
@@ -863,16 +864,16 @@ def splat_vary_numintru():
 def splat_vary_sendensity():
     '''Varies sensor density
     '''
-    logs = ['results/10.21-4/log-sen-80', 'results/10.21-4/log-sen-160', 'results/10.21-4/log-sen-240', \
-                   'results/10.21-4/log-sen-320', 'results/10.21-4/log-sen-400']
-    # logs = ['results/10.21-2/log-sen-80', 'results/10.21-2/log-sen-160', 'results/10.21-2/log-sen-240', \
-    #                'results/10.21-2/log-sen-320', 'results/10.21-2/log-sen-400']
-    # logs = logs + ['results/10.21-3/log-sen-80', 'results/10.21-3/log-sen-160', 'results/10.21-3/log-sen-240', \
-    #                'results/10.21-3/log-sen-320', 'results/10.21-3/log-sen-400']
+    # logs = ['results/10.21-4/log-sen-80', 'results/10.21-4/log-sen-160', 'results/10.21-4/log-sen-240', \
+                #    'results/10.21-4/log-sen-320', 'results/10.21-4/log-sen-400']
+
+    logs = ['results/10.25/log-sen-80', 'results/10.25/log-sen-160', 'results/10.25/log-sen-240', \
+                   'results/10.25/log-sen-320', 'results/10.25/log-sen-400']
+
     data = IOUtility.read_logs(logs)
-    PlotResult.error_missfalse_vary_sendensity(data, src='splat', train_gran=Default.training_gran, num_intruder=Default.num_intruder, cell_len=SplatMap.cell_len, figname='plot/splat-vary-sendensity')
+    PlotResult.error_missfalse_vary_sendensity(data, src='splat', train_gran=Default.training_gran, num_intruder=Default.num_intruder, cell_len=SplatMap.cell_len, figname='plot/splat-vary-sendensity-fulltrain')
     print('varying sensor density')
-    shutil.copy('plot/splat-vary-sendensity.png', '/home/caitao/Project/latex/localize/ipsn/figures')
+    # shutil.copy('plot/splat-vary-sendensity.png', '/home/caitao/Project/latex/localize/ipsn/figures')
     print('\n\n')
 
 
@@ -895,9 +896,9 @@ if __name__ == '__main__':
     plt.rcParams['axes.labelweight'] = 'bold'
     random.seed(0)
     # indoor_full_training()
-    indoor_interpolation()
-    outdoor_interpolation()
+    # indoor_interpolation()
+    # outdoor_interpolation()
     # splat_vary_traindata()
-    # splat_vary_numintru()
+    splat_vary_numintru()
     # splat_vary_sendensity()
     # splat_vary_numauthorized()

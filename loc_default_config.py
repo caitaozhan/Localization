@@ -6,10 +6,10 @@ import json
 
 class Default:
     grid_len       = 40
-    training_gran  = 12    # [6, 8, 10, 12, 14, 16, 18]
+    training_gran  = 40    # [6, 8, 10, 12, 14, 16, 18]
     num_intruder   = 5     # [1, 3, 5, 7, 10]
     sen_density    = 240   # [80, 160, 240, 320, 400]
-    num_authorized = 5     # [0 or 5] NOTE: watchout!
+    num_authorized = 0     # the default values can be 0 or 5 NOTE: watchout! it is 5 only in the shared spectrum experiments.
     repeat         = 10    # repeating experiments
     methods        = ['our', 'splot', 'cluster', 'our-ss']
     true_data_path = '../mysplat/output8_{}'
@@ -85,7 +85,7 @@ class Config:
         elif case == 'splat':
             q        = 2.6
             q2       = 4
-            q_prime1 = 0.4
+            q_prime1 = 0.6
             q_prime2 = 0.1
             r        = [8, 6, 5, 4, 3, 2]
             r2       = 6
@@ -196,7 +196,7 @@ class ConfigSplot:
             return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
 
         else:
-            R1 = 8
+            R1 = 9
             R2 = 8
             localmax_threshold = -60
             sigma_x_square = 0.5
