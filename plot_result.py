@@ -227,7 +227,7 @@ class PlotResult:
         ax0.set_ylim([0, 1.2*max(cluster_error)])
         ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         ax0.set_ylabel('Mean localization error (m)')
-        ax0.set_xlabel('Number of Intruders', labelpad=110)
+        ax0.set_xlabel('Number of Intruders', labelpad=145)
 
         pos1 = ind - width - 0.005
         pos2 = ind
@@ -247,8 +247,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind) + ['SPLOT']*len(ind) + ['CLUST']*len(ind)
         ax1.set_xlabel('Number of Intruders')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=25, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=105)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=55, rotation=30, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=145)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
 
         plt.ylim([0, 37])
@@ -405,7 +405,7 @@ class PlotResult:
         ax0.set_ylim([0, 1.2*max(our_error)])
         ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         ax0.set_ylabel('Mean localization error (m)')
-        ax0.set_xlabel('Percentage of Training Data', labelpad=110)
+        ax0.set_xlabel('Percentage of Training Data', labelpad=145)
 
         pos1 = ind
         ax1.bar(pos1, our_miss, width, edgecolor='black', label='Miss Rate', color=PlotResult.COLOR['M-MAP'], hatch=PlotResult.HATCH['miss'])
@@ -419,8 +419,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind)
         ax1.set_xlabel('Percentage of Training Data')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=30, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=125)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=55, rotation=30, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=145)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 21])
         plt.ylabel('Percentage (%)')
@@ -495,7 +495,7 @@ class PlotResult:
         ax0.set_ylim([0, 1.2*max(splot_error)])
         ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         ax0.set_ylabel('Mean localization error (m)')
-        ax0.set_xlabel('Number of Intruders', labelpad=110)
+        ax0.set_xlabel('Number of Intruders', labelpad=145)
 
         pos1 = ind - width - 0.005
         pos2 = ind
@@ -516,8 +516,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind) + ['SPLOT']*len(ind) + ['CLUST']*len(ind)
         ax1.set_xlabel('Number of Intruders')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=38, rotation=45, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=135)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=45, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=145)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         # plt.ylim([0, 55]) full training
         plt.ylim([0, 31])
@@ -623,7 +623,7 @@ class PlotResult:
         ax0.set_ylim([0, 1.2*max(splot_error)])
         ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         ax0.set_ylabel('Mean localization error (m)')
-        ax0.set_xlabel('Sensor density', labelpad=110)
+        ax0.set_xlabel('Sensor density', labelpad=145)
 
         pos1 = ind - width - 0.005
         pos2 = ind
@@ -644,8 +644,8 @@ class PlotResult:
         minor_lab = ['MAP$^*$']*len(ind) + ['SPLOT']*len(ind) + ['CLUST']*len(ind)
         ax1.set_xlabel('Sensor density')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=38, rotation=45, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=135)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=45, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=145)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 31])
         plt.ylabel('Percentage (%)')
@@ -717,7 +717,7 @@ class PlotResult:
         ax0.set_ylim([0, 1.2*max(our_error)])
         ax0.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         ax0.set_ylabel('Mean localization error (m)')
-        ax0.set_xlabel('Number of Intruders', labelpad=110)
+        ax0.set_xlabel('Number of Intruders', labelpad=145)
 
         pos1 = ind - width - 0.005
         pos2 = ind
@@ -735,8 +735,8 @@ class PlotResult:
         minor_lab = ['MAP$^{*+}$']*len(ind) + ['MAP$^{**}$']*len(ind)
         ax1.set_xlabel('Number of Intruders')
         ax1.set_xticks(minor_pos, minor=True)
-        ax1.set_xticklabels(minor_lab, minor=True, fontsize=45, rotation=30, weight='bold')
-        ax1.tick_params(axis='x', which='major', pad=125)
+        ax1.set_xticklabels(minor_lab, minor=True, fontsize=50, rotation=40, weight='bold')
+        ax1.tick_params(axis='x', which='major', pad=145)
         ax1.tick_params(axis='y', direction='in', length=10, width=3, pad=15)
         plt.ylim([0, 61])
         plt.ylabel('Percentage (%)')
@@ -914,8 +914,8 @@ if __name__ == '__main__':
     random.seed(0)
     # indoor_full_training()
     # indoor_interpolation()
-    # outdoor_interpolation()
+    outdoor_interpolation()
     # splat_vary_traindata()
     # splat_vary_numintru()
     # splat_vary_sendensity()
-    splat_vary_numauthorized()
+    # splat_vary_numauthorized()
