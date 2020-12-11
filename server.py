@@ -11,7 +11,7 @@ from loc_default_config import TrainingInfo
 from loc_default_config import Default
 from localize import Localization
 from input_output import Input, Output
-from utility import subsample_from_full
+from utility_ipsn import subsample_from_full
 from plots import visualize_localization, visualize_all_transmitters
 from authorized import Authorized
 

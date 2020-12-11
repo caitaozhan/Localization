@@ -10,7 +10,7 @@ from subprocess import PIPE, Popen
 
 from input_output import Input, Output
 from localize import Localization
-from utility import generate_intruders
+from utility_ipsn import generate_intruders
 from loc_default_config import Default
 from authorized import Authorized
 

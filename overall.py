@@ -7,7 +7,7 @@ import plots
 import numpy as np
 import line_profiler
 import random
-from utility import random_intruder, random_secondary
+from utility_ipsn import random_intruder, random_secondary
 
 
 def overall():

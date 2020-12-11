@@ -5,7 +5,7 @@ import time
 import random
 sys.path.append('../..')
 from localize import Localization
-from utility import generate_intruders
+from utility_ipsn import generate_intruders
 
 
 # SelectSensor version on May 31, 2019

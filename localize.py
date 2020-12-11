@@ -11,19 +11,19 @@ import pandas as pd
 from scipy.stats import multivariate_normal, norm
 from sensor import Sensor
 from transmitter import Transmitter
-from utility import read_config, ordered_insert, power_2_db, power_2_db_, db_2_power, db_2_power_, find_elbow#, print_results
+from utility_ipsn import read_config, ordered_insert, power_2_db, power_2_db_, db_2_power, db_2_power_, find_elbow#, print_results
 from counter import Counter
 from itertools import combinations, product
 from sklearn.cluster import KMeans
 from sklearn.metrics import mean_squared_error, median_absolute_error
 from scipy.optimize import nnls
 from plots import visualize_sensor_output, visualize_sensor_output2, visualize_cluster, visualize_localization, visualize_q_prime, visualize_q, visualize_splot, visualize_unused_sensors
-from utility import generate_intruders, generate_intruders_2, distance, Point, my_local_max
+from utility_ipsn import generate_intruders, generate_intruders_2, distance, Point, my_local_max
 from loc_default_config import Config, ConfigSplot
 from waf_model import WAF
 from authorized import Authorized
 from skimage.feature import peak_local_max
-import line_profiler
+# import line_profiler
 import matplotlib.pyplot as plt
 
 # import mkl
@@ -926,7 +926,7 @@ class Localization:
         detected = 0
         threshold = self.grid_len * self.config.error_threshold
         for match in matches:
-            error = match[2]
+            error = round(match[2], 4)
             if error <= threshold:
                 errors.append(error)
                 power_errors.append(match[3])
@@ -948,7 +948,7 @@ class Localization:
             print(pred_locations[false], pred_powers[false], end=';  ')
         print()
         try:
-            return errors, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations), power_errors
+            return errors, len(true_locations) - detected, len(pred_locations) - detected, power_errors
         except:
             return [], 0, 0, []
 
@@ -1163,15 +1163,15 @@ class Localization:
                 mean_vec = mean_vec + delta_p  # add the delta of power
                 stds = np.sqrt(np.diagonal(self.covariance)[subset_sensors])
                 # a hack for outdoor####
-                for i, sen_output in enumerate(sensor_outputs_copy):
-                    if sen_output > -40:
-                        stds[i] = 3
-                    elif sen_output > -50:
-                        stds[i] = 2.5
-                    elif sen_output > -60:
-                        stds[i] = 2
-                    else:
-                        stds[i] = 1
+                # for i, sen_output in enumerate(sensor_outputs_copy):
+                #     if sen_output > -40:
+                #         stds[i] = 3
+                #     elif sen_output > -50:
+                #         stds[i] = 2.5
+                #     elif sen_output > -60:
+                #         stds[i] = 2
+                #     else:
+                #         stds[i] = 1
                 ########################
                 array_of_pdfs = self.get_pdfs(mean_vec, stds, sensor_outputs_copy)
                 likelihood = np.prod(array_of_pdfs)
@@ -1193,7 +1193,7 @@ class Localization:
                 #         break
                 # likelihood = likelihood_max
 
-            likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant, len(subset_sensors))
+            likelihood *= np.power(out_prob*constant, len(self.sensors) - len(subset_sensors)) * np.power(constant*1.0, len(subset_sensors))
 
             self.grid_posterior[trans.x * self.grid_len + trans.y] = likelihood * self.grid_priori[trans.x * self.grid_len + trans.y]
             # power_grid[trans.x][trans.y] = power_max
@@ -1422,7 +1422,7 @@ class Localization:
             #               math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             hypotheses = [h for h in range(len(self.transmitters)) if math.sqrt((self.transmitters[h].x - self.sensors[center].x)**2 + (self.transmitters[h].y - self.sensors[center].y)**2) < R ]
             hypotheses = [h for h in hypotheses if self.grid_priori[h] != 0.]
-            for t in range(2, 4):
+            for t in range(2, 3):   # temporary switch to 3
                 self.counter.time3_start()
                 self.counter.time4_start()
                 # hypotheses_combination = list(combinations(hypotheses, t))   # two Tx cannot be at a same hypothesis
@@ -1612,15 +1612,15 @@ class Localization:
                 far = far_grid[index[0]][index[1]]
                 print(', score = {:.3f}, ratio = {:.3f}, delta_p = {:.3f}'.format(far[0], far[1], far[2]), end=' ')
                 if q > q_threshold:
-                    if far[2] < -0.45 or all([far[1] >= 0.8, far[2] < -1]):
-                        print('* power too weak, likely far false alarm, or authorized users present')
-                        continue
-                    if self.authorized is not None and far[2] < 0 and self.check_authorized(index, fig):
-                        print('* likely authorized user')
-                        continue
-                    if self.authorized is not None and self.check_authorized2(index, fig):
-                        print('* likely authorized user')
-                        continue
+                    # if far[2] < -0.45 or all([far[1] >= 0.8, far[2] < -1]):
+                    #     print('* power too weak, likely far false alarm, or authorized users present')
+                    #     continue
+                    # if self.authorized is not None and far[2] < 0 and self.check_authorized(index, fig):
+                    #     print('* likely authorized user')
+                    #     continue
+                    # if self.authorized is not None and self.check_authorized2(index, fig):
+                    #     print('* likely authorized user')
+                    #     continue
                     if far[2] > 3.5 or all([far[1] <= 0.2, far[2] > 2.5]):
                         print('* power too strong, likely multiple Tx')
                         continue

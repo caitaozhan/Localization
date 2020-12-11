@@ -6,7 +6,7 @@ import math
 from sklearn.linear_model import LinearRegression
 from collections import defaultdict
 import matplotlib.pyplot as plt
-from utility import Point, Segment, Wall, distance
+from utility_ipsn import Point, Segment, Wall, distance
 
 class WAF:
     '''P(d)[dBm] = P(d0)[dBm] - 10*n*log(d/d0) - nW*WAF 

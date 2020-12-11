@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import random
 
-from utility import read_utah_data, distance, plot_cdf, generate_intruders_utah, set_intruders_utah
+from utility_ipsn import read_utah_data, distance, plot_cdf, generate_intruders_utah, set_intruders_utah
 from location_transform import LocationTransform
 from localize import Localization
 from plots import visualize_localization

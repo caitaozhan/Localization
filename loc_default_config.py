@@ -82,6 +82,23 @@ class Config:
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
+        elif case == 'lognormal2':
+            q        = 2.5
+            q2       = 3.5
+            q_prime1 = 0.5
+            q_prime2 = 0.1
+            r        = [20, 10, 8, 6, 4]
+            r2       = 6
+            e        = 2
+            nf_p     = -80
+            c_thre   = -65
+            s_thre   = -75
+            e_thre   = 0.2
+            d_thre   = 2    # power delta
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
+
         elif case == 'splat':
             q        = 2.6
             q2       = 4

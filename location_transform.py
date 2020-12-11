@@ -5,7 +5,7 @@ import scipy.io
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from utility import read_utah_data, distance, plot_cdf
+from utility_ipsn import read_utah_data, distance, plot_cdf
 
 
 class LocationTransform:
