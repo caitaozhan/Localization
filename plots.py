@@ -287,7 +287,7 @@ def visualize_splot(weight_global, folder, fig):
     plt.subplots(figsize=(10, 10))
     sns.heatmap(grid2, vmin=np.min(grid2), vmax=np.max(grid2), square=True, linewidth=0.5)
     plt.title('The estimated power (the weights of ridge regression)')
-    plt.savefig('visualize/{}/{}'.format(folder, fig))
+    plt.savefig(root_dir + 'visualize/{}/{}'.format(folder, fig))
 
 
 def save_data_AGA(plot_data, file_path):

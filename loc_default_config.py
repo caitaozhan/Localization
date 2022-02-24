@@ -99,6 +99,23 @@ class Config:
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
 
+        elif case == 'lognormal3':  # for power prediction in journal
+            q        = 2.5
+            q2       = 3.5
+            q_prime1 = 0.5
+            q_prime2 = 0.1
+            r        = [20, 10, 8, 6, 4]
+            r2       = 6
+            e        = 10
+            nf_p     = -80
+            c_thre   = -65
+            s_thre   = -75
+            e_thre   = 0.2
+            d_thre   = 2.5    # power delta
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
+
         elif case == 'splat':
             q        = 2.6
             q2       = 4
@@ -112,6 +129,40 @@ class Config:
             s_thre   = -60
             e_thre   = 0.5
             d_thre   = 2
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
+
+        elif case == 'splat2':  # for wowmom
+            q        = 2.6
+            q2       = 4
+            q_prime1 = 0.5
+            q_prime2 = 0.1
+            r        = [20, 10, 8, 6, 4]
+            r2       = 6
+            e        = 2
+            nf_p     = -68
+            c_thre   = -50
+            s_thre   = -60
+            e_thre   = 0.5
+            d_thre   = 2.5
+
+            return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
+                       r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
+
+        elif case == 'splat3':  # for power prediction in journal
+            q        = 2.6
+            q2       = 4
+            q_prime1 = 0.5
+            q_prime2 = 0.1
+            r        = [20, 10, 8, 6, 4]
+            r2       = 6
+            e        = 10
+            nf_p     = -68
+            c_thre   = -50
+            s_thre   = -60
+            e_thre   = 0.5
+            d_thre   = 2.5
 
             return cls(q_threshold_1=q, q_threshold_2=q2, q_prime_threshold_1=q_prime1, q_prime_threshold_2=q_prime2,\
                        r_list=r, r_2=r2, edge=e, noise_floor_prune=nf_p, center_threshold=c_thre, surround_threshold=s_thre, error_threshold = e_thre, delta_threshold=d_thre)
@@ -208,6 +259,30 @@ class ConfigSplot:
             delta_c = 1
             n_p = 2
             minPL = 1
+            delta_N_square = 1
+
+            return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
+
+        elif case == 'lognormal2':
+            R1 = 12
+            R2 = 8
+            localmax_threshold = -57
+            sigma_x_square = 0.5
+            delta_c = 1
+            n_p = 2
+            minPL = 1.5
+            delta_N_square = 1
+
+            return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)
+
+        elif case == 'splat2':
+            R1 = 12
+            R2 = 8
+            localmax_threshold = -62
+            sigma_x_square = 0.5
+            delta_c = 1
+            n_p = 2
+            minPL = 1.5
             delta_N_square = 1
 
             return cls(R1, R2, localmax_threshold, sigma_x_square, delta_c, n_p, minPL, delta_N_square)

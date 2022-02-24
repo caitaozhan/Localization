@@ -863,7 +863,7 @@ class Localization:
         detected = 0
         threshold = self.grid_len * self.config.error_threshold
         for match in matches:
-            error = match[2]
+            error = round(match[2], 4)
             if error <= threshold:
                 errors.append(error)
                 detected += 1
@@ -884,7 +884,7 @@ class Localization:
             print(pred_locations[false], end=' ')
         print()
         try:
-            return errors, (len(true_locations) - detected) / len(true_locations), (len(pred_locations) - detected) / len(true_locations)
+            return errors, len(true_locations) - detected, len(pred_locations) - detected
         except:
             return [], 0, 0
 
@@ -1621,8 +1621,11 @@ class Localization:
                     # if self.authorized is not None and self.check_authorized2(index, fig):
                     #     print('* likely authorized user')
                     #     continue
-                    if far[2] > 3.5 or all([far[1] <= 0.2, far[2] > 2.5]):
+                    if far[2] > 3.5: # or all([far[1] <= 0.2, far[2] > 2.5]):
                         print('* power too strong, likely multiple Tx')
+                        continue
+                    if far[2] < -3: # or all([far[1] <= 0.2, far[2] > 2.5]):
+                        print('* power too weak, likely False alarm')
                         continue
                     print(' **Intruder!**')
                     detected = True
